@@ -3,13 +3,32 @@
 > 一个**单文件网页**级的专业照片编辑器，被装进了 Android / Windows / Linux / macOS / iOS 五个平台的壳里。
 > 页面不依赖任何外部网络资源，所有调色、合成、导出都在你自己的设备上算完。
 
-<p align="left">
-  <img src="docs/screenshots/icon.png" width="96" alt="Iris 图标">
+<p align="center">
+  <img src="docs/screenshots/icon.png" width="112" alt="Iris 图标">
 </p>
 
+<p align="center">
+  <b>网页一份，五端同源</b> · 零外部依赖 · 照片不出设备
+</p>
+
+<p align="center">
+  <img alt="单文件" src="https://img.shields.io/badge/page-single%20file-1b1b1d?style=flat-square">
+  <img alt="WebGL" src="https://img.shields.io/badge/render-WebGL-c9a227?style=flat-square">
+  <img alt="平台" src="https://img.shields.io/badge/platform-Android%20%7C%20iOS%20%7C%20Win%20%7C%20Linux%20%7C%20macOS-2f6f4f?style=flat-square">
+  <img alt="License" src="https://img.shields.io/badge/license-MIT-3c6e9f?style=flat-square">
+</p>
+
+![Iris 调色盘](docs/screenshots/27-blueprint.png)
+
 - 🌐 在线直接体验：<https://david1a21.github.io/iris-palette-web/>
-- 📦 全平台安装包：[Releases](../../releases)
-- 📄 页面本体：`web/index.html`（约 768 KB，单个 HTML 文件，内联全部 CSS / JS / GLSL）
+- 📦 全平台安装包：[Releases](https://github.com/david1a21/iris-palette/releases)
+- 📄 页面本体：`web/index.html`（785,822 字节，单个 HTML 文件，内联全部 CSS / JS / GLSL）
+
+### 一眼看界面
+
+| 手机（主界面） | 桌面（调色盘 + 曲线同屏） |
+|---|---|
+| <img src="docs/screenshots/01-palette.png" width="260"> | <img src="docs/screenshots/desktop.png" width="520"> |
 
 ---
 
@@ -99,9 +118,27 @@
 
 ---
 
+## 界面与操作
+
+界面按「**顶栏 + 画布 + 检视器**」三块组织，宽屏是左右分栏，窄屏自动收成单栏抽屉：
+
+| 区域 | 作用 |
+|---|---|
+| 顶栏 | 打开 / 保存 / 撤销重做 / 对比原图 / 命令面板入口 / 说明书入口 |
+| 画布 | 支持拖入、粘贴、双击打开；滚轮缩放、空格拖动、双击回到适应窗口 |
+| 检视器 | 调色盘 → 调整 → 曲线 → 分色 → 局部 → 元素 → 模板，按使用频次自上而下 |
+| 底部 | 胶片条：最近编辑、导出记录、模板收藏 |
+
+交互上有两条刻意的设计：
+
+1. **所有参数都是双向的**。盘里拖动会实时反映到数值，数值框改数也会实时带动盘上的光点，不存在「预设值 / 当前值」两套真相。
+2. **任何一步都能退回零位**。双击某个参数归零、双击盘心回到原始色调，长按「对比」看原图 —— 不需要先记住原样再手动复原。
+
+新手建议的路径是：`调色盘 → 曲线 → 局部 → 导出`，四步就能出片；进阶再碰分色、胶片、光场这些。
+
 ## 五端安装
 
-> 所有安装包都在 [Releases](../../releases) 里。**页面内容五端完全一致**，差别只在外壳和系统集成。
+> 所有安装包都在 [Releases](https://github.com/david1a21/iris-palette/releases) 里。**页面内容五端完全一致**，差别只在外壳和系统集成。
 
 ### Android
 
@@ -208,6 +245,12 @@ WebView      (Win/Lin/Mac)   WKWebView
 为什么坚持「页面一份、外壳多份」？因为**页面是唯一的事实来源**：任何平台都不许私自改页面逻辑，平台差异一律在外壳层消化。这样升级页面时，五端只需要替换同一个 `index.html`，行为天然一致。
 
 ---
+
+### 性能与体积
+
+体积是刻意压下来的：页面 **不到 800 KB**，没有框架、没有 polyfill、没有图标字体；首屏不发任何网络请求，断网也能完整使用。
+
+渲染上，预览走「视口优先」：画布只按实际显示尺寸采样，超大原图不会在拖动滑杆时被逐像素重算；导出时才以原始分辨率跑一次完整管线。这也是为什么在手机上推调色盘能跟手，而导出要等一两秒。
 
 ## 外壳做了什么适配
 
