@@ -1,0 +1,31 @@
+name: build-ios-ipa
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "ios/Resources/**"
+      - "ios/Sources/**"
+      - "ios/build_ipa.sh"
+      - ".github/workflows/build-ipa.yml"
+
+jobs:
+  ipa:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 环境检查
+        run: |
+          xcodebuild -version
+          xcrun --sdk iphoneos --show-sdk-version
+
+      - name: 构建未签名 ipa
+        run: cd ios && bash build_ipa.sh
+
+      - name: 上传产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: Iris-Palette-iOS-ipa
+          path: "ios/*.ipa"
+          if-no-files-found: error

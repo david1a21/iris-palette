@@ -1,0 +1,9 @@
+{
+  "name": "iris-palette",
+  "productName": "Iris 调色盘",
+  "version": "1.0.0",
+  "main": "main.js",
+  "author": "Iris",
+  "license": "MIT",
+  "description": "Iris 调色盘 —— 语义感知的端侧照片编辑器"
+}

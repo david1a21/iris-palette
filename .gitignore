@@ -1,0 +1,21 @@
+# 构建产物与依赖
+node_modules/
+dist/
+release/
+.cache/
+Build/
+*.app
+*.ipa
+*.apk
+*.idsig
+*.jks
+*.keystore
+
+# 发布资产只在 Releases 里，不进仓库
+_release/
+
+# 系统/编辑器
+.DS_Store
+__pycache__/
+*.pyc
+.vscode/
