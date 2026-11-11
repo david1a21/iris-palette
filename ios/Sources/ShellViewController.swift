@@ -53,7 +53,20 @@ final class ShellViewController: UIViewController, WKScriptMessageHandler, WKNav
 
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
-        web.frame = view.bounds
+        applyWebFrame()
+    }
+
+    /// 顶栏不能被状态栏压住。
+    /// 做法：WebView 的顶边落在安全区下沿（刘海/灵动岛/状态栏高度），
+    /// 底部仍然通栏，下沿交给页面里的 env(safe-area-inset-bottom) 自己处理。
+    /// 这样页面里那些 position:fixed / position:absolute 的顶栏即使带着 top:0，
+    /// 也只会在安全区之下的坐标系里贴顶，不会钻进状态栏，也不会和 CSS 二次留白。
+    private func applyWebFrame() {
+        let top = max(0, view.safeAreaInsets.top)
+        web.frame = CGRect(x: 0,
+                           y: top,
+                           width: view.bounds.width,
+                           height: max(0, view.bounds.height - top))
     }
 
     // MARK: - 侧滑返回
