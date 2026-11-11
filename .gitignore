@@ -19,3 +19,6 @@ _release/
 __pycache__/
 *.pyc
 .vscode/
+
+# Android 构建中间产物
+build/

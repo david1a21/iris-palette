@@ -49,8 +49,8 @@ echo "==> sign"
 "$BT/apksigner" sign \
   --ks iris-release.jks --ks-pass pass:iris2026 --key-pass pass:iris2026 \
   --v2-signing-enabled true --v3-signing-enabled true \
-  --out "dist/Iris_1.0.2.apk" build/aligned.apk
+  --out "dist/Iris_1.0.4.apk" build/aligned.apk
 
 echo "==> verify"
-"$BT/apksigner" verify "dist/Iris_1.0.2.apk" && echo "signature ok"
-ls -lh "dist/Iris_1.0.2.apk"
+"$BT/apksigner" verify "dist/Iris_1.0.4.apk" && echo "signature ok"
+ls -lh "dist/Iris_1.0.4.apk"

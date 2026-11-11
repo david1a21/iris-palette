@@ -5,7 +5,7 @@ import os, shutil, subprocess, zipfile, hashlib, json
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DIST = os.path.join(ROOT, 'dist')
 OUT = os.path.join(ROOT, 'release')
-VER = '1.0.1'
+VER = '1.0.4'
 os.makedirs(OUT, exist_ok=True)
 
 README_MAC = """Iris 调色盘 · macOS（未签名）

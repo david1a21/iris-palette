@@ -11,7 +11,7 @@ const CACHE = path.join(ROOT, '.cache');
 const DIST = path.join(ROOT, 'dist');
 const APP = path.join(ROOT, 'app');
 const UI = path.join(APP, 'ui');
-const VERSION = '1.0.1';
+const VERSION = '1.0.4';
 
 const run = (cmd, args, opts = {}) => execFileSync(cmd, args, { stdio: 'inherit', ...opts });
 
