@@ -6,7 +6,7 @@
 <title>Iris 调色盘 · 语义感知的在线照片编辑器</title>
 <meta name="theme-color" content="#0b0b0d">
 <!-- 版本元数据：检查更新时远端只需读取文件头部即可比对，不必下载整份页面 -->
-<meta name="iris-version" content="1.0.5">
+<meta name="iris-version" content="1.0.6">
 <meta name="iris-build" content="2026-11-12">
 <meta name="iris-repo" content="david1a21/iris-palette">
 <meta name="description" content="Iris 调色盘：语义感知的二维色彩控制器。Tone × Color 两轴、端侧区域分割与肤色锁，433 款滤镜、78 套模板，支持照片 / 视频 / GIF 导出，纯前端不上传。">
@@ -15577,6 +15577,12 @@ window.addEventListener('resize',()=>{
   invalidateStageRect();
   const now=isMobile()+'|'+isCompact();
   if(now!==lastLayout){
+    /* 输入法弹出/收起会把窗口高度压掉一大截，这个 resize 很容易被误判成「真的换布局了」。
+       而一旦在编辑途中重建面板，正在打字的 textarea 会连同焦点一起被销毁，
+       Android WebView 随即收走输入法——表现就是「刚改文字键盘就没了」。
+       所以只要焦点还在输入控件里，就只重画布，不动面板 DOM。 */
+    const ae=document.activeElement;
+    if(ae&&ae.closest&&ae.closest(EDITABLE_SEL)){ render(); return; }
     lastLayout=now; applyMobileUI(); buildTools(); buildPanel(); render();
   }
 });
