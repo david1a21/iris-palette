@@ -30,6 +30,29 @@
 |---|---|
 | <img src="docs/screenshots/01-palette.png" width="260"> | <img src="docs/screenshots/desktop.png" width="520"> |
 
+### 宣传图 · 20 张（竖版 10 / 横版 10）
+
+> 全部由**真实界面截图 + 精确排版**渲染而成（无 AI 画字），2 倍像素导出；原图在 [`docs/posters`](docs/posters)，按 `v01–v10`（3:4 竖版）与 `h01–h10`（16:9 横版）编号。
+
+| 竖版 3:4 · 小红书 | | |
+|---|---|---|
+| <img src="docs/posters/v01.jpg" width="240"> | <img src="docs/posters/v03.jpg" width="240"> | <img src="docs/posters/v05.jpg" width="240"> |
+| 两轴调色 | 78 套模板 | 曲线 |
+| <img src="docs/posters/v02.jpg" width="240"> | <img src="docs/posters/v04.jpg" width="240"> | <img src="docs/posters/v07.jpg" width="240"> |
+| 433 款滤镜 | 局部选区 | 19 页工具抽屉 |
+
+| 横版 16:9 · 酷安 / 官网 Banner | | |
+|---|---|---|
+| <img src="docs/posters/h01.jpg" width="300"> | <img src="docs/posters/h02.jpg" width="300"> | <img src="docs/posters/h03.jpg" width="300"> |
+| 主视觉 | 滤镜接触印样 | 五端同步 |
+| <img src="docs/posters/h05.jpg" width="300"> | <img src="docs/posters/h06.jpg" width="300"> | <img src="docs/posters/h09.jpg" width="300"> |
+| 前后对比 | 两轴原理 | 页面中心 |
+
+其余 8 张：`v06` 文字与元素、`v08` 分级色轮、`v09` 导出格式、`v10` 两种早晨、`h04` 三步工作流、`h07` 模板横版、`h08` 局部蒙版、`h10` 零上传。
+
+---
+
+
 ---
 
 ## 目录
@@ -37,6 +60,7 @@
 - [它是什么](#它是什么)
 - [能做什么](#能做什么)
 - [五端安装](#五端安装)
+- [宣传图 20 张](#宣传图--20-张竖版-10--横版-10)
 - [三十秒上手](#三十秒上手)
 - [技术架构](#技术架构)
 - [外壳做了什么适配](#外壳做了什么适配)
