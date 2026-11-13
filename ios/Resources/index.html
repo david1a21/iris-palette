@@ -6,7 +6,7 @@
 <title>Iris 调色盘 · 语义感知的在线照片编辑器</title>
 <meta name="theme-color" content="#0b0b0d">
 <!-- 版本元数据：检查更新时远端只需读取文件头部即可比对，不必下载整份页面 -->
-<meta name="iris-version" content="1.0.6">
+<meta name="iris-version" content="1.0.9">
 <meta name="iris-build" content="2026-11-12">
 <meta name="iris-repo" content="david1a21/iris-palette">
 <meta name="description" content="Iris 调色盘：语义感知的二维色彩控制器。Tone × Color 两轴、端侧区域分割与肤色锁，433 款滤镜、78 套模板，支持照片 / 视频 / GIF 导出，纯前端不上传。">
@@ -94,7 +94,7 @@ button{cursor:pointer;border:0;background:none}
 #app{position:relative;display:flex;flex-direction:column;height:100dvh;overflow:hidden}
 
 /* ---------- 顶栏 ---------- */
-.topbar{position:relative;flex:0 0 auto;display:flex;align-items:center;gap:6px;padding:9px 14px 8px;
+.topbar{position:relative;flex:0 0 auto;display:flex;align-items:center;flex-wrap:wrap;gap:6px;padding:9px 14px 6px;
   background:var(--topbar-bg);backdrop-filter:blur(14px);border-bottom:1px solid var(--line);z-index:22}
 .tb-side{display:flex;gap:4px;align-items:center;min-width:0;flex:0 0 auto}
 .tb-side.right{justify-content:flex-end}
@@ -185,8 +185,15 @@ button{cursor:pointer;border:0;background:none}
   font-size:12px;font-weight:600;background:var(--accent);color:var(--on-accent);z-index:6;
   box-shadow:0 4px 18px rgba(0,0,0,.5)}
 #app.dock-off .dock-float{display:block}
-.tools{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:3px;flex:0 0 auto;
-  padding:7px 8px 6px;scrollbar-width:none;border-bottom:1px solid var(--line)}
+/* 工具 tab 是「顶部 tab」：跟在顶栏第一行下面，作为顶栏第二行自然占位。
+   以前它在底部 dock 里，屏幕 64% 处才出现，看着像掉到页面下半截。
+   v1.0.8：宽屏再进一步，与品牌 / 按钮同一行，顶栏只剩一行高。 */
+/* 工具 tab 是「顶部 tab」：跟在顶栏第一行下面，作为顶栏第二行自然占位。
+   以前它在底部 dock 里，屏幕 64% 处才出现，看着像掉到页面下半截。 */
+.tools{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:3px;
+  flex:0 0 100%;width:100%;margin-top:3px;padding:5px 0 1px;
+  border-top:1px solid var(--line);scrollbar-width:none}
+#app.dock-off .tools{display:none}
 .tools::-webkit-scrollbar{display:none}
 .tool{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;
   gap:4px;min-width:0;padding:5px 2px 7px;border-radius:11px;font-size:10.5px;color:var(--sub);
@@ -470,7 +477,7 @@ input[type=color]{-webkit-appearance:none;appearance:none;width:44px;height:30px
   #app{flex-direction:row}
   .topbar{position:absolute;top:0;left:0;right:0;background:var(--topbar-grad);border:0}
   .stage{height:100dvh;flex:1}
-  .dock{flex:0 0 330px;height:100dvh;border-top:0;border-left:1px solid var(--line);padding-top:54px}
+  .dock{flex:0 0 330px;height:100dvh;border-top:0;border-left:1px solid var(--line);padding-top:48px}
   .dock-grip{cursor:ew-resize;flex:0 0 18px}
   .tools{padding-top:6px;grid-template-columns:repeat(5,minmax(0,1fr))}
   .panel{padding-bottom:30px}
@@ -647,13 +654,13 @@ input[type=range]::-webkit-slider-thumb{width:16px;height:16px;margin-top:-6.5px
     max-height:72dvh;overflow-y:auto}
 }
 @media(min-width:900px){
-  .topbar{background:linear-gradient(to bottom,rgba(6,6,8,.9),rgba(6,6,8,0));padding:14px 20px}
+  .topbar{background:linear-gradient(to bottom,rgba(6,6,8,.9),rgba(6,6,8,0));padding:8px 16px 7px}
   .dock{border-left:1px solid var(--w06)}
   .panel{padding:6px 18px 40px}
   .more-menu{left:12px;right:12px}
 }
 @media(max-width:520px){
-  .topbar{padding:10px 12px 8px}
+  .topbar{padding:7px 10px 6px}
   .tb-main{font-size:13px;letter-spacing:1.2px}
   .tbtn{padding:7px 10px;font-size:11.5px}
   .tools{padding:8px 8px}
@@ -1242,8 +1249,10 @@ body.boot .dock{animation:bootUp .44s ease-out .12s both}
   box-shadow:0 6px 20px rgba(var(--accent-rgb),.18)}
 .ic-foot{margin-top:12px;font-size:9.5px;color:var(--w34);letter-spacing:.4px}
 /* 分栏 / 分组：功能不删，但一次只呈现一组 */
-.preset-tabs{display:flex;gap:5px;margin:0 0 12px;padding:3px;border-radius:12px;
-  background:var(--w035);border:1px solid var(--line)}
+.preset-tabs{display:flex;gap:5px;margin:-6px 0 9px;padding:3px;border-radius:12px;
+  position:sticky;top:-8px;z-index:6;
+  background:var(--panel);border:1px solid var(--line);
+  box-shadow:0 4px 14px rgba(0,0,0,.18)}
 .preset-tabs .chip{flex:1;text-align:center;border-radius:9px;padding:7px 4px}
 .more-group-title{font-size:10px;color:var(--sub);letter-spacing:1px;margin:10px 3px 7px}
 .more-grid{grid-template-columns:repeat(3,1fr)}
@@ -1979,7 +1988,7 @@ html[data-ui="nova"] .topbar{
   border-radius:calc(var(--nova-r) * 1);
   backdrop-filter:blur(18px) saturate(140%);-webkit-backdrop-filter:blur(18px) saturate(140%);
   box-shadow:0 14px 40px rgba(0,0,0,.22),inset 0 1px 0 var(--w10);
-  padding:11px 16px 10px!important}
+  padding:8px 14px 7px!important}
 html[data-ui="nova"] .topbar::before{
   /* 原版是 left:0;right:0 的全宽直角金线，胶囊化后它会从圆角外横穿出去，
      看起来就像顶栏背后还留着一层直角矩形。收进圆角内侧并做成圆头短线。 */
@@ -2256,6 +2265,374 @@ html[data-ui="nova"] .sp-stat>div{border-radius:calc(var(--nova-r)*.6)!important
 .upd-priv-list{display:grid;gap:7px;margin-top:8px}
 .upd-priv-i{font-size:11px;line-height:1.75;color:var(--sub);padding-left:14px;position:relative}
 .upd-priv-i::before{content:'·';position:absolute;left:3px;color:var(--accent);font-weight:700}
+/* ---------------- 视频工作台 ---------------- */
+.vst-stage{position:relative;width:100%;height:clamp(220px,34vh,380px);background:#000;
+  border-radius:14px;overflow:hidden;border:1px solid var(--line);margin:0 0 10px}
+.vst-canvas{display:block;width:100%;height:100%;object-fit:contain;background:#000}
+.vst-over{position:absolute;left:10px;top:9px;pointer-events:none}
+.vst-live{font-size:9.5px;letter-spacing:.16em;color:rgba(255,255,255,.72);
+  background:rgba(0,0,0,.38);padding:4px 9px;border-radius:999px;backdrop-filter:blur(6px)}
+.vst-playbar{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin:0 0 12px}
+.vst-pbtn{padding:7px 11px;border-radius:10px;border:1px solid var(--line);
+  background:var(--w065);color:var(--txt);font-size:11.5px;cursor:pointer;white-space:nowrap}
+.vst-pbtn.primary{background:var(--accent);color:var(--on-accent);border-color:transparent;font-weight:700;min-width:84px}
+.vst-check{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--sub);white-space:nowrap}
+.vst-check input{accent-color:var(--accent)}
+.vst-scrub{flex:1 1 150px;min-width:110px;accent-color:var(--accent)}
+.vst-tc{font-size:10.5px;color:var(--sub);font-variant-numeric:tabular-nums;white-space:nowrap}
+.vst-tools{display:flex;flex-wrap:wrap;gap:7px;margin:0 0 12px}
+.vst-tbtn{padding:8px 12px;border-radius:10px;border:1px solid var(--line);
+  background:var(--w035);color:var(--txt);font-size:11px;cursor:pointer;white-space:nowrap}
+.vst-tbtn:hover{border-color:rgba(var(--accent-rgb),.5)}
+.vst-tbtn.accent{background:rgba(var(--accent-rgb),.14);border-color:rgba(var(--accent-rgb),.4)}
+.vst-tpl{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;
+  padding:11px;border:1px solid var(--line);border-radius:14px;background:var(--w025);margin:0 0 12px}
+.vst-tpl-i{display:flex;flex-direction:column;gap:3px;text-align:left;padding:10px;
+  border-radius:11px;border:1px solid var(--line);background:var(--w035);
+  color:var(--txt);cursor:pointer}
+.vst-tpl-i b{font-size:11.5px}.vst-tpl-i small{font-size:10px;color:var(--sub);line-height:1.5}
+.vst-tl-wrap{border:1px solid var(--line);border-radius:14px;background:var(--w025);
+  padding:11px;margin:0 0 12px;overflow-x:auto}
+.vst-sec-h{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;
+  color:var(--txt);margin:0 0 9px;flex-wrap:wrap}
+.vst-sec-h em{font-style:normal;font-size:10px;color:var(--sub);font-weight:400}
+.vst-tl{position:relative;user-select:none;-webkit-user-select:none;touch-action:pan-x}
+.vst-ruler{position:relative;height:20px;margin-bottom:6px;border-bottom:1px solid var(--line)}
+.vst-tick{position:absolute;top:0;transform:translateX(-50%);font-size:9px;color:var(--sub);
+  white-space:nowrap;padding-left:7px;border-left:1px solid var(--line);height:19px}
+.vst-track{position:relative;display:flex;gap:5px;height:82px;cursor:crosshair;
+  touch-action:none;-webkit-user-select:none;user-select:none}
+.vst-clip{position:relative;flex:1 1 0;min-width:52px;border-radius:10px;overflow:hidden;
+  border:1px solid var(--line);background:var(--w045);display:flex;flex-direction:column;
+  cursor:grab;touch-action:none}
+.vst-clip:active{cursor:grabbing}
+.vst-clip.dragging{opacity:.55;outline:2px dashed var(--accent);outline-offset:-2px}
+.vst-clip.sel{border-color:var(--accent);box-shadow:0 0 0 1px rgba(var(--accent-rgb),.45)}
+.vst-clip.dragging{opacity:.72;z-index:6;box-shadow:0 8px 24px rgba(0,0,0,.5);
+  outline:1px dashed var(--accent);outline-offset:1px}
+.vst-clip-h{display:flex;justify-content:space-between;gap:5px;padding:4px 7px;
+  font-size:9.5px;color:var(--txt);background:var(--w045);white-space:nowrap;overflow:hidden}
+.vst-clip-n{overflow:hidden;text-overflow:ellipsis}
+.vst-clip-h small{color:var(--sub);flex:0 0 auto}
+.vst-clip-b{position:relative;flex:1;background-size:cover;background-position:center;
+  background-color:rgba(0,0,0,.25)}
+.vst-clip-th{position:absolute;inset:0;background-size:cover;background-position:center}
+.vst-handle{position:absolute;top:0;bottom:0;width:9px;cursor:ew-resize;
+  background:rgba(var(--accent-rgb),.0);z-index:4}
+.vst-handle:hover{background:rgba(var(--accent-rgb),.45)}
+.vst-handle.l{left:0}.vst-handle.r{right:0}
+.vst-kf{position:absolute;top:50%;width:9px;height:9px;margin:-5px 0 0 -5px;
+  transform:rotate(45deg);background:var(--accent);border:1px solid rgba(0,0,0,.45);
+  cursor:grab;z-index:3;border-radius:2px}
+.vst-kf.on{outline:2px solid #fff;outline-offset:1px}
+.vst-head{position:absolute;top:-3px;bottom:-3px;width:2px;background:#ff5f56;
+  left:0;pointer-events:none;z-index:5;box-shadow:0 0 6px rgba(255,95,86,.7)}
+.vst-head::before{content:'';position:absolute;top:-4px;left:-4px;width:10px;height:10px;
+  border-radius:50%;background:#ff5f56}
+.vst-head-hit{position:absolute;top:-8px;bottom:-8px;left:-9px;width:20px;
+  pointer-events:auto;cursor:ew-resize;touch-action:none;z-index:6}
+.vst-empty{font-size:11px;color:var(--sub);padding:12px;text-align:center;width:100%}
+.vst-insp{border:1px solid var(--line);border-radius:14px;background:var(--w025);
+  padding:12px;margin:0 0 12px}
+.vst-insp-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px}
+.vst-insp-h b{font-size:12px}.vst-insp-h small{font-size:10px;color:var(--sub)}
+.vst-insp-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px}
+.vst-f{display:flex;flex-direction:column;gap:4px;font-size:10px;color:var(--sub);min-width:0}
+.vst-f input,.vst-f select{width:100%;box-sizing:border-box;padding:7px 9px;border-radius:9px;
+  border:1px solid var(--line);background:var(--bg);color:var(--txt);font-size:11px;min-width:0}
+.vst-kf-h{display:flex;align-items:center;justify-content:space-between;gap:8px;
+  margin:12px 0 7px;flex-wrap:wrap}
+.vst-kf-h b{font-size:11.5px}
+.vst-kf-btns{display:flex;gap:6px}
+.vst-mini{padding:6px 11px;border-radius:9px;border:1px solid var(--line);
+  background:var(--w065);color:var(--txt);font-size:10.5px;cursor:pointer;white-space:nowrap}
+.vst-mini:hover{border-color:rgba(var(--accent-rgb),.5)}
+.vst-mini.danger{color:#e9a49f}
+.vst-kf-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:9px}
+.vst-chip{padding:5px 10px;border-radius:999px;border:1px solid var(--line);
+  background:var(--w035);color:var(--sub);font-size:10px;cursor:pointer}
+.vst-chip.on{background:var(--accent);color:var(--on-accent);border-color:transparent}
+.vst-param{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:8px 14px}
+.vst-p{display:grid;grid-template-columns:66px 1fr 38px;align-items:center;gap:7px;
+  font-size:10px;color:var(--sub)}
+.vst-p input{width:100%;accent-color:var(--accent)}
+.vst-p b{font-size:10px;color:var(--txt);text-align:right;font-variant-numeric:tabular-nums}
+.vst-insp-ops{display:flex;gap:7px;flex-wrap:wrap;margin-top:11px}
+.vst-tip{font-size:10.5px;line-height:1.75;color:var(--sub);margin-top:9px;
+  border-left:2px solid rgba(var(--accent-rgb),.45);padding-left:10px}
+.vst-export{border:1px solid var(--line);border-radius:14px;background:var(--w025);
+  padding:12px;margin:0 0 12px}
+.vst-set{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px}
+.vst-prog{position:relative;height:24px;border-radius:9px;background:var(--w045);
+  overflow:hidden;margin:11px 0 9px;border:1px solid var(--line)}
+.vst-prog-f{position:absolute;left:0;top:0;bottom:0;width:0;
+  background:linear-gradient(90deg,rgba(var(--accent-rgb),.55),var(--accent));transition:width .16s}
+.vst-prog-t{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-size:10px;color:var(--txt);text-shadow:0 1px 3px rgba(0,0,0,.6)}
+.vst-ebtns{display:flex;gap:8px;flex-wrap:wrap}
+.vst-export-btn{padding:10px 18px;border-radius:11px;border:1px solid transparent;
+  background:var(--accent);color:var(--on-accent);font-size:12px;font-weight:700;cursor:pointer}
+.vst-priv{border:1px solid var(--line);border-radius:14px;background:var(--w025);
+  padding:12px;margin:0 0 8px}
+.vst-priv-i{position:relative;padding-left:14px;font-size:10.5px;line-height:1.75;color:var(--sub)}
+.vst-priv-i::before{content:'·';position:absolute;left:3px;color:var(--accent);font-weight:700}
+/* ---------------- 视频 · 紧凑标题 / 片段调色盘 / 减负 ---------------- */
+.vst-hero{display:flex;align-items:center;justify-content:space-between;gap:10px;
+  margin:0 0 9px;padding:9px 12px;border-radius:13px;
+  border:1px solid var(--line);background:var(--w025)}
+.vst-hero-t{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;min-width:0}
+.vst-hero-t b{font-size:14px;letter-spacing:.01em}
+.vst-hero-t small{font-size:10px;color:var(--sub)}
+.vst-hero-tag{flex:0 0 auto;font-size:9px;letter-spacing:.14em;color:var(--accent);
+  padding:4px 9px;border-radius:999px;background:rgba(var(--accent-rgb),.10)}
+.vst-stat{margin:0 0 10px}
+.vst-more-tools{margin:0 0 12px;border:1px solid var(--line);border-radius:12px;
+  background:var(--w025);overflow:hidden}
+.vst-more-tools>summary{padding:8px 12px;font-size:10.5px;color:var(--sub);
+  cursor:pointer;list-style:none}
+.vst-more-tools>summary::-webkit-details-marker{display:none}
+.vst-more-tools>summary::after{content:' ⌄';color:var(--accent)}
+.vst-more-tools[open]>summary{border-bottom:1px solid var(--line)}
+.vst-more-row{display:flex;flex-wrap:wrap;gap:7px;padding:10px}
+.vst-adv{margin:9px 0;border:1px solid var(--line);border-radius:11px;
+  background:var(--w025);overflow:hidden}
+.vst-adv>summary{padding:8px 11px;font-size:10.5px;color:var(--sub);
+  cursor:pointer;list-style:none}
+.vst-adv>summary::-webkit-details-marker{display:none}
+.vst-adv[open]>summary{border-bottom:1px solid var(--line);color:var(--txt)}
+.vst-adv>.vst-kf-h,.vst-adv>.vst-kf-chips,.vst-adv>.vst-param{padding:9px 11px}
+.vst-look-summary{display:flex;align-items:center;justify-content:space-between;gap:8px;
+  padding:8px 10px;border-radius:10px;background:rgba(var(--accent-rgb),.08);
+  font-size:11px;color:var(--txt);margin-bottom:7px}
+.vst-look-summary>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.vst-adv>.vst-look-row,.vst-adv>.vst-look-quick{margin:9px 11px}
+/* 片段调色盘：一个圆盘 + 一排模式 + 一根强度，横向紧凑 */
+.vst-padbox{margin:0 0 12px;padding:12px 13px;border-radius:16px;
+  border:1px solid var(--line);background:var(--w025)}
+.vst-padbox-h{display:flex;align-items:center;justify-content:space-between;
+  gap:9px;flex-wrap:wrap;margin-bottom:10px}
+.vst-padbox-t{display:flex;flex-direction:column;gap:1px}
+.vst-padbox-t b{font-size:12.5px}
+.vst-padbox-t small{font-size:9.5px;color:var(--sub)}
+.vst-padbox-val{font-size:10px;color:var(--accent);padding:5px 9px;border-radius:8px;
+  background:rgba(var(--accent-rgb),.10);font-variant-numeric:tabular-nums}
+.vst-padbox-b{display:grid;grid-template-columns:170px 1fr;gap:14px;align-items:start}
+.vst-padbig{position:relative;width:170px;height:170px;border-radius:50%;
+  border:1px solid var(--line);cursor:crosshair;touch-action:none;
+  background:radial-gradient(circle at 28% 24%,rgba(255,214,150,.55),transparent 56%),
+    radial-gradient(circle at 74% 78%,rgba(90,146,255,.52),transparent 58%),
+    linear-gradient(145deg,#6b6152,#2b3440);
+  box-shadow:inset 0 0 24px rgba(0,0,0,.3)}
+.vst-padbig-dot{position:absolute;width:16px;height:16px;margin:-8px 0 0 -8px;
+  border-radius:50%;background:#fff;border:2px solid var(--accent);
+  box-shadow:0 0 0 4px rgba(255,255,255,.22);pointer-events:none}
+.vst-padbig-x,.vst-padbig-y{position:absolute;font-size:8.5px;color:rgba(255,255,255,.72);
+  letter-spacing:.06em;pointer-events:none;white-space:nowrap}
+.vst-padbig-x{left:50%;bottom:9px;transform:translateX(-50%)}
+.vst-padbig-y{left:8px;top:50%;transform:translateY(-50%) rotate(-90deg);transform-origin:center}
+.vst-padbox-side{display:flex;flex-direction:column;gap:8px;min-width:0}
+.vst-padbox-lb{font-size:9.5px;color:var(--sub);letter-spacing:.08em}
+.vst-pad-modes{display:flex;flex-wrap:wrap;gap:5px}
+.vst-pad-mode{padding:6px 10px;border-radius:999px;border:1px solid var(--line);
+  background:var(--w035);color:var(--sub);font-size:10px;cursor:pointer;white-space:nowrap}
+.vst-pad-mode:hover{border-color:rgba(var(--accent-rgb),.6)}
+.vst-pad-mode.on{background:rgba(var(--accent-rgb),.20);color:var(--txt);
+  border-color:rgba(var(--accent-rgb),.6);font-weight:700}
+.vst-pad-more{border:1px solid var(--line);border-radius:10px;background:var(--w025)}
+.vst-pad-more>summary{padding:7px 10px;font-size:10px;color:var(--sub);cursor:pointer;list-style:none}
+.vst-pad-more>summary::-webkit-details-marker{display:none}
+.vst-pad-more[open]>summary{border-bottom:1px solid var(--line)}
+.vst-pad-more .vst-pad-modes{padding:9px;gap:5px}
+.vst-pad-amt{display:flex;align-items:center;gap:9px;font-size:10px;color:var(--sub)}
+.vst-pad-amt input{flex:1;accent-color:var(--accent);min-width:0}
+.vst-pad-acts{display:flex;gap:6px;flex-wrap:wrap}
+.vst-padbox-note{font-size:9.5px;color:var(--sub);line-height:1.65;margin-top:9px}
+@media(max-width:640px){
+  .vst-padbox{padding:10px}
+  .vst-padbox-val{flex:1 1 100%}
+  .vst-padbox-b{grid-template-columns:1fr;gap:10px}
+  .vst-padbig{width:min(190px,52vw);height:min(190px,52vw);margin:0 auto}
+  .vst-hero-t small{display:none}
+}
+/* v1.0.8：宽屏把 5 个顶部 tab 提到「顶栏第一行同排」。
+   放在所有 .tools 规则之后 + 提高选择器特异性，避免被后面的全局规则覆盖。 */
+@media(min-width:1100px){
+  html[data-toolpos="top"] .topbar{flex-wrap:nowrap}
+  /* 顺序：左操作 → 品牌 → 顶部 tab（占中间弹性区） → 右侧换照片/导出贴右 */
+  html[data-toolpos="top"] .topbar>.tb-side.left{order:1}
+  html[data-toolpos="top"] .topbar>.tb-title{order:2;flex:0 1 auto;min-width:110px}
+  html[data-toolpos="top"] .topbar>.tools{order:3;flex:1 1 420px;max-width:560px;width:auto;min-width:230px;
+    margin:0 14px;padding:0;border-top:0;border-bottom:0;gap:2px}
+  html[data-toolpos="top"] .topbar>.tb-side.right{order:4;margin-left:auto}
+  html[data-toolpos="top"] .topbar>.tools>.tool{padding:3px 2px 4px;gap:2px;border-radius:9px}
+}
+/* 默认：工具行回到 dock 顶部（grip / 裁剪条之下，面板之上）。
+   .dock 是 column flex，所以必须把顶栏用的 flex:0 0 100%（会撑满高度）
+   改回 flex:0 0 auto，否则整个编辑区会被这一行吃掉。 */
+html[data-toolpos="dock"] .tools{flex:0 0 auto;width:auto;
+  margin:0;padding:7px 8px 6px;
+  border-top:0;border-bottom:1px solid var(--line);
+  grid-template-columns:repeat(5,minmax(0,1fr));gap:3px}
+html[data-toolpos="dock"] .tool{padding:5px 2px 7px;font-size:10.5px}
+@media(max-width:520px){
+  html[data-toolpos="dock"] .tools{padding:6px 6px 5px;gap:2px}
+}
+/* 工具在底部时顶栏只剩一行，桌面 dock 的顶部留白同步收紧 */
+@media(min-width:900px){
+  html[data-toolpos="dock"] .dock{padding-top:44px}
+}
+/* ---------------- 视频 · 一键滤镜速贴条 ---------------- */
+.vst-quick{margin:12px 0 4px;padding:12px 13px 13px;border-radius:16px;
+  border:1px solid var(--line);background:var(--w025);overflow:hidden}
+.vst-q-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:9px}
+.vst-q-title{display:flex;flex-direction:column;gap:1px;flex:0 0 auto}
+.vst-q-title b{font-size:12.5px;letter-spacing:.01em}
+.vst-q-title small{font-size:9.5px;color:var(--sub)}
+.vst-q-target{flex:1 1 150px;min-width:0;font-size:10px;color:var(--accent);
+  padding:5px 9px;border-radius:8px;background:rgba(var(--accent-rgb),.10);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vst-q-acts{display:flex;gap:5px;flex-wrap:wrap;flex:0 0 auto}
+.vst-q-btn,.vst-q-sel{height:28px;padding:0 9px;border-radius:9px;
+  border:1px solid var(--line);background:var(--w035);color:var(--txt);
+  font-size:10px;cursor:pointer;white-space:nowrap}
+.vst-q-btn:hover,.vst-q-sel:hover{border-color:rgba(var(--accent-rgb),.6)}
+.vst-q-sel{padding:0 6px;max-width:104px}
+.vst-q-bar{display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap}
+.vst-q-search{flex:0 0 164px;min-width:120px;padding:7px 10px;border-radius:9px;
+  border:1px solid var(--line);background:var(--bg);color:var(--txt);font-size:10.5px}
+.vst-q-cats{display:flex;gap:5px;overflow-x:auto;flex:1 1 260px;
+  scrollbar-width:thin;padding-bottom:2px;overscroll-behavior-x:contain}
+.vst-q-cats::-webkit-scrollbar{height:4px}
+.vst-q-cats::-webkit-scrollbar-thumb{background:var(--w045);border-radius:4px}
+.vst-q-cat{flex:0 0 auto;padding:5px 10px;border-radius:999px;
+  border:1px solid var(--line);background:var(--w025);color:var(--sub);
+  font-size:9.5px;cursor:pointer;white-space:nowrap}
+.vst-q-cat.on{background:rgba(var(--accent-rgb),.20);color:var(--txt);
+  border-color:rgba(var(--accent-rgb),.6);font-weight:700}
+.vst-q-note{font-size:9.5px;color:var(--sub);margin:0 0 7px}
+.vst-q-strip{display:flex;gap:7px;overflow-x:auto;padding:1px 1px 7px;
+  scrollbar-width:thin;overscroll-behavior-x:contain;scroll-snap-type:x proximity}
+.vst-q-strip::-webkit-scrollbar{height:5px}
+.vst-q-strip::-webkit-scrollbar-thumb{background:var(--w045);border-radius:5px}
+.vst-q-card{flex:0 0 88px;display:flex;flex-direction:column;text-align:left;
+  padding:0 0 7px;border-radius:11px;border:1px solid var(--line);
+  background:var(--w025);color:var(--txt);cursor:pointer;overflow:hidden;
+  scroll-snap-align:start;transition:border-color .15s,transform .15s}
+.vst-q-card:hover{border-color:rgba(var(--accent-rgb),.7);transform:translateY(-2px)}
+.vst-q-card.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
+.vst-q-card.dragging{opacity:.5}
+.vst-q-th{display:block;width:100%;aspect-ratio:4/3;background-size:cover;
+  background-position:center;background-color:var(--w035)}
+.vst-q-card b{display:block;font-size:10px;padding:6px 7px 1px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vst-q-card small{display:block;font-size:8.5px;color:var(--sub);padding:0 7px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vst-track.drop-target{outline:2px dashed var(--accent);outline-offset:2px}
+@media(max-width:640px){
+  .vst-quick{padding:10px;border-radius:14px;margin:10px 0 2px}
+  .vst-q-head{gap:7px}
+  .vst-q-target{flex:1 1 100%;order:3}
+  .vst-q-acts{flex:1 1 100%;order:4;overflow-x:auto;flex-wrap:nowrap;padding-bottom:2px}
+  .vst-q-search{flex:1 1 100%}
+  .vst-q-cats{flex:1 1 100%}
+  .vst-q-card{flex-basis:76px}
+}
+/* ---------------- 视频 · 风格库与片段风格 ---------------- */
+.vst-clip-look{font-size:8.5px;color:var(--sub);padding:0 7px 3px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:.85}
+.vst-looks{border-top:1px solid var(--line);margin-top:12px;padding-top:10px}
+.vst-look-row{display:grid;grid-template-columns:1fr 22px 1fr;align-items:stretch;gap:6px;margin-bottom:8px}
+.vst-look-card{display:flex;flex-direction:column;gap:3px;text-align:left;
+  padding:9px 11px;border-radius:11px;border:1px solid var(--line);
+  background:var(--w035);color:var(--txt);cursor:pointer;min-width:0}
+.vst-look-card:hover{border-color:rgba(var(--accent-rgb),.6);background:rgba(var(--accent-rgb),.08)}
+.vst-look-card small{font-size:9.5px;color:var(--sub);letter-spacing:.04em}
+.vst-look-card b{font-size:11.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.vst-look-card i{font-size:9.5px;color:var(--accent);font-style:normal}
+.vst-look-arrow{display:flex;align-items:center;justify-content:center;
+  font-size:14px;color:var(--accent)}
+.vst-look-quick{display:flex;gap:6px;flex-wrap:wrap}
+.vst-lib{position:fixed;inset:0;z-index:12000;background:rgba(0,0,0,.62);
+  display:flex;align-items:center;justify-content:center;padding:18px;
+  backdrop-filter:blur(10px)}
+.vst-lib-panel{width:min(920px,100%);max-height:min(86vh,860px);display:flex;flex-direction:column;
+  border-radius:20px;border:1px solid var(--line);overflow:hidden;
+  background:var(--panel);box-shadow:0 24px 70px rgba(0,0,0,.55)}
+.vst-lib-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;
+  padding:15px 17px 11px;border-bottom:1px solid var(--line)}
+.vst-lib-head b{display:block;font-size:15px;margin-bottom:3px}
+.vst-lib-head small{display:block;font-size:10.5px;color:var(--sub);line-height:1.6}
+.vst-lib-close{flex:0 0 auto;width:30px;height:30px;border-radius:9px;
+  border:1px solid var(--line);background:var(--w045);color:var(--txt);cursor:pointer;font-size:13px}
+.vst-lib-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:11px 17px;
+  border-bottom:1px solid var(--line)}
+.vst-lib-search{flex:1 1 210px;min-width:150px;padding:8px 11px;border-radius:10px;
+  border:1px solid var(--line);background:var(--bg);color:var(--txt);font-size:11.5px}
+.vst-lib-tabs{display:flex;gap:5px;flex-wrap:wrap}
+.vst-lib-tab{padding:7px 12px;border-radius:9px;border:1px solid var(--line);
+  background:var(--w035);color:var(--sub);font-size:11px;cursor:pointer;white-space:nowrap}
+.vst-lib-tab.on{background:var(--accent);color:var(--on-accent);border-color:transparent;font-weight:700}
+.vst-lib-body{flex:1;overflow-y:auto;padding:13px 17px 17px;overscroll-behavior:contain}
+.vst-lib-cats{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px}
+.vst-lib-cat{padding:5px 10px;border-radius:999px;border:1px solid var(--line);
+  background:var(--w025);color:var(--sub);font-size:10px;cursor:pointer;white-space:nowrap}
+.vst-lib-cat.on{background:rgba(var(--accent-rgb),.18);color:var(--txt);
+  border-color:rgba(var(--accent-rgb),.55)}
+.vst-lib-note{font-size:10px;color:var(--sub);margin:2px 0 10px;line-height:1.6}
+.vst-lib-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:9px}
+.vst-lib-card{display:flex;flex-direction:column;text-align:left;padding:0 0 9px;
+  border-radius:12px;border:1px solid var(--line);overflow:hidden;
+  background:var(--w025);color:var(--txt);cursor:pointer;min-width:0}
+.vst-lib-card:hover{border-color:var(--accent);transform:translateY(-1px)}
+.vst-lib-th{display:block;width:100%;aspect-ratio:4/3;background-size:cover;background-position:center}
+.vst-lib-card b{display:block;font-size:10.5px;padding:7px 8px 2px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vst-lib-card small{display:block;font-size:9px;color:var(--sub);padding:0 8px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vst-lib-card i{display:block;font-size:8.5px;color:var(--accent);font-style:normal;padding:3px 8px 0}
+.vst-lib-foot{padding:9px 17px;border-top:1px solid var(--line);
+  font-size:10px;color:var(--sub);line-height:1.6}
+.vst-pad-wrap{display:flex;flex-direction:column;gap:10px}
+.vst-pad-info b{display:block;font-size:12.5px;margin-bottom:4px}
+.vst-pad-info small{display:block;font-size:10.5px;color:var(--sub);line-height:1.7}
+.vst-pad-row{display:grid;grid-template-columns:minmax(160px,240px) 1fr;gap:14px;
+  align-items:start;padding:12px;border:1px solid var(--line);border-radius:14px;background:var(--w025)}
+.vst-minipad{position:relative;width:100%;aspect-ratio:1;border-radius:50%;
+  border:1px solid var(--line);cursor:crosshair;touch-action:none;
+  background:radial-gradient(circle at 30% 25%,rgba(255,214,150,.55),transparent 55%),
+    radial-gradient(circle at 72% 78%,rgba(90,146,255,.5),transparent 58%),
+    linear-gradient(145deg,#6b6152,#2b3440)}
+.vst-minipad-dot{position:absolute;width:14px;height:14px;margin:-7px 0 0 -7px;
+  border-radius:50%;background:#fff;border:2px solid var(--accent);
+  box-shadow:0 0 0 3px rgba(255,255,255,.25);pointer-events:none}
+.vst-pad-side{display:flex;flex-direction:column;gap:8px;font-size:10.5px;color:var(--sub)}
+.vst-pad-side input[type=range]{width:100%;accent-color:var(--accent)}
+.vst-pad-vals{font-size:11px;color:var(--txt);font-variant-numeric:tabular-nums}
+.vst-pad-desc{line-height:1.7}
+.vst-pad-btns{display:flex;gap:7px;flex-wrap:wrap;margin-top:3px}
+.vst-pad-cur{font-size:9.5px;color:var(--accent);padding:5px 8px;border-radius:8px;
+  background:rgba(var(--accent-rgb),.09);line-height:1.5}
+@media(max-width:640px){
+  .vst-lib{padding:8px;align-items:flex-end}
+  .vst-lib-panel{max-height:92vh;border-radius:18px 18px 0 0}
+  .vst-lib-head{padding:12px}
+  .vst-lib-bar{padding:9px 12px}
+  .vst-lib-body{padding:11px 12px}
+  .vst-lib-grid{grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:7px}
+  .vst-pad-row{grid-template-columns:1fr}
+  .vst-minipad{max-width:210px;margin:0 auto}
+  .vst-look-row{grid-template-columns:1fr 18px 1fr;gap:4px}
+  .vst-look-card{padding:7px 8px}
+  .vst-look-card b{font-size:10px}
+}
+@media(max-width:640px){
+  .vst-stage{height:clamp(190px,30vh,290px)}
+  .vst-playbar{gap:5px}.vst-tc{width:100%;text-align:right}
+  .vst-scrub{order:9;flex-basis:100%}
+  .vst-tools{gap:5px}.vst-tbtn{padding:7px 9px;font-size:10.5px}
+  .vst-p{grid-template-columns:58px 1fr 34px}
+}
+
 @media(max-width:520px){
   .upd-kv{grid-template-columns:80px minmax(0,1fr);font-size:11px}
   .upd-form{grid-template-columns:1fr}
@@ -2634,7 +3011,8 @@ html[data-theme="liquid"] .subpage{
       <div class="em-title">导出成品</div>
       <button class="em-item" data-act="photo"><i></i><span><b>导出照片</b><small id="emPhotoHint">PNG / JPG / WebP</small></span><em>Ctrl S</em></button>
       <button class="em-item" data-act="gif"><i></i><span><b>导出 GIF 动图</b><small id="emGifHint">256 色 · 可循环</small></span><em>GIF</em></button>
-      <button class="em-item" data-act="video"><i></i><span><b>导出视频</b><small id="emVideoHint">不限时长 · 逐帧套用编辑</small></span><em>MP4 / WebM</em></button>
+      <button class="em-item" data-act="video"><i></i><span><b>快速导出视频</b><small id="emVideoHint">单段 · 不限时长</small></span><em>MP4 / WebM</em></button>
+  <button class="em-item" data-act="studio"><i></i><span><b>视频工作台</b><small>多片段 · 关键帧 · 转场 · 运镜</small></span><em>▷</em></button>
       <button class="em-item" data-act="pair"><i></i><span><b>导出实况配对素材</b><small>封面 + 视频 ZIP</small></span><em>LIVE</em></button>
       <button class="em-item" data-act="bundle"><i></i><span><b>打包全格式</b><small>PNG + JPG + WebP</small></span><em>ZIP</em></button>
       <button class="em-item" data-act="settings"><i></i><span><b>导出设置</b><small>尺寸 · 格式 · 视频 · GIF · 画框</small></span><em>→</em></button>
@@ -5965,12 +6343,19 @@ function paintFrame(){
   /* 实况播放：把视频当前帧直接上传为纹理，复用同一套 shader，
      滤镜 / 调色盘 / 元素 / 涂抹效果全部逐帧生效。 */
   if(LIVE.playing&&LIVE.video&&LIVE.video.readyState>=2&&LIVE.video.videoWidth){
-    try{
-      gl.activeTexture(gl.TEXTURE0);
-      gl.bindTexture(gl.TEXTURE_2D,tex);
-      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,false);
-      gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,LIVE.video);
-    }catch(e){}
+    const tu=performance.now();
+    /* 录制时目标帧率通常低于显示器刷新率：未到下一帧时刻就复用上一帧纹理，
+       省掉一半以上的 texImage2D 上传，画面与输出帧率都不变。 */
+    const gap=LIVE.recording?(1000/Math.max(1,+state.exportVideoFps||30)-1.5):0;
+    if(!LIVE.lastUpload||tu-LIVE.lastUpload>=gap){
+      try{
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D,tex);
+        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,false);
+        gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,LIVE.video);
+        LIVE.lastUpload=tu;
+      }catch(e){}
+    }
   }
   const now=performance.now();
   /* 连续拖动时把主画布降到约 65% 分辨率，停手 140ms 自动回到全清晰。
@@ -7165,9 +7550,14 @@ function recordStillClip(seconds,mime,motion,onProgress){
     const proxy=document.createElement('canvas'); proxy.width=W; proxy.height=H;
     const px=proxy.getContext('2d');
     const fps=clamp(+state.exportVideoFps||30,12,60);
-    let rec,stream;
+    let rec,stream,manual=false,track=null;
     try{
-      stream=proxy.captureStream(fps);
+      /* 手工推帧：0fps 的 captureStream 由 requestFrame() 决定何时出帧。
+         定格画面只画一次，其余帧零 CPU；按帧号对齐墙钟保证时长准确。 */
+      stream=proxy.captureStream(0);
+      track=stream.getVideoTracks()[0];
+      manual=!!(track&&typeof track.requestFrame==='function');
+      if(!manual){ try{stream.getTracks().forEach(t=>t.stop());}catch(e){} stream=proxy.captureStream(fps); }
       rec=new MediaRecorder(stream,videoRecorderOpts(mime));
     }catch(e){ reject(e); return; }
     const chunks=[]; let timer=0, tickTimer=0, done=false, lastToast=0;
@@ -7195,14 +7585,26 @@ function recordStillClip(seconds,mime,motion,onProgress){
     paint(0);
     try{ rec.start(1000); }catch(e){ reject(e); return; }
     const t0=performance.now(), ms=clamp(seconds||3,.5,86400)*1000;
-    tickTimer=setInterval(()=>{
-      if(done) return;
-      const el=performance.now()-t0;
-      if(videoCancel){ finish(); return; }
-      paint(Math.min(1,el/ms));
-      if(onProgress&&el-lastToast>1200){ lastToast=el; onProgress(Math.min(1,el/ms)); }
-      if(el>=ms) setTimeout(finish,140);
-    },Math.max(16,Math.round(1000/fps)));
+    const frames=Math.max(1,Math.round(ms/1000*fps));
+    /* 定格（motion==='still'）画面恒定：首帧画过以后循环里不再重绘，
+       只 requestFrame 推给编码器。运镜 / 呼吸则每帧按进度重画。 */
+    const still=(motion==='still');
+    const step=async()=>{
+      for(let f=0;f<frames;f++){
+        if(done||videoCancel) break;
+        const u=frames>1?f/(frames-1):0;
+        if(!manual||!still||f===0) paint(u);
+        if(manual){ try{ track.requestFrame(); }catch(e){} }
+        else paint(u);
+        if(onProgress&&f%Math.max(1,fps)===0){ onProgress(u); }
+        if(f%8===0) await new Promise(r=>requestAnimationFrame(r));
+        const target=t0+(f+1)*1000/fps, wait=target-performance.now();
+        if(wait>1) await new Promise(r=>setTimeout(r,wait));
+        else if(f%4===0) await new Promise(r=>setTimeout(r,0));
+      }
+      finish();
+    };
+    step();
     timer=setTimeout(finish,ms+3000);
   });
 }
@@ -7273,9 +7675,14 @@ function recordLiveClip(mimeOverride){
       rec=new MediaRecorder(stream,videoRecorderOpts(mime));
     }catch(e){ reject(e); return; }
     const chunks=[]; let done=false, guard=0, guard2=0, pump=0;
+    let lastPaint=0;
     const paint=()=>{
       if(done) return;
-      try{ px.drawImage(canvas,0,0,proxy.width,proxy.height); }catch(e){}
+      const pn=performance.now(), pg=1000/Math.max(1,+state.exportVideoFps||30)-1.5;
+      if(pn-lastPaint>=pg){
+        try{ px.drawImage(canvas,0,0,proxy.width,proxy.height); }catch(e){}
+        lastPaint=pn;
+      }
       pump=requestAnimationFrame(paint);
     };
     const finish=()=>{
@@ -8161,6 +8568,2022 @@ function irisMark(size){
     `<svg width="${size}" height="${size}" `);
 }
 /* ============================================================
+   Iris 视频工作台 · 多片段时间线 / 关键帧 / 转场 / 运镜 / 帧精确导出
+   ------------------------------------------------------------
+   设计要点（为什么比旧版快、也比旧版好用）：
+   ① 旧版把「视频」当成一整段录制：静态照片每帧都做一次全分辨率
+      2D drawImage，实况视频每帧都做一次 WebGL texImage2D + 全屏
+      drawArrays，60fps 时主线程几乎没有空档。
+   ② 这版把画面拆成「两张基准帧 + 轻量 2D 合成」：调好的成品 B 与
+      原图 A 只各渲染一次；时间线上的调色强度 / 运镜 / 淡入淡出 /
+      色温亮度全部是 2D drawImage 与 alpha 混合，导出期间 WebGL
+      完全不参与。
+   ③ 手工推帧：captureStream(0) + track.requestFrame()，按帧号对齐
+      墙钟。画面签名没变就只推帧不重绘 —— 一段 10 秒定格只画 1 次，
+      CPU 几乎为零，进度、取消、界面滚动都不受影响。
+   ④ 每 8 帧让出一次主线程，时间线缩略图按视口分批生成，
+      预览默认 1/2 分辨率、拖播放头时降到 1/4，并用 rAF 合并重绘。
+   ⑤ 项目只存元数据（localStorage），媒体本体不进 state、不进
+      自动保存快照；照片与视频仍然只在这台设备上。
+   ============================================================ */
+const VST={
+  proj:null, src:new Map(), bases:null, basesSig:'',
+  t:0, playing:false, raf:0, loop:true, sel:null, kfSel:null,
+  previewScale:.5, dragging:null, preview:null, pctx:null,
+  exporting:false, cancel:false, progress:0, lastSig:'', lastKf:null,
+  thumbQ:[], thumbBusy:false, body:null, scrollHost:null,
+  lookCache:new Map(), lookSig:'', lookThumbCache:new Map(), libOpen:false, libTab:'filter',
+  lookAdvOpen:false, kfAdvOpen:false
+};
+const VST_KF_DEFAULT={mix:1,bright:0,temp:0,sat:0,zoom:1,fade:1,dx:0,dy:0,
+  /* 盘动画：px = COLOR 轴、py = TONE 轴、pa = 盘强度，作用于片段里 pad 类风格 */
+  px:0,py:0,pa:1};
+/* 风格 spec：k = current / original / filter / template / pad，
+   id = 滤镜名 / 模板名 / 盘模式 id，x,y,a = 盘坐标与强度 */
+const VST_LOOK_A={k:'original'};
+const VST_LOOK_B={k:'current'};
+function vstLook(spec){ return spec&&typeof spec==='object'?spec:{k:'current'}; }
+function vstQuant(v,step){ step=step||.05; return Math.round(vstClamp(v,-1,1)/step)*step; }
+function vstLookKey(spec,qx,qy,qa){
+  const o=vstLook(spec);
+  const edit=(o.k==='current')?vstNowSig():'';
+  const coords=(o.k==='pad'||o.k==='combo')
+    ?[qx===undefined?(o.x||0):qx, qy===undefined?(o.y||0):qy,
+      qa===undefined?(o.a===undefined?1:o.a):qa].map(v=>vstQuant(v,.05)).join(',')
+    :'';
+  return [o.k,o.f||'',o.id||'',vstQuant(o.a===undefined?1:o.a,.02),coords,edit].join('|');
+}
+/* 画面签名专用的轻量标签：绝不能用 vstLookKey（current 风格会把
+   vstNowSig() 整份 state JSON 塞进来，播放 / 导出每帧要拼两遍 2KB 字符串）。
+   编辑内容变化由 vstLookFrame 的 lookSig 单独负责失效。 */
+function vstLookTag(spec){
+  const o=vstLook(spec);
+  if(o.k==='combo') return 'combo:'+(o.f||'')+':'+(o.id||'')+':'+
+    vstQuant(o.x||0,.05)+','+vstQuant(o.y||0,.05)+':'+vstQuant(o.a===undefined?1:o.a,.02);
+  return o.k+':'+(o.id||'')+':'+vstQuant(o.a===undefined?1:o.a,.02);
+}
+function vstLookName(spec){
+  const o=vstLook(spec);
+  if(o.k==='current') return '当前编辑';
+  if(o.k==='original') return '原图';
+  if(o.k==='filter') return o.id||'滤镜';
+  if(o.k==='template') return '模板 · '+(o.id||'');
+  if(o.k==='pad'){
+    const m=PAD_MODE_MAP.get(o.id);
+    return (m?m.name:'盘')+' · '+(o.id==='semantic'?'语义':'二维盘');
+  }
+  if(o.k==='combo'){
+    const m=PAD_MODE_MAP.get(o.id);
+    return (o.f||'滤镜')+' + '+(m?m.name:'盘');
+  }
+  return '风格';
+}
+/* ---------- 片段样式统一层（v1.0.8） ----------
+   用户只需要理解两件事：「滤镜」和「调色盘」。两者可以同时生效：
+   滤镜是 shader 基准帧，简化盘是片段上的 2D 参数，两条链路叠加；
+   高级盘模式用 combo spec 走同一套主 shader。A / B 由 vstSetClipStyle
+   自动处理（整段 A=B，渐显 A=原图），界面上不再出现「起点 / 终点」。 */
+function vstClipStyle(c){
+  const o=vstLook(c&&c.lookB);
+  if(o.k==='combo') return {filter:o.f||'',
+    pad:{id:o.id||'classic',x:o.x||0,y:o.y||0,a:o.a===undefined?1:o.a}};
+  if(o.k==='filter') return {filter:o.id||'',pad:{id:'classic',x:0,y:0,a:0}};
+  if(o.k==='pad') return {filter:'',
+    pad:{id:o.id||'classic',x:o.x||0,y:o.y||0,a:o.a===undefined?1:o.a}};
+  return {filter:'',pad:{id:'classic',x:0,y:0,a:0}};
+}
+function vstClipStyleLabel(c){
+  /* 高级风格库可能把起点 A 与终点 B 设成两套不同风格，这时显示过渡；
+     一键滤镜 / 简化盘下 A=B，走下面那段简洁标签。 */
+  const A=vstLook(c&&c.lookA), B=vstLook(c&&c.lookB);
+  const qAB=c&&c.pad, padOn=qAB&&qAB.a>0.001&&Math.abs(qAB.x)+Math.abs(qAB.y)>0.001;
+  const padTag=padOn?' · 盘调 '+(PAD_MODE_MAP.get(qAB.id)?.short||''):'';
+  if(c&&vstLookTag(A)!==vstLookTag(B)){
+    return vstLookName(A)+' → '+vstLookName(B)+padTag;
+  }
+  const st=vstClipStyle(c), bits=[];
+  if(st.filter) bits.push(st.filter);
+  if(st.pad&&st.pad.a>0.001&&Math.abs(st.pad.x)+Math.abs(st.pad.y)>0.001){
+    const m=PAD_MODE_MAP.get(st.pad.id);
+    bits.push((m?(m.short||m.name):'盘')+' '+st.pad.x.toFixed(1)+'/'+st.pad.y.toFixed(1));
+  }
+  /* 简化盘存在片段自己的 c.pad 里，与 shader 风格是两条独立链路，都要显示 */
+  const q=c&&c.pad;
+  if(q&&q.a>0.001&&Math.abs(q.x)+Math.abs(q.y)>0.001){
+    const m=PAD_MODE_MAP.get(q.id);
+    bits.push('盘调 '+(m?(m.short||m.name):''));
+  }
+  if(bits.length) return bits.join(' + ');
+  const o=vstLook(c&&c.lookB);
+  if(o.k==='original') return '原图';
+  if(o.k==='template') return '模板 · '+(o.id||'');
+  return '主编辑器调色';
+}
+function vstStyleEffective(st){
+  return !!(st.filter) || !!(st.pad&&st.pad.a>0.001&&
+    (Math.abs(st.pad.x)+Math.abs(st.pad.y)>0.001||st.pad.id!=='classic'));
+}
+function vstSetClipStyle(c,st,opt){
+  if(!c) return;
+  const o=opt||{}, hasF=!!st.filter, hasP=!!(st.pad&&st.pad.a>0.001&&
+    (Math.abs(st.pad.x)+Math.abs(st.pad.y)>0.001||st.pad.id!=='classic'));
+  let spec;
+  if(!hasF&&!hasP) spec={k:o.original?'original':'current'};
+  else if(hasF&&hasP) spec={k:'combo',f:st.filter,id:st.pad.id,
+    x:st.pad.x,y:st.pad.y,a:st.pad.a};
+  else if(hasF) spec={k:'filter',id:st.filter,a:1};
+  else spec={k:'pad',id:st.pad.id,x:st.pad.x,y:st.pad.y,a:st.pad.a};
+  if(o.reveal){
+    c.lookA={k:'original'}; c.lookB=deep(spec);
+    c.kf.forEach(k=>{ k.p.mix=vstClamp(k.t,0,1); });
+  }else{
+    c.lookA=deep(spec); c.lookB=deep(spec);
+  }
+}
+/* 找到一套滤镜 / 模板 / 盘 id 时优先按名字模糊挑，找不到安全回退 */
+function vstPickFilter(kw){
+  if(!kw) return FILTERS[0]?.name||'原图';
+  const hit=FILTERS.find(f=>f.name&&f.name.includes(kw))
+    ||FILTERS.find(f=>f.group&&f.group.includes(kw));
+  return hit?hit.name:(FILTERS[1]?.name||'原图');
+}
+function vstPickTemplate(kw){
+  return (QUICK.find(q=>q.name&&q.name.includes(kw))||QUICK[0])?.name||'';
+}
+function vstPickPad(id){
+  return PAD_MODE_MAP.has(id)?id:(PAD_MODES[0]?.id||'semantic');
+}
+/* 用「当前 state 的深拷贝 + 默认色彩字段」构造一套独立渲染状态：
+   构图、元素、蒙版、虚化、光场、画框、导出规格全部保留，
+   只把色彩参数换成目标风格 —— 所以 433 款滤镜 / 78 套模板 / 20 种盘
+   走的都是主画面那同一套 shader，不是另写的近似算法。 */
+const VST_COLOR_KEYS=['layers','base','globalPlates','plateScope','padMode','padVals',
+  'sem','splitShadow','splitHigh','cross','splitBalance','grade','hsl','hslChannel',
+  'curve','curveChannel','chanMix','chanAmt','lutOn','splitOn','plateToneMode',
+  'filter','filterStrength','editLayer','editLayerName'];
+function vstLookState(spec,qx,qy,qa){
+  const o=vstLook(spec), d=defaultState(), s=deep(state);
+  VST_COLOR_KEYS.forEach(k=>{ if(k in d) s[k]=deep(d[k]); });
+  /* 语义盘默认关掉：非 semantic 风格不该被当前语义设置二次叠加 */
+  if(s.sem){ s.sem.enabled=false; s.sem.intensity=0; s.sem.color=0; s.sem.tone=0; }
+  const amt=vstClamp(o.a===undefined?1:o.a,0,1);
+  if(o.k==='filter'){
+    s.layers=[newLayer(o.id||'原图')];
+    s.layers[0].strength=amt; s.editLayer=0; s.editLayerName=o.id||'原图';
+    s.globalPlates=platesZero();
+  }else if(o.k==='template'){
+    const q=QUICK.find(x=>x.name===o.id)||QUICK[0];
+    if(q){
+      s.layers=[newLayer(q.f)]; s.editLayer=0; s.editLayerName=q.f;
+      s.globalPlates=platesZero(); s.plateScope=0;
+      Object.entries(q.pl||{}).forEach(([k,v])=>{
+        if(s.layers[0].plates[k]) s.layers[0].plates[k]=deep(v);
+      });
+      if(q.sem) s.sem={...s.sem,color:q.sem.c,tone:q.sem.t,
+        intensity:q.sem.i*amt,presetId:'custom',enabled:true};
+      Object.entries(q.b||{}).forEach(([k,v])=>{
+        const key=PK[k]||k; if(key in s.base) s.base[key]=v;
+      });
+      if(q.frame) s.frame={...s.frame,...q.frame};
+    }
+  }else if(o.k==='pad'||o.k==='combo'){
+    const id=vstPickPad(o.id);
+    if(o.k==='combo'){
+      /* 滤镜与盘叠加：滤镜层照常加载自己的独立盘，盘模式再在其上做不等权映射 */
+      s.layers=[newLayer(o.f||'原图')];
+      s.layers[0].strength=1; s.editLayer=0; s.editLayerName=o.f||'原图';
+      s.globalPlates=platesZero();
+    }else{
+      s.layers=[]; s.base=baseZero(); s.globalPlates=platesZero();
+    }
+    s.padMode=id;
+    const x=vstClamp(qx===undefined?(o.x||0):qx,-1,1);
+    const y=vstClamp(qy===undefined?(o.y||0):qy,-1,1);
+    const a=vstClamp(qa===undefined?amt:qa,0,1);
+    s.padVals[id]={x,y,s:a};
+    if(id==='semantic') s.sem={...s.sem,enabled:true,intensity:1,
+      color:x,tone:y,presetId:'custom'};
+  }
+  return s;
+}
+function vstLookFrame(spec,qx,qy,qa,batch){
+  const o=vstLook(spec), key=vstLookKey(o,qx,qy,qa);
+  /* 当前编辑变了 → 整套缓存失效，避免用旧成品帧 */
+  const sig=vstNowSig();
+  if(VST.lookSig!==sig){ VST.lookCache.clear(); VST.lookSig=sig; }
+  if(VST.lookCache.has(key)) return VST.lookCache.get(key);
+  if(!imageReady) return null;
+  let out=null;
+  if(o.k==='original'){
+    try{ out=vstOriginalFrame(); }catch(e){ out=null; }
+  }else if(o.k==='current'){
+    try{ out=renderExportCanvas(); }catch(e){ out=null; }
+  }else{
+    const saved=state;
+    try{
+      state=vstLookState(o,qx,qy,qa);
+      EFF_SOLO.clear();
+      out=renderExportCanvas();
+    }catch(e){ console.warn('[IrisVideo] 风格帧渲染失败',e); out=null; }
+    finally{
+      state=saved; EFF_SOLO.clear();
+      /* 批量预生成时由调用方在批末统一恢复一次，避免 N 张卡 = N 次全分辨率重绘 */
+      if(!batch){ try{ ensureToneLut(); }catch(e){} render(); }
+    }
+  }
+  if(!out) return null;
+  if(VST.lookCache.size>=32){
+    const oldest=VST.lookCache.keys().next().value;
+    VST.lookCache.delete(oldest);
+  }
+  VST.lookCache.set(key,out);
+  return out;
+}
+/* 风格库缩略图：96px FBO，走主 shader 的同一套 uniform，分批生成不堵主线程 */
+function vstLookThumb(spec,batch){
+  const o=vstLook(spec), key=vstLookKey(o,0,0,1);
+  if(VST.lookThumbCache.has(key)) return VST.lookThumbCache.get(key);
+  if(!imageReady) return null;
+  let url=null;
+  const saved=state;
+  try{
+    if(o.k==='original'){
+      const big=vstLookFrame(o,0,0,1);
+      if(big){
+        const cv=document.createElement('canvas'); cv.width=cv.height=96;
+        cv.getContext('2d').drawImage(big,0,0,96,96);
+        url=cv.toDataURL('image/jpeg',.7);
+      }
+    }else{
+      if(o.k!=='current') state=vstLookState(o);
+      const px=renderSmall(96,{});
+      const cv=document.createElement('canvas'); cv.width=cv.height=96;
+      const im=cv.getContext('2d').createImageData(96,96);
+      /* WebGL readPixels 是底朝上，翻正后写入 */
+      for(let y=0;y<96;y++){
+        const src=(95-y)*96*4, dst=y*96*4;
+        im.data.set(px.subarray(src,src+96*4),dst);
+      }
+      cv.getContext('2d').putImageData(im,0,0);
+      url=cv.toDataURL('image/jpeg',.7);
+    }
+  }catch(e){ url=null; }
+  finally{
+    state=saved; EFF_SOLO.clear();
+    if(!batch){ try{ ensureToneLut(); }catch(e){} render(); }
+  }
+  if(url) VST.lookThumbCache.set(key,url);
+  return url;
+}
+/* 导出前把这一整条时间线会用到的风格帧预生成好：
+   按帧率采样关键帧参数 → 量化去重 → 分批渲染 → 进度可见。
+   之后录制循环里 vstLookFrame 100% 命中缓存，纯 2D、不掉帧。 */
+async function vstPrepareLooks(onProgress){
+  const p=vstProj(), fps=vstClamp(+p.fps||30,12,60), total=vstTotal();
+  const samples=Math.min(900,Math.max(1,Math.round(total*fps)));
+  const tasks=[]; const seen=new Set();
+  for(let i=0;i<samples;i++){
+    const t=total*(i/Math.max(1,samples-1)), h=vstClipAt(t);
+    if(!h) continue;
+    const src=VST.src.get(h.clip.srcId);
+    if(!src||src.kind!=='photo') continue;
+    const k=vstKF(h.clip,h.u);
+    const qx=vstQuant(k.px||0,.05), qy=vstQuant(k.py||0,.05), qa=vstQuant(k.pa===undefined?1:k.pa,.05);
+    [vstLook(h.clip.lookA),vstLook(h.clip.lookB)].forEach(sp=>{
+      const key=vstLookKey(sp,qx,qy,qa);
+      if(seen.has(key)) return;
+      seen.add(key); tasks.push([sp,qx,qy,qa]);
+    });
+  }
+  VST.lookCache.clear(); VST.lookSig=vstNowSig();
+  for(let i=0;i<tasks.length;i++){
+    if(VST.cancel) break;
+    vstLookFrame(tasks[i][0],tasks[i][1],tasks[i][2],tasks[i][3],true);
+    if(i%2===0){
+      try{ ensureToneLut(); }catch(e){} render();
+      if(onProgress) onProgress((i+1)/tasks.length,'准备风格帧 '+(i+1)+' / '+tasks.length);
+      await vstYield();
+    }
+  }
+  return tasks.length;
+}
+const VST_MOTIONS=[
+  {id:'still',name:'定格'},{id:'push',name:'缓慢推近'},{id:'zoomout',name:'缓慢拉远'},
+  {id:'pan',name:'左→右摇摄'},{id:'panrev',name:'右→左摇摄'},
+  {id:'tilt',name:'上→下'},{id:'breathe',name:'呼吸缩放'}
+];
+const VST_TRANS=[
+  {id:'none',name:'直接切'},{id:'fade',name:'淡入淡出'},{id:'black',name:'黑场'},
+  {id:'dissolve',name:'交叉溶解'}
+];
+const VST_TEMPLATES=[
+  {id:'single',name:'单张定格',desc:'1 张照片 · 4 秒 · 定格'},
+  {id:'kenburns',name:'缓慢推近',desc:'1 张照片 · 5 秒 · 运镜 + 淡入淡出'},
+  {id:'dissolve',name:'双段溶解',desc:'2 段照片 · 交叉溶解 + 不同取景'},
+  {id:'story',name:'片头片尾',desc:'渐变卡 + 照片 + 渐变卡 · 完整短片'},
+  {id:'live',name:'实况混剪',desc:'实况视频 + 照片尾帧（需已载入实况）'}
+];
+let vstUid=0;
+const vstId=pre=>pre+'_'+(++vstUid)+'_'+Math.random().toString(36).slice(2,6);
+function vstClamp(v,a,b){ return Math.max(a,Math.min(b,v)); }
+function vstLerp(a,b,t){ return a+(b-a)*t; }
+function vstSmooth(t){ t=vstClamp(t,0,1); return t*t*(3-2*t); }
+function vstFmtTime(t){
+  if(!isFinite(t)) t=0;
+  const m=Math.floor(t/60), sec=t-m*60;
+  return String(m).padStart(2,'0')+':'+sec.toFixed(2).padStart(5,'0');
+}
+function vstNowSig(){
+  /* 编辑变化时基准帧才需要重算；这里只取影响成品的字段，不含视图状态。
+     200ms 内复用结果，避免运镜片段每帧都 stringify 一份大对象。 */
+  const now=performance.now();
+  if(VST.sigCache&&now-VST.sigCache.t<200) return VST.sigCache.v;
+  let v;
+  try{
+    v=JSON.stringify([state.layers,state.base,state.globalPlates,state.plateMode,
+      state.plates,state.grade,state.cross,state.splitShadow,state.splitHigh,
+      state.hsl,state.curves,state.chanMix,state.chanAmt,state.elements,
+      state.fxRegions,state.brushStrokes,state.frame,state.toneTransfer,
+      state.lf,state.bokeh,state.sem,state.zoneAdj,state.exportScale,state.exportMax]);
+  }catch(e){ v=String(Date.now()); }
+  VST.sigCache={t:now,v}; return v;
+}
+function vstDefaultKF(){ return Object.assign({},VST_KF_DEFAULT); }
+function vstNewClip(srcId,dur){
+  return {id:vstId('clip'),srcId,dur:vstClamp(dur||3,.2,86400),
+    in:0,out:null,trans:'fade',motion:'still',
+    lookA:deep(VST_LOOK_A),lookB:deep(VST_LOOK_B),
+    kf:[{t:0,p:vstDefaultKF()},{t:1,p:vstDefaultKF()}],name:''};
+}
+function vstProj(){
+  if(!VST.proj) vstNewProject('');
+  return VST.proj;
+}
+function vstNewProject(name){
+  VST.proj={id:vstId('proj'),name:name||'未命名影片',
+    fps:vstClamp(+state.exportVideoFps||30,12,60),
+    clips:[],created:Date.now()};
+  VST.bases=null; VST.basesSig=''; VST.t=0; VST.sel=null; VST.kfSel=null;
+  VST.lookCache.clear(); VST.lookThumbCache.clear(); VST.lookSig='';
+  VST.src.clear();
+  vstRegisterPhoto();
+  if(LIVE.pair) vstRegisterLive();
+  /* 默认就放一段当前照片，不会打开是空时间线 */
+  vstAddClip('photo',4);
+  vstSave();
+  return VST.proj;
+}
+/* ---------- 源登记（媒体不进 state） ---------- */
+function vstRegisterPhoto(){
+  VST.src.set('photo',{id:'photo',kind:'photo',label:'当前照片',dur:0,w:0,h:0});
+}
+function vstRegisterLive(){
+  if(!LIVE.pair||!LIVE.video) return false;
+  const d=LIVE.duration||1.5;
+  VST.src.set('live',{id:'live',kind:'video',video:LIVE.video,label:'实况视频',
+    dur:d,w:LIVE.video.videoWidth||0,h:LIVE.video.videoHeight||0,internal:true});
+  return true;
+}
+async function vstRegisterFile(file){
+  const v=document.createElement('video');
+  v.muted=true; v.playsInline=true; v.preload='auto';
+  const url=URL.createObjectURL(file);
+  await new Promise((res,rej)=>{
+    let done=false;
+    const ok=()=>{ if(done)return;done=true;res(); };
+    const bad=()=>{ if(done)return;done=true;rej(new Error('VIDEO_DECODE')); };
+    v.addEventListener('loadedmetadata',ok,{once:true});
+    v.addEventListener('error',bad,{once:true});
+    v.src=url; v.load();
+    setTimeout(()=>{ if(!v.videoWidth) bad(); },8000);
+  }).catch(e=>{ try{URL.revokeObjectURL(url);}catch(_){} throw e; });
+  const id=vstId('vs');
+  VST.src.set(id,{id,kind:'video',video:v,url,label:file.name,
+    dur:isFinite(v.duration)?v.duration:3,w:v.videoWidth,h:v.videoHeight});
+  return id;
+}
+function vstAddColor(label,text,c1,c2){
+  const id=vstId('col');
+  VST.src.set(id,{id,kind:'color',label:label||'渐变卡',text:text||'',
+    c1:c1||'#101018',c2:c2||'#3a2f22',dur:0,w:0,h:0});
+  return id;
+}
+function vstSrcDur(src){
+  if(!src) return 0;
+  if(src.kind==='video') return Math.max(.2,src.dur||1.5);
+  return 0; /* 照片 / 纯色卡没有源长度限制 */
+}
+function vstClipDur(c){
+  const src=VST.src.get(c.srcId);
+  if(src&&src.kind==='video'){
+    const avail=Math.max(.2,src.dur-(c.in||0));
+    return vstClamp(c.dur,.2,avail);
+  }
+  return vstClamp(c.dur,.2,86400);
+}
+function vstAddClip(srcId,dur,opt){
+  const p=vstProj(), src=VST.src.get(srcId);
+  if(!src) return null;
+  const c=vstNewClip(srcId,dur||(src.kind==='video'?Math.min(4,src.dur):3));
+  if(opt) Object.assign(c,opt);
+  if(src.kind==='video'&&c.out===null) c.out=null;
+  p.clips.push(c); VST.sel=c.id; VST.kfSel=null; vstSave();
+  return c;
+}
+function vstTotal(){ return vstProj().clips.reduce((s,c)=>s+vstClipDur(c),0); }
+function vstClipStart(idx){
+  const cl=vstProj().clips; let t=0;
+  for(let i=0;i<idx&&i<cl.length;i++) t+=vstClipDur(cl[i]);
+  return t;
+}
+function vstClipAt(t){
+  const cl=vstProj().clips, total=vstTotal();
+  t=vstClamp(t,0,Math.max(0,total-.0001));
+  let acc=0;
+  for(let i=0;i<cl.length;i++){
+    const d=vstClipDur(cl[i]);
+    if(t<acc+d||i===cl.length-1){
+      const local=vstClamp(t-acc,0,d);
+      return {idx:i,clip:cl[i],start:acc,local,dur:d,u:d?vstSmooth(local/d):0,
+        rawU:d?local/d:0,total};
+    }
+    acc+=d;
+  }
+  return null;
+}
+function vstKFPlain(c,u){
+  const kfs=(c.kf&&c.kf.length)?c.kf:[{t:0,p:vstDefaultKF()},{t:1,p:vstDefaultKF()}];
+  const arr=[...kfs].sort((a,b)=>a.t-b.t);
+  let a=arr[0],b=arr[arr.length-1];
+  for(let i=0;i<arr.length-1;i++){
+    if(u>=arr[i].t&&u<=arr[i+1].t){ a=arr[i];b=arr[i+1];break; }
+  }
+  const span=Math.max(.0001,b.t-a.t), k=vstSmooth((u-a.t)/span);
+  const out={};
+  Object.keys(VST_KF_DEFAULT).forEach(key=>{
+    out[key]=vstLerp(+((a.p&&a.p[key])??VST_KF_DEFAULT[key]),
+                     +((b.p&&b.p[key])??VST_KF_DEFAULT[key]),k);
+  });
+  return out;
+}
+function vstKF(c,u){
+  const out=vstKFPlain(c,u);
+  /* 运镜：与关键帧的缩放 / 位移叠加，仍随时间变化 → 签名能识别 */
+  const m=c.motion||'still', r=u;
+  if(m==='push'){ out.zoom*=1+.10*r; }
+  else if(m==='zoomout'){ out.zoom*=1.10-.10*r; }
+  else if(m==='pan'){ out.dx+=(r-.5)*-.06; out.zoom*=1.06; }
+  else if(m==='panrev'){ out.dx+=(r-.5)*.06; out.zoom*=1.06; }
+  else if(m==='tilt'){ out.dy+=(r-.5)*-.05; out.zoom*=1.06; }
+  else if(m==='breathe'){ out.zoom*=1+.03*Math.sin(r*Math.PI*2); }
+  return out;
+}
+/* 转场：返回首尾的可见度（0~1）与与前一段的混合权重 */
+function vstTransAlpha(c,u,dur){
+  const tr=c.trans||'none';
+  if(tr==='none') return {a:1,prev:0,black:0};
+  const w=vstClamp(.55/dur,0,.5);
+  let ain=1,aout=1,prev=0,black=0;
+  if(tr==='fade'){
+    ain=u<w?u/w:1; aout=u>1-w?(1-u)/w:1;
+  }else if(tr==='black'){
+    ain=u<w?u/w:1; aout=u>1-w?(1-u)/w:1;
+    black=Math.max(0,1-Math.min(ain,aout));
+  }else if(tr==='dissolve'){
+    prev=(u<w)?(1-u/w):0;
+  }
+  return {a:Math.min(ain,aout),prev,black};
+}
+function vstSig(t){
+  const h=vstClipAt(t); if(!h) return '';
+  const k=vstKF(h.clip,h.u), ta=vstTransAlpha(h.clip,h.u,h.dur);
+  const src=VST.src.get(h.clip.srcId);
+  const q=v=>Math.round(v*1000)/1000;
+  const parts=[h.clip.id,h.clip.srcId,q(k.mix),q(k.bright),q(k.temp),q(k.sat),
+    q(k.zoom),q(k.dx),q(k.dy),q(k.fade),q(ta.a),q(ta.prev),q(ta.black),
+    vstQuant(k.px||0,.05),vstQuant(k.py||0,.05),vstQuant(k.pa===undefined?1:k.pa,.05),
+    /* 风格变了必须重绘：上一版漏掉这两项，点滤镜后画面纹丝不动 */
+    vstLookTag(vstLook(h.clip.lookA)),vstLookTag(vstLook(h.clip.lookB))];
+  /* 视频源每帧都不同；静态源不含 u，所以定格段签名恒定 → 零重绘 */
+  if(src&&src.kind==='video') parts.push('V'+Math.round((h.clip.in+h.local)*vstProj().fps));
+  return parts.join('|');
+}
+/* ---------- 基准帧：只渲染一次，导出期间不再碰 WebGL ---------- */
+function vstOriginalFrame(){
+  const [ew,eh]=exportDims(), oldW=canvas.width, oldH=canvas.height;
+  canvas.width=ew; canvas.height=eh;
+  draw(ew,eh,{e:effective(),pan:[0,0],zoom:1,viewAspect:imageAspect(),original:true,thumb:true});
+  const out=document.createElement('canvas'); out.width=ew; out.height=eh;
+  out.getContext('2d').drawImage(canvas,0,0,ew,eh);
+  canvas.width=oldW; canvas.height=oldH; render();
+  return applyExportFrame(out);
+}
+function vstEnsureBases(){
+  const B=vstLookFrame({k:'current'},0,0,1);
+  const A=vstLookFrame({k:'original'},0,0,1)||B;
+  if(!B) return null;
+  VST.bases={A,B,w:B.width,h:B.height}; VST.basesSig=vstNowSig();
+  return VST.bases;
+}
+/* ---------- 画面合成（纯 2D） ---------- */
+function vstFit(ctx,img,W,H,z,dx,dy,alpha){
+  if(!img||!img.width||!img.height) return;
+  const iw=img.videoWidth||img.width, ih=img.videoHeight||img.height;
+  const fit=Math.min(W/iw,H/ih);
+  const dw=iw*fit*vstClamp(z,.2,4), dh=ih*fit*vstClamp(z,.2,4);
+  ctx.save();
+  ctx.globalAlpha=vstClamp(alpha,0,1);
+  try{ ctx.drawImage(img,0,0,iw,ih,(W-dw)/2+dx*W,(H-dh)/2+dy*H,dw,dh); }
+  catch(e){}
+  ctx.restore();
+}
+function vstColorFrame(ctx,src,W,H){
+  const g=ctx.createLinearGradient(0,0,W,H);
+  g.addColorStop(0,src.c1||'#101018'); g.addColorStop(1,src.c2||'#3a2f22');
+  ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+  if(src.text){
+    ctx.save(); ctx.fillStyle='rgba(255,255,255,.92)';
+    ctx.font='600 '+Math.round(Math.min(W,H)*.075)+'px system-ui,-apple-system,sans-serif';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.shadowColor='rgba(0,0,0,.35)'; ctx.shadowBlur=12;
+    ctx.fillText(src.text,W/2,H/2,W*.9);
+    ctx.restore();
+  }
+}
+function vstVideoTime(c,local){ return (c.in||0)+local; }
+function vstSyncVideo(src,c,local,playing){
+  const v=src&&src.video; if(!v) return;
+  const want=vstVideoTime(c,local);
+  if(playing){
+    if(v.paused){ try{ v.currentTime=want; }catch(e){} const pr=v.play(); if(pr&&pr.catch)pr.catch(()=>{}); }
+    else if(Math.abs((v.currentTime||0)-want)>.18){ try{ v.currentTime=want; }catch(e){} }
+  }else{
+    if(!v.paused){ try{ v.pause(); }catch(e){} }
+    if(Math.abs((v.currentTime||0)-want)>.04){ try{ v.currentTime=want; }catch(e){} }
+  }
+}
+function vstDrawClip(idx,local,ctx,W,H,k,alpha,quality,playing){
+  const cl=vstProj().clips, c=cl[idx]; if(!c) return;
+  const src=VST.src.get(c.srcId);
+  ctx.save();
+  /* 亮度 / 饱和 / 对比用 canvas filter；色温用低透明叠色，都不需要 GPU */
+  const br=1+vstClamp(k.bright,-1,1)*.45, sa=1+vstClamp(k.sat,-1,1)*.7;
+  try{ ctx.filter='brightness('+br.toFixed(3)+') saturate('+sa.toFixed(3)+')'; }
+  catch(e){}
+  const z=k.zoom, dx=k.dx, dy=k.dy;
+  if(!src||src.kind==='photo'){
+    const qx=vstQuant(k.px||0,.05), qy=vstQuant(k.py||0,.05),
+          qa=vstQuant(k.pa===undefined?1:k.pa,.05);
+    const A=vstLookFrame(vstLook(c.lookA),qx,qy,qa);
+    const B=vstLookFrame(vstLook(c.lookB),qx,qy,qa)||A;
+    if(A){
+      vstFit(ctx,A,W,H,z,dx,dy,alpha*(1-k.mix));
+      if(B&&k.mix>.001) vstFit(ctx,B,W,H,z,dx,dy,alpha*k.mix);
+    }
+  }else if(src.kind==='color'){
+    ctx.save(); ctx.globalAlpha=alpha; vstColorFrame(ctx,src,W,H); ctx.restore();
+  }else if(src.kind==='video'){
+    vstSyncVideo(src,c,local,playing);
+    try{ vstFit(ctx,src.video,W,H,z,dx,dy,alpha); }
+    catch(e){ ctx.fillStyle='#000'; ctx.fillRect(0,0,W,H); }
+  }
+  ctx.restore();
+  /* 色温叠色：暖橙 / 冷蓝，强度很低，不压死细节 */
+  if(Math.abs(k.temp)>.002){
+    ctx.save(); ctx.globalAlpha=Math.min(.22,Math.abs(k.temp)*.20);
+    ctx.fillStyle=k.temp>0?'#ffb066':'#5a92ff';
+    ctx.fillRect(0,0,W,H); ctx.restore();
+  }
+}
+function vstRenderFrame(t,ctx,W,H,opt){
+  opt=opt||{};
+  ctx.save();
+  try{ ctx.filter='none'; }catch(e){}
+  ctx.fillStyle='#000'; ctx.fillRect(0,0,W,H);
+  const h=vstClipAt(t);
+  if(!h){ ctx.restore(); return; }
+  const k=vstKF(h.clip,h.u), ta=vstTransAlpha(h.clip,h.u,h.dur);
+  const a=vstClamp(ta.a*vstClamp(k.fade,0,1),0,1);
+  /* 交叉溶解：额外画一次前一段的末帧 */
+  if(ta.prev>.001&&h.idx>0){
+    const pc=vstProj().clips[h.idx-1], pd=vstClipDur(pc);
+    const pk=vstKF(pc,1);
+    vstDrawClip(h.idx-1,pd,ctx,W,H,pk,ta.prev,opt.quality||1,false);
+  }
+  vstDrawClip(h.idx,h.local,ctx,W,H,k,a,opt.quality||1,!!opt.playing);
+  if(ta.black>.001||a<1){
+    ctx.save(); ctx.globalAlpha=vstClamp(Math.max(ta.black,1-a),0,1);
+    ctx.fillStyle='#000'; ctx.fillRect(0,0,W,H); ctx.restore();
+  }
+  ctx.restore();
+}
+/* ---------- 预览：低分辨率 + rAF 合并 + 拖动时再降一档 ---------- */
+function vstPreviewDims(){
+  const base=vstEnsureBases();
+  let W=base?base.w:1280, H=base?base.h:720;
+  const ratio=W/H||4/3;
+  const cap=vstProj().previewMax||960;
+  const k=Math.min(1,cap/Math.max(W,H));
+  W=Math.max(2,Math.round(W*k*VST.previewScale));
+  H=Math.max(2,Math.round(W/ratio));
+  return [W,H];
+}
+function vstPaintPreview(t){
+  const cv=VST.preview; if(!cv||!VST.pctx) return;
+  const [W,H]=vstPreviewDims();
+  if(cv.width!==W||cv.height!==H){ cv.width=W; cv.height=H; }
+  vstRenderFrame(t,VST.pctx,W,H,{quality:1,playing:VST.playing});
+  vstUpdatePlayhead(t);
+}
+let vstPreviewQueued=false;
+function vstQueuePreview(t){
+  if(vstPreviewQueued) return;
+  vstPreviewQueued=true;
+  requestAnimationFrame(()=>{ vstPreviewQueued=false; vstPaintPreview(t); });
+}
+function vstPreviewTick(ts){
+  if(!VST.playing) return;
+  if(!VST.tickT0) VST.tickT0=ts-VST.t*1000;
+  let t=(ts-VST.tickT0)/1000, total=vstTotal();
+  if(t>=total){
+    if(VST.loop){ t=0; VST.tickT0=ts; vstStopAllVideos(); }
+    else{ VST.t=total; vstPause(); return; }
+  }
+  VST.t=t; vstPaintPreview(t);
+  VST.raf=requestAnimationFrame(vstPreviewTick);
+}
+function vstStopAllVideos(){
+  VST.src.forEach(s=>{ if(s.kind==='video'&&s.video){ try{ s.video.pause(); }catch(e){} } });
+}
+function vstPlay(){
+  if(VST.playing||!vstTotal()) return;
+  /* 打开页面时预览停在「海报帧」避免黑场首帧；点播放自动从头开始 */
+  if(VST.needRewind){ VST.t=0; VST.needRewind=false; VST.tickT0=0; vstQueuePreview(0); }
+  VST.playing=true; VST.tickT0=0;
+  VST.raf=requestAnimationFrame(vstPreviewTick); vstUpdatePlayBtn();
+}
+function vstPause(){
+  VST.playing=false; cancelAnimationFrame(VST.raf); VST.raf=0;
+  vstStopAllVideos(); vstUpdatePlayBtn();
+}
+function vstSeek(t,keepPlaying){
+  VST.needRewind=false;
+  const was=VST.playing;
+  if(!keepPlaying&&was) vstPause();
+  VST.t=vstClamp(t,0,Math.max(0,vstTotal()-.001));
+  VST.tickT0=0; vstQueuePreview(VST.t); vstUpdatePlayBtn();
+}
+function vstUpdatePlayBtn(){
+  const b=document.getElementById('vstPlayBtn');
+  if(b) b.textContent=VST.playing?'❚❚ 暂停':'▶ 播放';
+  const tc=document.getElementById('vstTC');
+  if(tc) tc.textContent=vstFmtTime(VST.t)+' / '+vstFmtTime(vstTotal());
+  const sc=document.getElementById('vstScrub');
+  if(sc&&document.activeElement!==sc) sc.value=Math.round(vstTotal()?VST.t/vstTotal()*1000:0);
+}
+function vstUpdatePlayhead(t){
+  const ph=document.getElementById('vstHead');
+  const tr=document.getElementById('vstTrack');
+  if(ph&&tr){ const total=vstTotal(); ph.style.left=(total?t/total*100:0)+'%'; }
+  const tc=document.getElementById('vstTC');
+  if(tc) tc.textContent=vstFmtTime(t)+' / '+vstFmtTime(vstTotal());
+}
+/* ---------- 项目存取 ---------- */
+function vstSave(){
+  try{
+    const p=VST.proj;
+    if(!p) return;
+    /* 只存元数据；外部视频的 ObjectURL 不写盘，重开时提示重新导入 */
+    const data=JSON.stringify({v:2,proj:p,src:[...VST.src.values()]
+      .filter(s=>s.kind!=='video'||s.internal)
+      .map(s=>({id:s.id,kind:s.kind,label:s.label,text:s.text,c1:s.c1,c2:s.c2,dur:s.dur}))});
+    localStorage.setItem('iris_video_project',data);
+  }catch(e){}
+}
+function vstLoadRaw(){
+  try{ return JSON.parse(localStorage.getItem('iris_video_project')||'null'); }
+  catch(e){ return null; }
+}
+function vstLoad(){
+  const d=vstLoadRaw();
+  if(!d||!d.proj||!Array.isArray(d.proj.clips)||!d.proj.clips.length) return false;
+  VST.src.clear(); vstRegisterPhoto(); if(LIVE.pair) vstRegisterLive();
+  (d.src||[]).forEach(s=>{
+    if(s.kind==='photo'||s.kind==='color') VST.src.set(s.id,Object.assign({w:0,h:0},s));
+  });
+  VST.proj=d.proj;
+  VST.proj.fps=vstClamp(+VST.proj.fps||30,12,60);
+  /* 缺失的外部视频源降级为占位渐变卡，不产生空白帧 */
+  VST.proj.clips.forEach(c=>{
+    if(!VST.src.has(c.srcId)) VST.src.set(c.srcId,{id:c.srcId,kind:'color',
+      label:'需重新导入',text:'重新导入视频',c1:'#16161d',c2:'#2a2535',dur:0,w:0,h:0});
+    if(!c.lookA) c.lookA=deep(VST_LOOK_A);
+    if(!c.lookB) c.lookB=deep(VST_LOOK_B);
+    if(!Array.isArray(c.kf)||!c.kf.length) c.kf=[{t:0,p:vstDefaultKF()},{t:1,p:vstDefaultKF()}];
+    c.kf.forEach(kf=>{ kf.p=Object.assign(vstDefaultKF(),kf.p||{}); });
+  });
+  VST.sel=VST.proj.clips[0].id; VST.t=0; VST.bases=null; VST.basesSig='';
+  return true;
+}
+function vstPosterFrame(){
+  const total=vstTotal();
+  VST.t=Math.min(total*.35,2);
+  VST.needRewind=true;
+  vstQueuePreview(VST.t);
+}
+function vstEnsureProject(){
+  if(VST.proj) return VST.proj;
+  if(!vstLoad()) vstNewProject('');
+  return VST.proj;
+}
+/* ---------- 模板 ---------- */
+function vstApplyTemplate(id){
+  const p=vstNewProject((VST_TEMPLATES.find(t=>t.id===id)||{}).name||'影片');
+  p.clips=[]; VST.src.clear(); vstRegisterPhoto(); if(LIVE.pair) vstRegisterLive();
+  const ph='photo';
+  const F=(kw)=>({k:'filter',id:vstPickFilter(kw),a:1});
+  const T=(kw)=>({k:'template',id:vstPickTemplate(kw),a:1});
+  const P=(pid,x,y)=>({k:'pad',id:vstPickPad(pid),x:x||0,y:y||0,a:1});
+  if(id==='live'&&LIVE.pair){
+    const c=vstAddClip('live',Math.min(5,LIVE.duration||3),{trans:'fade',motion:'still'});
+    c.name='实况片段';
+    const c2=vstAddClip('photo',2.5,{trans:'dissolve',motion:'push',
+      lookA:F('胶片'),lookB:T('日系')});
+    c2.kf=[{t:0,p:Object.assign(vstDefaultKF(),{zoom:1.06,mix:.15})},
+           {t:1,p:Object.assign(vstDefaultKF(),{zoom:1.14,mix:1})}];
+  }else if(id==='dissolve'){
+    const a=vstAddClip(ph,3,{trans:'fade',motion:'still',
+      lookA:F('电影'),lookB:F('柯达金')});
+    a.kf=[{t:0,p:Object.assign(vstDefaultKF(),{zoom:1,mix:0})},
+          {t:1,p:Object.assign(vstDefaultKF(),{zoom:1.08,mix:1})}];
+    const b=vstAddClip(ph,3.5,{trans:'dissolve',motion:'zoomout',
+      lookA:F('柯达金'),lookB:T('胶片青橙')});
+    b.kf=[{t:0,p:Object.assign(vstDefaultKF(),{zoom:1.14,sat:.12,mix:0})},
+          {t:1,p:Object.assign(vstDefaultKF(),{zoom:1,sat:0,mix:1})}];
+    b.name='第二段';
+  }else if(id==='story'){
+    const col1=vstAddColor('片头','Iris 调色盘','#0d1118','#3a2f22');
+    const col2=vstAddColor('片尾','谢谢观看','#1a1410','#0d1118');
+    vstAddClip(col1,1.4,{trans:'black',motion:'still'});
+    const c=vstAddClip(ph,5,{trans:'dissolve',motion:'push',
+      lookA:P('cinema',-.45,-.22),lookB:P('vivid',.35,.18)});
+    c.kf=[{t:0,p:Object.assign(vstDefaultKF(),{mix:0,fade:1,px:-.45,py:-.22})},
+          {t:1,p:Object.assign(vstDefaultKF(),{mix:1,fade:1,px:.35,py:.18})}];
+    vstAddClip(col2,1.6,{trans:'black',motion:'still'});
+  }else if(id==='kenburns'){
+    const c=vstAddClip(ph,5,{trans:'fade',motion:'push',
+      lookA:{k:'original'},lookB:T('胶片青橙')});
+    c.kf=[{t:0,p:Object.assign(vstDefaultKF(),{mix:.35,zoom:1})},
+          {t:1,p:Object.assign(vstDefaultKF(),{mix:1,zoom:1.08})}];
+  }else{
+    vstAddClip(ph,4,{trans:'none',motion:'still',
+      lookA:{k:'original'},lookB:{k:'current'}});
+  }
+  VST.sel=p.clips[0].id; VST.kfSel=null; vstSave();
+  vstPosterFrame();
+  toast('已套用模板：'+p.name);
+  vstRebuild();
+}/* ---------- 导出：手工推帧 / 静止零重绘 / 可取消 ---------- */
+function vstWait(ms){ return new Promise(r=>setTimeout(r,Math.max(0,ms))); }
+function vstYield(){ return new Promise(r=>requestAnimationFrame(()=>r())); }
+function vstExportDims(){
+  const base=vstEnsureBases();
+  let W=base?base.w:1280, H=base?base.h:720;
+  const cap=+state.exportVideoMaxEdge>0?vstClamp(+state.exportVideoMaxEdge,320,3840):0;
+  if(cap&&Math.max(W,H)>cap){ const k=cap/Math.max(W,H); W=Math.round(W*k); H=Math.round(H*k); }
+  if(W%2)W--; if(H%2)H--;
+  return [Math.max(2,W),Math.max(2,H)];
+}
+function vstExportUI(p,msg){
+  VST.progress=p;
+  const bar=document.getElementById('vstProgBar'), txt=document.getElementById('vstProgTxt');
+  if(bar) bar.style.width=Math.round(p*100)+'%';
+  if(txt) txt.textContent=msg||'';
+  const btn=document.getElementById('vstExportBtn');
+  if(btn) btn.textContent=VST.exporting?'■ 停止导出':'⬇ 导出影片';
+}
+async function vstExport(){
+  if(VST.exporting) return;
+  const p=vstEnsureProject();
+  if(!p.clips.length){ toast('时间线是空的，先添加片段'); return; }
+  if(!imageReady){ toast('请先导入一张照片'); return; }
+  if(typeof MediaRecorder==='undefined'||typeof HTMLCanvasElement.prototype.captureStream!=='function'){
+    toast('当前浏览器不支持视频录制'); return;
+  }
+  const vm=videoMimeChoice();
+  if(!vm.mime){ toast('当前浏览器不支持视频录制'); return; }
+  const [W,H]=vstExportDims();
+  const fps=vstClamp(+p.fps||30,12,60), total=vstTotal();
+  const frames=Math.max(1,Math.round(total*fps));
+  const proxy=document.createElement('canvas'); proxy.width=W; proxy.height=H;
+  const px=proxy.getContext('2d',{alpha:false});
+  let stream,rec,manual=false;
+  try{
+    stream=proxy.captureStream(0);
+    const tr=stream.getVideoTracks()[0];
+    manual=!!(tr&&typeof tr.requestFrame==='function');
+    if(!manual){ try{ stream.getTracks().forEach(t=>t.stop()); }catch(e){} stream=proxy.captureStream(fps); }
+    state.exportVideoFps=fps;
+    rec=new MediaRecorder(stream,videoRecorderOpts(vm.mime));
+  }catch(e){ toast('无法启动录制：'+(e.message||e)); return; }
+  VST.exporting=true; VST.cancel=false; VST.lastSig='';
+  vstPause();
+  const track=stream.getVideoTracks()[0];
+  const chunks=[]; let stopResolve=null;
+  const done=new Promise(r=>stopResolve=r);
+  rec.ondataavailable=e=>{ if(e.data&&e.data.size) chunks.push(e.data); };
+  rec.onerror=e=>{ console.warn('[IrisVideo]',e.error||e); };
+  rec.onstop=()=>stopResolve();
+  vstExportUI(0,'准备中… 预生成风格帧');
+  try{
+    const n=await vstPrepareLooks((r,msg)=>vstExportUI(r*.12,msg));
+    if(!VST.cancel&&n>1) vstExportUI(.12,'已准备 '+n+' 张风格帧 · 开始录制');
+  }catch(e){ console.warn('[IrisVideo] 风格帧预生成',e); }
+  if(VST.cancel){
+    VST.exporting=false; VST.cancel=false;
+    try{ if(rec.state!=='inactive') rec.stop(); }catch(e){}
+    try{ stream.getTracks().forEach(t=>t.stop()); }catch(e){}
+    vstExportUI(0,'已取消'); return;
+  }
+  /* 视频源按时间线播放，不做逐帧 seek */
+  const trackVideo=()=>{
+    const h=vstClipAt(VST.t);
+    if(h){ const s=VST.src.get(h.clip.srcId);
+      VST.src.forEach(o=>{ if(o.kind==='video'&&o.video&&o!==s&&!o.video.paused){ try{o.video.pause();}catch(e){} } });
+      if(s&&s.kind==='video') vstSyncVideo(s,h.clip,h.local,true);
+    }
+  };
+  try{
+    /* 首帧必须真实绘制，否则某些编码器收不到第一帧 */
+    vstEnsureBases();
+    vstRenderFrame(0,px,W,H,{quality:1,playing:true});
+    rec.start(1000);
+    const t0=performance.now();
+    for(let f=0;f<frames;f++){
+      if(VST.cancel) break;
+      const t=f/fps;
+      VST.t=t;
+      trackVideo();
+      const sig=vstSig(t);
+      /* 画面没变 → 只推帧，不重绘。定格 10 秒只画 1 次。 */
+      if(manual&&sig===VST.lastSig){
+        /* no-op */
+      }else{
+        vstRenderFrame(t,px,W,H,{quality:1,playing:true});
+        VST.lastSig=sig;
+      }
+      if(manual){ try{ track.requestFrame(); }catch(e){} }
+      else { /* 自动出帧模式：轻触一次以触发新帧 */
+        vstRenderFrame(t,px,W,H,{quality:1,playing:true});
+      }
+      if(f%8===0){
+        vstExportUI(.12+.88*f/frames,'录制中 '+(f+1)+' / '+frames+' 帧 · '+
+          Math.round(f/fps)+'s / '+Math.round(total)+'s · '+W+'×'+H+' @ '+fps+'fps');
+        await vstYield();
+      }
+      const target=t0+(f+1)*1000/fps;
+      const wait=target-performance.now();
+      if(wait>1) await vstWait(wait);
+      else if(f%4===0) await vstWait(0);
+    }
+  }catch(e){ console.warn('[IrisVideo] 录制循环',e); }
+  finally{
+    vstStopAllVideos();
+    try{ if(rec.state!=='inactive') rec.stop(); }catch(e){}
+    await Promise.race([done,vstWait(2500)]);
+    try{ stream.getTracks().forEach(t=>t.stop()); }catch(e){}
+    VST.exporting=false;
+    vstExportUI(1,'正在封装文件…');
+    const blob=new Blob(chunks,{type:rec.mimeType||vm.mime||'video/webm'});
+    if(!blob.size||blob.size<256){
+      vstExportUI(0,VST.cancel?'已停止，未产生可用片段':'录制失败（编码器无输出）');
+      toast(VST.cancel?'已停止导出':'视频导出失败，请换一种格式再试');
+    }else{
+      const ext=(blob.type||'').indexOf('mp4')>=0?'.mp4':'.webm';
+      downloadBlob(blob,'Iris_影片_'+Date.now()+ext);
+      vstExportUI(1,'完成 · '+(blob.size/1024).toFixed(0)+' KB'+(VST.cancel?'（提前停止）':''));
+      toast('已导出影片 '+(blob.size/1024).toFixed(0)+' KB · '+total.toFixed(1)+'s · '+fps+'fps'+
+        (VST.cancel?'（提前停止，仅含已录制部分）':''));
+      if(typeof logExport==='function'){ try{ logExport('Iris_影片'+ext,blob); }catch(e){} }
+    }
+    VST.cancel=false;
+  }
+}
+function vstStopExport(){
+  if(!VST.exporting) return;
+  VST.cancel=true; toast('正在停止并保存已录制部分…');
+}
+/* ---------- 时间线交互 ---------- */
+function vstRebuild(){
+  if(!VST.body||!VST.body.isConnected) return;
+  vstBuildTimeline(VST.body);
+  vstBuildInspector(VST.body);
+  try{ vstQSyncSel(); }catch(e){}
+  try{ vstPadSync(); }catch(e){}
+  vstQueuePreview(VST.t);
+}
+function vstSetSel(id){
+  VST.sel=id; VST.kfSel=null; vstRebuild();
+}
+function vstClipEl(c,idx,total){
+  const el=spEl('div','vst-clip'+(c.id===VST.sel?' sel':''));
+  el.dataset.id=c.id; el.dataset.idx=idx;
+  el.style.flexGrow=String(Math.max(.4,vstClipDur(c)));
+  const src=VST.src.get(c.srcId);
+  const head=spEl('div','vst-clip-h');
+  const nm=spEl('span','vst-clip-n','');
+  nm.textContent=(idx+1)+' · '+(c.name||src?.label||'片段')+(src&&src.kind==='video'?' · 视频':'');
+  const look=spEl('div','vst-clip-look','');
+  look.textContent=vstClipStyleLabel(c);
+  const du=spEl('small','',vstClipDur(c).toFixed(1)+'s');
+  head.append(nm,du);
+  /* 先标题、再风格、最后缩略图 —— 旧版顺序反了，风格名压在片段名上面 */
+  el.append(head,look);
+  const body=spEl('div','vst-clip-b');
+  const th=spEl('div','vst-clip-th'); th.dataset.thumb=c.id; body.append(th);
+  /* 关键帧标记 */
+  (c.kf||[]).forEach((k,ki)=>{
+    const d=spEl('i','vst-kf'+(VST.kfSel===ki&&c.id===VST.sel?' on':''));
+    d.style.left=(vstClamp(k.t,0,1)*100)+'%'; d.dataset.kf=ki; d.title='关键帧 '+Math.round(k.t*100)+'%';
+    body.append(d);
+  });
+  const l=spEl('i','vst-handle l'); l.dataset.handle='l';
+  const r=spEl('i','vst-handle r'); r.dataset.handle='r';
+  body.append(l,r); el.append(body);
+  return el;
+}
+function vstBuildTimeline(body){
+  const host=body.querySelector('#vstTL'); if(!host) return;
+  host.innerHTML='';
+  const total=vstTotal(), p=vstProj(), trackW=Math.max(560,Math.round(total*90));
+  const ruler=spEl('div','vst-ruler'); ruler.style.minWidth=trackW+'px';
+  const step=total>30?10:total>12?5:total>6?2:1;
+  for(let t=0;t<=total+.001;t+=step){
+    const d=spEl('span','vst-tick'); d.style.left=(total?t/total*100:0)+'%';
+    d.textContent=t+'s'; ruler.append(d);
+  }
+  host.append(ruler);
+  const track=spEl('div','vst-track'); track.id='vstTrack'; track.style.minWidth=trackW+'px';
+  p.clips.forEach((c,i)=>track.append(vstClipEl(c,i,total)));
+  if(!p.clips.length) track.append(spEl('div','vst-empty','时间线是空的 · 用上面的「＋」添加片段'));
+  const head=spEl('div','vst-head'); head.id='vstHead';
+  head.style.left=(total?vstClamp(VST.t/total,0,1)*100:0)+'%';
+  /* 旧版 head 是 pointer-events:none，红头根本拖不了；加一个 18px 透明热区 */
+  const hit=spEl('i','vst-head-hit',''); hit.dataset.seek='1';
+  hit.title='拖我移动播放头'; head.append(hit);
+  track.append(head); host.append(track);
+  /* ---------- 时间轴交互（v1.0.8 重写） ----------
+     ① 每次重建都先解绑旧监听：旧版只绑一次，闭包抓着已失效的 DOM，
+        页面重开后拖拽全部静默失效 —— 这是「拖不动」的真根因。
+     ② 触屏：track 设 touch-action:none + setPointerCapture，浏览器不会抢手势。
+     ③ 拖动过程只就地改 DOM（排序 / 时长 / 关键帧位置 / 播放头），
+        绝不重建 track —— 重建会销毁正在被拖的元素并丢掉 pointer 流。
+     ④ 松手才写 state 并整体重建一次，保证数据、缩略图、检查器同步。 */
+  if(VST._onMove) document.removeEventListener('pointermove',VST._onMove);
+  if(VST._onUp){
+    document.removeEventListener('pointerup',VST._onUp);
+    document.removeEventListener('pointercancel',VST._onUp);
+  }
+  const pxPerSec=()=>Math.max(1,track.getBoundingClientRect().width/Math.max(.001,vstTotal()));
+  const trackNow=()=>VST.body&&VST.body.isConnected
+    ?VST.body.querySelector('#vstTrack'):track;
+  const seekFrom=e=>{
+    const r=(trackNow()||track).getBoundingClientRect();
+    vstSeek(vstClamp((e.clientX-r.left)/Math.max(1,r.width),0,1)*vstTotal(),false);
+    const hd=VST.body&&VST.body.querySelector('#vstHead');
+    if(hd) hd.style.left=(vstClamp((e.clientX-r.left)/Math.max(1,r.width),0,1)*100)+'%';
+  };
+  const onMove=e=>{
+    const d=VST.dragging; if(!d||!VST.body||!VST.body.isConnected) return;
+    const proj=vstProj(), tr=trackNow()||track;
+    if(d.type==='seek'){ seekFrom(e); return; }
+    if(d.type==='trim'){
+      const c=proj.clips[d.ci]; if(!c) return;
+      const delta=(e.clientX-d.x0)/d.pps;
+      if(d.side==='r') c.dur=vstClamp(d.dur0+delta,.2,86400);
+      else{
+        const src=VST.src.get(c.srcId);
+        const maxIn=src&&src.kind==='video'?Math.max(0,src.dur-.3):0;
+        const ni=vstClamp(d.in0+delta,0,maxIn);
+        c.dur=vstClamp(d.dur0-(ni-d.in0),.2,86400); c.in=ni;
+      }
+      const el=tr.querySelector('.vst-clip[data-id="'+c.id+'"]');
+      if(el){
+        el.style.flexGrow=String(Math.max(.4,vstClipDur(c)));
+        const du=el.querySelector('.vst-clip-h small');
+        if(du) du.textContent=vstClipDur(c).toFixed(1)+'s';
+      }
+      vstQueuePreview(VST.t); vstUpdatePlayBtn(); return;
+    }
+    if(d.type==='kf'){
+      const c=proj.clips[d.ci]; if(!c) return;
+      const el=tr.querySelector('.vst-clip[data-id="'+c.id+'"]');
+      if(!el) return;
+      const w=Math.max(1,el.getBoundingClientRect().width);
+      const t=vstClamp((e.clientX-el.getBoundingClientRect().left)/w,0,1);
+      if(d.ki>0&&d.ki<(c.kf.length-1)) c.kf[d.ki].t=t;
+      const mark=el.querySelector('.vst-kf[data-kf="'+d.ki+'"]');
+      if(mark) mark.style.left=(vstClamp(c.kf[d.ki].t,0,1)*100)+'%';
+      vstQueuePreview(VST.t); return;
+    }
+    if(d.type==='move'){
+      if(Math.abs(e.clientX-d.x0)<6&&!d.moved) return;
+      d.moved=true;
+      const from=proj.clips[d.ci]; if(!from) return;
+      const el=tr.querySelector('.vst-clip[data-id="'+from.id+'"]'); if(!el) return;
+      el.classList.add('dragging');
+      /* 用指针位置找目标，不销毁任何节点：只插到目标前 / 后 */
+      const under=document.elementFromPoint(e.clientX,e.clientY);
+      const target=under&&under.closest?under.closest('.vst-clip'):null;
+      if(target&&target!==el&&target.parentElement===tr){
+        const toId=target.dataset.id;
+        const to=proj.clips.findIndex(c=>c.id===toId);
+        if(to>=0&&to!==d.ci){
+          const r=target.getBoundingClientRect();
+          const before=e.clientX<r.left+r.width/2;
+          if(before) tr.insertBefore(el,target); else tr.insertBefore(el,target.nextSibling);
+          const [m]=proj.clips.splice(d.ci,1);
+          const ni=proj.clips.findIndex(c=>c.id===toId);
+          proj.clips.splice(before?ni:ni+1,0,m);
+          d.ci=proj.clips.findIndex(c=>c.id===from.id);
+        }
+      }
+      return;
+    }
+  };
+  const onUp=e=>{
+    const d=VST.dragging;
+    if(d){
+      const tr=trackNow()||track;
+      tr.querySelectorAll('.vst-clip.dragging').forEach(x=>x.classList.remove('dragging'));
+      if(d.type!=='seek'){
+        vstSave();
+        if(VST.body&&VST.body.isConnected){
+          vstBuildTimeline(VST.body); vstBuildInspector(VST.body);
+          try{ vstPadSync(); }catch(err){}
+          try{ vstQSyncSel(); }catch(err){}
+          vstQueuePreview(VST.t);
+        }
+      }
+    }
+    VST.dragging=null;
+    try{ track.releasePointerCapture&&track.releasePointerCapture(e.pointerId); }catch(err){}
+  };
+  VST._onMove=onMove; VST._onUp=onUp;
+  document.addEventListener('pointermove',onMove,{passive:false});
+  document.addEventListener('pointerup',onUp);
+  document.addEventListener('pointercancel',onUp);
+  track.addEventListener('pointerdown',e=>{
+    const proj=vstProj();
+    const kf=e.target.closest('.vst-kf');
+    const clip=kf?kf.closest('.vst-clip'):e.target.closest('.vst-clip');
+    const handle=e.target.closest('.vst-handle');
+    let drag=null;
+    if(e.target.dataset&&e.target.dataset.seek){
+      drag={type:'seek'}; seekFrom(e);
+    }else if(kf&&clip){
+      const ci=proj.clips.findIndex(c=>c.id===clip.dataset.id);
+      VST.sel=clip.dataset.id; VST.kfSel=+kf.dataset.kf;
+      drag={type:'kf',ci,ki:+kf.dataset.kf,x0:e.clientX};
+    }else if(handle&&clip){
+      const ci=proj.clips.findIndex(c=>c.id===clip.dataset.id);
+      VST.sel=clip.dataset.id;
+      drag={type:'trim',ci,side:handle.dataset.handle,x0:e.clientX,
+        dur0:vstClipDur(proj.clips[ci]),in0:proj.clips[ci].in||0,pps:pxPerSec()};
+    }else if(clip){
+      VST.sel=clip.dataset.id; VST.kfSel=null;
+      drag={type:'move',ci:proj.clips.findIndex(c=>c.id===clip.dataset.id),
+        x0:e.clientX,moved:false};
+    }else{
+      drag={type:'seek'}; seekFrom(e);
+    }
+    VST.dragging=drag;
+    if(drag.type!=='seek') vstBuildInspector(VST.body||body);
+    try{ track.setPointerCapture(e.pointerId); }catch(err){}
+    e.preventDefault();
+  });
+  /* 缩略图：只生成可见片段，每批 3 张、批间让一帧 */
+  vstScheduleThumbs(host);
+}
+function vstScheduleThumbs(host){
+  const p=vstProj();
+  VST.thumbQ=p.clips.map((c,i)=>({id:c.id,i})).filter(x=>!VST.thumbCache?.has(x.id));
+  VST.thumbCache=VST.thumbCache||new Map();
+  if(VST.thumbBusy) return;
+  VST.thumbBusy=true;
+  const run=()=>{
+    if(!VST.body||!VST.body.isConnected){ VST.thumbBusy=false; return; }
+    const batch=VST.thumbQ.splice(0,3);
+    if(!batch.length){ VST.thumbBusy=false; return; }
+    batch.forEach(({id,i})=>{
+      const c=p.clips.find(x=>x.id===id); if(!c) return;
+      const el=host.querySelector('[data-thumb="'+id+'"]'); if(!el) return;
+      try{
+        const [w,h]=vstPreviewDims();
+        const cv=document.createElement('canvas'); cv.width=Math.max(24,Math.round(w*.55));
+        cv.height=Math.max(16,Math.round(h*.55));
+        vstRenderFrame(vstClipStart(i)+vstClipDur(c)*.5,cv.getContext('2d'),cv.width,cv.height,
+          {quality:1,playing:false});
+        const url=cv.toDataURL('image/jpeg',.55);
+        VST.thumbCache.set(id,url); el.style.backgroundImage='url('+url+')';
+      }catch(e){}
+    });
+    requestAnimationFrame(run);
+  };
+  requestAnimationFrame(run);
+}
+/* ---------- 检查器 ---------- */
+function vstBuildInspector(body){
+  const box=body.querySelector('#vstInsp'); if(!box) return;
+  box.innerHTML='';
+  const p=vstProj(), idx=p.clips.findIndex(c=>c.id===VST.sel);
+  if(idx<0){ box.append(spEl('div','vst-empty','点时间线上任意片段，在这里编辑')); return; }
+  const c=p.clips[idx], src=VST.src.get(c.srcId);
+  const h=spEl('div','vst-insp-h');
+  h.append(spEl('b','',(c.name||src?.label||'片段')+' · 第 '+(idx+1)+' 段'));
+  h.append(spEl('small','',vstClipDur(c).toFixed(2)+'s'));
+  box.append(h);
+  const row=spEl('div','vst-insp-row');
+  const add=(label,el)=>{ const d=spEl('label','vst-f'); d.append(spEl('span','',label),el); row.append(d); };
+  const inp=spEl('input',''); inp.type='text'; inp.value=c.name||''; inp.placeholder='片段名';
+  inp.onchange=()=>{ c.name=inp.value.trim(); vstSave(); vstBuildTimeline(body); };
+  add('名称',inp);
+  const dur=spEl('input',''); dur.type='number'; dur.min=.2; dur.max=86400; dur.step=.1;
+  dur.value=vstClipDur(c).toFixed(1);
+  dur.onchange=()=>{ c.dur=vstClamp(+dur.value||3,.2,86400); vstSave(); vstRebuild(); };
+  add('时长（秒）',dur);
+  const sel=(opts,val,fn)=>{ const s=spEl('select','');
+    opts.forEach(o=>{ const op=document.createElement('option'); op.value=o.id; op.textContent=o.name;
+      if(o.id===val) op.selected=true; s.append(op); });
+    s.onchange=()=>fn(s.value); return s; };
+  const tr=sel(VST_TRANS,c.trans,v=>{ c.trans=v; vstSave(); vstQueuePreview(VST.t); });
+  add('转场',tr);
+  const mo=sel(VST_MOTIONS,c.motion,v=>{ c.motion=v; vstSave(); vstQueuePreview(VST.t); });
+  add('运镜',mo);
+  if(src&&src.kind==='video'){
+    const i=spEl('input',''); i.type='number'; i.min=0; i.max=Math.max(0,src.dur-.2); i.step=.1;
+    i.value=(c.in||0).toFixed(1);
+    i.onchange=()=>{ c.in=vstClamp(+i.value||0,0,Math.max(0,src.dur-.2)); vstSave(); vstRebuild(); };
+    add('源内入点（秒）',i);
+  }
+  box.append(row);
+  /* 风格 A / B：接入完整色彩引擎 */
+  const lk=spEl('div','vst-looks');
+  lk.append(spEl('div','vst-sec-h','片段风格 <em>上方「✦ 给片段加滤镜」点一下就套上</em>'));
+  const lsum=spEl('div','vst-look-summary');
+  lsum.append(spEl('span','',vstLookName(c.lookA)+' → '+vstLookName(c.lookB)));
+  const swap=spEl('button','vst-mini','⇄ 换滤镜 ›');
+  swap.onclick=()=>document.getElementById('vstQuick')?.scrollIntoView({behavior:'smooth',block:'center'});
+  lsum.append(swap); lk.append(lsum);
+  const advLook=document.createElement('details'); advLook.className='vst-adv';
+  advLook.open=!!VST.lookAdvOpen;
+  advLook.ontoggle=()=>{ VST.lookAdvOpen=advLook.open; };
+  advLook.append(spEl('summary','','高级：起点 A → 终点 B 混合 ▾'));
+  const lrow=spEl('div','vst-look-row');
+  [['A','起点',c.lookA],['B','终点',c.lookB]].forEach(([slot,label,spec])=>{
+    const card=spEl('button','vst-look-card','');
+    card.append(spEl('small','',label+' · '+slot));
+    card.append(spEl('b','',vstLookName(spec)));
+    card.append(spEl('i','','点此更换 ›'));
+    card.onclick=()=>vstOpenStyleLibrary(slot);
+    lrow.append(card);
+  });
+  const arrow=spEl('div','vst-look-arrow','→'); lrow.insertBefore(arrow,lrow.children[1]);
+  advLook.append(lrow);
+  const quick=spEl('div','vst-look-quick');
+  const qbtn=(t,fn)=>{ const b=spEl('button','vst-mini',t); b.onclick=fn; quick.append(b); return b; };
+  qbtn('原图 → 当前编辑',()=>{ c.lookA=deep(VST_LOOK_A); c.lookB=deep(VST_LOOK_B); vstSave(); vstRebuild(); });
+  qbtn('冷调 → 暖调（盘动画）',()=>{
+    c.lookA={k:'pad',id:vstPickPad('cinema'),x:-.55,y:-.25,a:1};
+    c.lookB={k:'pad',id:vstPickPad('vivid'),x:.55,y:.20,a:1};
+    c.kf[0].p=Object.assign(vstDefaultKF(),{mix:0,px:-.55,py:-.25});
+    c.kf[c.kf.length-1].p=Object.assign(vstDefaultKF(),{mix:1,px:.55,py:.20});
+    vstSave(); vstRebuild(); toast('已生成冷暖盘动画');
+  });
+  qbtn('两款滤镜互溶',()=>{
+    c.lookA={k:'filter',id:vstPickFilter('电影'),a:1};
+    c.lookB={k:'filter',id:vstPickFilter('柯达金'),a:1};
+    vstSave(); vstRebuild(); toast('已设为两款滤镜互溶');
+  });
+  qbtn('交换 A / B',()=>{ const t=c.lookA; c.lookA=c.lookB; c.lookB=t; vstSave(); vstRebuild(); });
+  advLook.append(quick);
+  lk.append(advLook);
+  if(src&&src.kind==='video') lk.append(spEl('div','vst-tip',
+    '视频源片段使用原始画面，关键帧里的亮度 / 色温 / 饱和度仍以 2D 生效；'+
+    '要逐帧套用完整滤镜与着色器调色，请用照片片段或预设页的「快速导出实况」。'));
+  box.append(lk);
+  /* 关键帧：11 根滑杆收进折叠，默认不压人；状态跨重建保留 */
+  const advKf=document.createElement('details'); advKf.className='vst-adv';
+  advKf.open=!!VST.kfAdvOpen;
+  advKf.ontoggle=()=>{ VST.kfAdvOpen=advKf.open; };
+  advKf.append(spEl('summary','','高级：关键帧与动画参数 ▾'));
+  const kh=spEl('div','vst-kf-h');
+  kh.append(spEl('b','','关键帧 · '+c.kf.length+' 个'));
+  const kb=spEl('div','vst-kf-btns');
+  const addK=spEl('button','vst-mini','＋ 在播放头处添加');
+  addK.onclick=()=>{
+    const h2=vstClipAt(VST.t);
+    if(!h2||h2.clip.id!==c.id){ toast('先把播放头拖到这个片段内'); return; }
+    const t=vstClamp(h2.rawU,.02,.98);
+    c.kf.push({t,p:vstKFPlain(c,t)});
+    c.kf.sort((a,b)=>a.t-b.t);
+    VST.kfSel=c.kf.findIndex(k=>Math.abs(k.t-t)<.001);
+    vstSave(); vstRebuild();
+  };
+  const delK=spEl('button','vst-mini','− 删除选中');
+  delK.onclick=()=>{
+    if(VST.kfSel===null||VST.kfSel===0||VST.kfSel===c.kf.length-1){ toast('首尾关键帧不能删除'); return; }
+    c.kf.splice(VST.kfSel,1); VST.kfSel=null; vstSave(); vstRebuild();
+  };
+  kb.append(addK,delK); kh.append(kb); advKf.append(kh);
+  const chips=spEl('div','vst-kf-chips');
+  c.kf.forEach((k,i)=>{
+    const b=spEl('button','vst-chip'+(VST.kfSel===i?' on':''),Math.round(k.t*100)+'%');
+    b.onclick=()=>{ VST.kfSel=i; vstSeek(vstClipStart(idx)+k.t*vstClipDur(c),false); vstBuildInspector(body); };
+    chips.append(b);
+  });
+  advKf.append(chips);
+  const ki=VST.kfSel===null?0:vstClamp(VST.kfSel,0,c.kf.length-1);
+  const kp=c.kf[ki]?c.kf[ki].p:vstDefaultKF();
+  const grid=spEl('div','vst-param');
+  const param=(label,key,min,max,step)=>{
+    const d=spEl('label','vst-p'); d.append(spEl('span','',label));
+    const i=spEl('input',''); i.type='range'; i.min=min;i.max=max;i.step=step;i.value=kp[key];
+    const v=spEl('b','',(+kp[key]).toFixed(2)); d.append(i,v);
+    i.oninput=()=>{ kp[key]=+i.value; v.textContent=(+i.value).toFixed(2);
+      VST.lastSig=''; vstQueuePreview(VST.t); };
+    i.onchange=()=>vstSave();
+    grid.append(d); return i;
+  };
+  param('A → B 混合','mix',0,1,.01);
+  param('盘 COLOR 轴','px',-1,1,.01);
+  param('盘 TONE 轴','py',-1,1,.01);
+  param('盘强度','pa',0,1,.01);
+  param('亮度','bright',-1,1,.01);
+  param('色温','temp',-1,1,.01);
+  param('饱和度','sat',-1,1,.01);
+  param('缩放','zoom',.7,2,.01);
+  param('淡入淡出','fade',0,1,.01);
+  param('水平位移','dx',-.3,.3,.005);
+  param('垂直位移','dy',-.3,.3,.005);
+  advKf.append(grid); box.append(advKf);
+  const ops=spEl('div','vst-insp-ops');
+  const dup=spEl('button','vst-mini','⧉ 复制片段');
+  dup.onclick=()=>{ const n=JSON.parse(JSON.stringify(c)); n.id=vstId('clip');
+    p.clips.splice(idx+1,0,n); VST.sel=n.id; vstSave(); vstRebuild(); };
+  const del=spEl('button','vst-mini danger','✕ 删除片段');
+  del.onclick=()=>{ if(p.clips.length<=1){ toast('至少保留一个片段'); return; }
+    p.clips.splice(idx,1); VST.sel=p.clips[0].id; VST.t=0; vstSave(); vstRebuild(); };
+  const prev=spEl('button','vst-mini','◀ 上一帧');
+  prev.onclick=()=>vstSeek(Math.max(0,VST.t-1/p.fps),false);
+  const next=spEl('button','vst-mini','下一帧 ▶');
+  next.onclick=()=>vstSeek(Math.min(vstTotal()-.001,VST.t+1/p.fps),false);
+  ops.append(dup,del,prev,next); box.append(ops);
+  box.append(spEl('div','vst-tip',
+    '关键帧参数在片段内平滑插值：拖时间线上的菱形点改位置，滑杆改该点的画面。'
+    +'「A → B 混合」在起点风格与终点风格两张基准帧之间过渡；盘 COLOR / TONE / 强度'
+    +'会让 pad 类风格沿二维盘实时移动。所有风格帧都在导出前预生成，'
+    +'录制循环只做 2D 合成，不逐帧跑 WebGL。首尾两个锚点固定位置，只改参数。'));
+}
+/* ---------- 页面 ---------- */
+/* ============================================================
+   风格库：片段可以绑定「任意一套色彩方案」。
+   不是另写一套简化调色，而是把主画面的完整渲染管线（433 款滤镜 /
+   78 套模板 / 20 种盘模式 / 当前编辑 / 原图）预渲染成基准帧，
+   导出时只在两张基准帧之间做 2D 合成 —— 效果与主编辑器逐像素一致。
+   ============================================================ */
+const VST_LIB_TABS=[
+  {id:'filter',name:'滤镜库'},{id:'template',name:'一键模板'},
+  {id:'pad',name:'调色盘'},{id:'quick',name:'快捷'}
+];
+let vstLibSlot='B', vstLibQuery='', vstLibCat='全部',
+    vstPadId='vivid', vstPadX=.32, vstPadY=-.18, vstPadAmt=1,
+    vstThumbQ=[], vstThumbBusy=false;
+function vstCloseLib(){
+  VST.libOpen=false;
+  const el=document.getElementById('vstLib'); if(el) el.remove();
+}
+function vstOpenStyleLibrary(slot){
+  vstLibSlot=slot||'B'; VST.libOpen=true;
+  const clip=vstProj().clips.find(c=>c.id===VST.sel);
+  if(!clip){ toast('先点选时间线上的一个片段'); return; }
+  const old=document.getElementById('vstLib'); if(old) old.remove();
+  const mask=spEl('div','vst-lib'); mask.id='vstLib';
+  mask.addEventListener('pointerdown',e=>{ if(e.target===mask) vstCloseLib(); });
+  const panel=spEl('div','vst-lib-panel'); mask.append(panel);
+  const head=spEl('div','vst-lib-head');
+  const ttl=spEl('div','','');
+  ttl.append(spEl('b','','风格库'));
+  ttl.append(spEl('small','','设为 '+(vstLibSlot==='A'?'起点 A':'终点 B')+
+    ' · 片段「'+(clip.name||'未命名')+'」· 全部走主编辑器同一套渲染管线'));
+  const close=spEl('button','vst-lib-close','✕'); close.onclick=vstCloseLib;
+  head.append(ttl,close); panel.append(head);
+  const bar=spEl('div','vst-lib-bar');
+  const search=spEl('input','vst-lib-search','');
+  search.type='search'; search.placeholder='搜索滤镜 / 模板 / 盘模式…';
+  search.value=vstLibQuery;
+  search.oninput=()=>{ vstLibQuery=search.value.trim(); vstRenderLibBody(body); };
+  bar.append(search);
+  const tabs=spEl('div','vst-lib-tabs');
+  VST_LIB_TABS.forEach(t=>{
+    const b=spEl('button','vst-lib-tab'+(VST.libTab===t.id?' on':''),t.name);
+    b.onclick=()=>{ VST.libTab=t.id; vstLibCat='全部';
+      [...tabs.children].forEach(x=>x.classList.remove('on')); b.classList.add('on');
+      vstRenderLibBody(body); };
+    tabs.append(b);
+  });
+  bar.append(tabs); panel.append(bar);
+  const body=spEl('div','vst-lib-body'); panel.append(body);
+  const foot=spEl('div','vst-lib-foot');
+  foot.append(spEl('span','','点任意卡片即设为 '+(vstLibSlot==='A'?'起点 A':'终点 B')+
+    '；A→B 之间由关键帧的混合滑杆连续过渡'));
+  panel.append(foot);
+  document.body.append(mask);
+  vstRenderLibBody(body);
+  setTimeout(()=>search.focus(),60);
+}
+function vstSetLook(slot,spec){
+  const c=vstProj().clips.find(x=>x.id===VST.sel); if(!c) return;
+  if(slot==='A') c.lookA=deep(spec); else c.lookB=deep(spec);
+  vstSave(); vstCloseLib(); vstRebuild();
+  toast('已设为 '+(slot==='A'?'起点 A':'终点 B')+'：'+vstLookName(spec));
+}
+function vstLibCard(name,sub,spec,thumbSpec,extra){
+  const d=spEl('button','vst-lib-card','');
+  const th=spEl('div','vst-lib-th'); th.dataset.look=vstLookKey(thumbSpec||spec,0,0,1);
+  th.dataset.spec=encodeURIComponent(JSON.stringify(thumbSpec||spec));
+  th.style.background='linear-gradient(145deg,rgba(var(--accent-rgb),.14),var(--w045))';
+  d.append(th);
+  d.append(spEl('b','',name));
+  if(sub) d.append(spEl('small','',sub));
+  if(extra) d.append(spEl('i','',extra));
+  d.onclick=()=>vstSetLook(vstLibSlot,spec);
+  return d;
+}
+function vstRenderLibBody(body){
+  if(!body) return;
+  body.innerHTML=''; vstThumbQ=[]; vstThumbBusy=false;
+  const q=vstLibQuery.toLowerCase();
+  /* ---------- 滤镜库 ---------- */
+  if(VST.libTab==='filter'){
+    const groups=['全部',...new Set(FILTERS.map(f=>f.group).filter(Boolean))];
+    const cats=spEl('div','vst-lib-cats');
+    groups.forEach(g=>{
+      const b=spEl('button','vst-lib-cat'+(vstLibCat===g?' on':''),g);
+      b.onclick=()=>{ vstLibCat=g; vstRenderLibBody(body); };
+      cats.append(b);
+    });
+    body.append(cats);
+    let list=FILTERS.filter(f=>{
+      const okCat=vstLibCat==='全部'||f.group===vstLibCat;
+      const okQ=!q||(f.name||'').toLowerCase().includes(q)||(f.group||'').toLowerCase().includes(q);
+      return okCat&&okQ;
+    });
+    if(!q) list=list.slice(0,120);
+    body.append(spEl('div','vst-lib-note',
+      '共 '+FILTERS.length+' 款'+(q?'，匹配 '+list.length+' 款':'，当前显示 '+list.length+' 款')+
+      ' · 搜索可跨全部 '+(groups.length-1)+' 个分类'));
+    const grid=spEl('div','vst-lib-grid');
+    list.forEach(f=>grid.append(vstLibCard(f.name,f.group,{k:'filter',id:f.name,a:1})));
+    body.append(grid);
+    if(!list.length) body.append(spEl('div','vst-empty','没有匹配的滤镜'));
+  }
+  /* ---------- 一键模板 ---------- */
+  else if(VST.libTab==='template'){
+    const cats=spEl('div','vst-lib-cats');
+    ['全部',...TEMPLATE_CATS.slice(1)].forEach(g=>{
+      const b=spEl('button','vst-lib-cat'+(vstLibCat===g?' on':''),g);
+      b.onclick=()=>{ vstLibCat=g; vstRenderLibBody(body); };
+      cats.append(b);
+    });
+    body.append(cats);
+    const list=QUICK.filter(t=>(vstLibCat==='全部'||t.cat===vstLibCat)
+      &&(!q||(t.name||'').toLowerCase().includes(q)||(t.cat||'').toLowerCase().includes(q)));
+    body.append(spEl('div','vst-lib-note',
+      '共 '+QUICK.length+' 套 · 每套含滤镜层 + 12 色调盘 + 语义盘 + 基础参数 + 画框'));
+    const grid=spEl('div','vst-lib-grid');
+    list.forEach(t=>grid.append(vstLibCard(t.name,t.cat+' · '+t.f,
+      {k:'template',id:t.name,a:1})));
+    body.append(grid);
+  }
+  /* ---------- 调色盘：20 种模式 + 可拖二维盘 ---------- */
+  else if(VST.libTab==='pad'){
+    const wrap=spEl('div','vst-pad-wrap');
+    const info=spEl('div','vst-pad-info');
+    info.innerHTML='<b>二维盘 · '+PAD_MODES.length+' 种模式</b><small>'+
+      '横轴 COLOR（冷↔暖）、纵轴 TONE（亮↔暗）。拖动盘面取坐标，'+
+      '关键帧里还能让 x / y / 强度随时间变化，形成「盘动画」。</small>';
+    wrap.append(info);
+    const chips=spEl('div','vst-lib-cats');
+    PAD_MODES.forEach(m=>{
+      const b=spEl('button','vst-lib-cat'+(vstPadId===m.id?' on':''),m.name);
+      b.title=m.desc||'';
+      b.onclick=()=>{ vstPadId=m.id; vstRenderLibBody(body); };
+      chips.append(b);
+    });
+    wrap.append(chips);
+    const meta=PAD_MODE_MAP.get(vstPadId)||PAD_MODES[0];
+    const row=spEl('div','vst-pad-row');
+    const pad=spEl('div','vst-minipad'); pad.id='vstMiniPad';
+    const dot=spEl('i','vst-minipad-dot'); pad.append(dot);
+    const place=()=>{
+      dot.style.left=((vstPadX+1)/2*100)+'%';
+      dot.style.top=((1-(vstPadY+1)/2)*100)+'%';
+    };
+    const pick=e=>{
+      const r=pad.getBoundingClientRect();
+      vstPadX=vstClamp((e.clientX-r.left)/r.width*2-1,-1,1);
+      vstPadY=vstClamp(1-(e.clientY-r.top)/r.height*2,-1,1);
+      place(); updLabels();
+    };
+    pad.addEventListener('pointerdown',e=>{ pick(e); pad.setPointerCapture(e.pointerId); });
+    pad.addEventListener('pointermove',e=>{ if(e.buttons) pick(e); });
+    const side=spEl('div','vst-pad-side');
+    const lab=spEl('div','vst-pad-vals'); side.append(lab);
+    const updLabels=()=>{
+      lab.textContent='COLOR '+vstPadX.toFixed(2)+'  ·  TONE '+vstPadY.toFixed(2)+
+        '  ·  强度 '+vstPadAmt.toFixed(2);
+    };
+    const amt=spEl('input',''); amt.type='range'; amt.min=0;amt.max=1;amt.step=.01;amt.value=vstPadAmt;
+    amt.oninput=()=>{ vstPadAmt=+amt.value; updLabels(); };
+    side.append(spEl('span','','盘强度'),amt);
+    side.append(spEl('div','vst-pad-desc',meta.desc||''));
+    const btns=spEl('div','vst-pad-btns');
+    const mk=(t,slot)=>{ const b=spEl('button','vst-tbtn accent',t);
+      b.onclick=()=>vstSetLook(slot,{k:'pad',id:vstPadId,x:vstPadX,y:vstPadY,a:vstPadAmt});
+      return b; };
+    btns.append(mk('设为起点 A','A'),mk('设为终点 B','B'));
+    side.append(btns); row.append(pad,side); wrap.append(row);
+    body.append(wrap);
+    /* 常用盘坐标一键 */
+    const presets=spEl('div','vst-lib-grid');
+    [['冷调电影',-.62,-.30],['暖金日落',.62,.18],['奶油高调',.12,.55],
+     ['浓郁暗调',-.18,-.55],['鲜艳通透',.35,.30],['中性',0,0]].forEach(([n,x,y])=>{
+      const b=spEl('button','vst-lib-card','');
+      b.append(spEl('b','',n),spEl('small','',meta.name+' · x '+x+' / y '+y));
+      b.onclick=()=>vstSetLook(vstLibSlot,{k:'pad',id:vstPadId,x,y,a:vstPadAmt});
+      presets.append(b);
+    });
+    body.append(spEl('div','vst-lib-note','常用盘位 · 点一下直接套用'),presets);
+    place(); updLabels();
+  }
+  /* ---------- 快捷 ---------- */
+  else{
+    const grid=spEl('div','vst-lib-grid');
+    grid.append(vstLibCard('当前编辑','主编辑器里这一刻的全部调色',{k:'current'},null,
+      '随主编辑器变化 · 自动重算'));
+    grid.append(vstLibCard('原图','未调色的原始画面',{k:'original'},null,'零位严格恒等'));
+    body.append(grid);
+    body.append(spEl('div','vst-lib-note','',
+      '把 A 设为「原图」、B 设为某个滤镜，再把关键帧的混合从 0 推到 1，就是一段调色渐显；'+
+      'A 与 B 设成两款不同滤镜，则是风格互溶。'));
+  }
+  vstScheduleLookThumbs(body);
+}
+function vstScheduleLookThumbs(body){
+  if(vstThumbBusy) return;
+  vstThumbQ=[...body.querySelectorAll('[data-look]')].filter(el=>!el.style.backgroundImage);
+  if(!vstThumbQ.length) return;
+  vstThumbBusy=true;
+  const run=()=>{
+    if(!document.getElementById('vstLib')){ vstThumbBusy=false; return; }
+    const batch=vstThumbQ.splice(0,3);
+    if(!batch.length){ vstThumbBusy=false; return; }
+    batch.forEach(el=>{
+      if(!el.isConnected) return;
+      try{
+        const spec=JSON.parse(decodeURIComponent(el.dataset.spec));
+        const url=vstLookThumb(spec,true);
+        if(url) el.style.backgroundImage='url('+url+')';
+      }catch(e){}
+    });
+    try{ ensureToneLut(); }catch(e){} render();
+    requestAnimationFrame(run);
+  };
+  requestAnimationFrame(run);
+}
+/* ---------- 模板升级：每套用真实的滤镜 / 模板 / 盘模式 ---------- */
+/* ============================================================
+   片段调色盘：一个圆盘 + 一根强度条，拖一下就改当前片段。
+   与照片编辑器那套 20 模式 + A/B + 三根关键帧轴不同，这里只有：
+     拖盘 = 立即变（2D 映射，零 WebGL，跟手）
+     松手 = 存进片段关键帧，预览与导出同一条链路，绝不跳变
+   完整 shader 盘仍在「更多风格」里，作为进阶而不是必经之路。
+   ============================================================ */
+const VST_PAD_HOT=['vivid','cinema','sunset','coolfilm'];
+function vstPadState(c){
+  if(!c.pad) c.pad={id:'vivid',x:0,y:0,a:1};
+  return c.pad;
+}
+/* 盘模式表 → 亮度 / 色温 / 饱和三个 2D 量。只遍历预编译 flat 表，
+   不构造 state、不跑 shader，pointermove 每帧调用也没有压力。 */
+function vstPadTo2D(id,x,y,a){
+  const m=PAD_MODE_MAP.get(id)||PAD_MODES[0];
+  let sa=.0,vi=0,br=0,ex=0,te=0,co=0;
+  const amt=Math.min(1,Math.hypot(x,y))*a, F=m.flat||[];
+  for(let i=0;i<F.length;i++){
+    const r=F[i], xx=r[0]===2?Math.max(0,x):x;
+    const d=(r[3]*xx+r[4]*y)*a+r[5]*amt;
+    if(!d) continue;
+    switch(r[1]){
+      case 'saturation':sa+=d;break; case 'vibrance':vi+=d;break;
+      case 'brilliance':br+=d;break; case 'exposure':ex+=d;break;
+      case 'temp':te+=d;break;      case 'contrast':co+=d;break;
+    }
+  }
+  return {sat:clamp(sa*.9+vi*.6,-1,1),
+    bright:clamp(br*.8+ex*.6-co*.12,-1,1),
+    temp:clamp(te*.85,-1,1)};
+}
+function vstPadApply(live){
+  const c=vstProj().clips.find(x=>x.id===VST.sel); if(!c) return;
+  const q=vstPadState(c), v=vstPadTo2D(q.id,q.x,q.y,q.a);
+  /* 整段生效：所有关键帧写同一组值；片段内不会忽然变回去 */
+  c.kf.forEach(k=>{ k.p.sat=v.sat; k.p.bright=v.bright; k.p.temp=v.temp; });
+  const lab=document.getElementById('vstPadVal');
+  if(lab){ const m=PAD_MODE_MAP.get(q.id)||PAD_MODES[0];
+    lab.textContent=m.name+' · COLOR '+q.x.toFixed(2)+' / TONE '+q.y.toFixed(2)+
+      ' / 强度 '+q.a.toFixed(2); }
+  if(live) vstQueuePreview(VST.t);
+  else { vstSave(); vstRebuild(); }
+}
+function vstPadSync(){
+  const c=vstProj().clips.find(x=>x.id===VST.sel); if(!c) return;
+  const q=vstPadState(c);
+  const dot=document.getElementById('vstPadDot');
+  if(dot){ dot.style.left=((q.x+1)/2*100)+'%'; dot.style.top=((1-(q.y+1)/2)*100)+'%'; }
+  const amt=document.getElementById('vstPadAmt'); if(amt) amt.value=q.a;
+  document.querySelectorAll('.vst-pad-mode').forEach(b=>{
+    b.classList.toggle('on',b.dataset.pad===q.id);
+  });
+  const lab=document.getElementById('vstPadVal');
+  if(lab){ const m=PAD_MODE_MAP.get(q.id)||PAD_MODES[0];
+    lab.textContent=m.name+' · COLOR '+q.x.toFixed(2)+' / TONE '+q.y.toFixed(2)+
+      ' / 强度 '+q.a.toFixed(2); }
+  const cf=document.getElementById('vstPadCurF');
+  if(cf){
+    const st=vstClipStyle(c);
+    cf.textContent=st.filter?'当前滤镜：'+st.filter+'（与盘叠加生效）':'当前滤镜：无 · 点上方卡片加一个';
+  }
+}
+function vstPadBuild(){
+  const box=spEl('div','vst-padbox'); box.id='vstPadBox';
+  const head=spEl('div','vst-padbox-h');
+  const t=spEl('div','vst-padbox-t');
+  t.append(spEl('b','','◉ 片段调色盘'));
+  t.append(spEl('small','','拖一下就改这一段 · 不用管风格 A/B 和关键帧'));
+  head.append(t);
+  const val=spEl('div','vst-padbox-val',''); val.id='vstPadVal'; head.append(val);
+  box.append(head);
+  const body=spEl('div','vst-padbox-b');
+  const pad=spEl('div','vst-padbig'); pad.id='vstPadBig';
+  pad.append(spEl('span','vst-padbig-x','← 冷　　COLOR　　暖 →'));
+  pad.append(spEl('span','vst-padbig-y','↑ 亮　TONE　暗 ↓'));
+  const dot=spEl('i','vst-padbig-dot'); dot.id='vstPadDot'; pad.append(dot);
+  const pick=e=>{
+    const r=pad.getBoundingClientRect();
+    const c=vstProj().clips.find(x=>x.id===VST.sel); if(!c) return;
+    const q=vstPadState(c);
+    q.x=vstClamp((e.clientX-r.left)/r.width*2-1,-1,1);
+    q.y=vstClamp(1-(e.clientY-r.top)/r.height*2,-1,1);
+    dot.style.left=((q.x+1)/2*100)+'%'; dot.style.top=((1-(q.y+1)/2)*100)+'%';
+    vstPadApply(true);
+  };
+  pad.addEventListener('pointerdown',e=>{ pick(e); try{ pad.setPointerCapture(e.pointerId); }catch(err){} });
+  pad.addEventListener('pointermove',e=>{ if(e.buttons) pick(e); });
+  pad.addEventListener('pointerup',()=>vstPadApply(false));
+  pad.addEventListener('pointercancel',()=>vstPadApply(false));
+  body.append(pad);
+  const side=spEl('div','vst-padbox-side');
+  side.append(spEl('div','vst-padbox-lb','常用盘'));
+  const hot=spEl('div','vst-pad-modes');
+  VST_PAD_HOT.forEach(id=>{
+    const m=PAD_MODE_MAP.get(id); if(!m) return;
+    const b=spEl('button','vst-pad-mode',m.name); b.dataset.pad=id;
+    b.title=m.desc||'';
+    b.onclick=()=>{
+      const c=vstProj().clips.find(x=>x.id===VST.sel); if(!c) return;
+      vstPadState(c).id=id; vstPadApply(false);
+    };
+    hot.append(b);
+  });
+  side.append(hot);
+  const more=document.createElement('details'); more.className='vst-pad-more';
+  more.append(spEl('summary','','全部 '+PAD_MODES.length+' 种盘模式 ▾'));
+  const all=spEl('div','vst-pad-modes');
+  PAD_MODES.forEach(m=>{
+    const b=spEl('button','vst-pad-mode',m.short||m.name); b.dataset.pad=m.id;
+    b.title=m.name+'：'+(m.desc||'');
+    b.onclick=()=>{
+      const c=vstProj().clips.find(x=>x.id===VST.sel); if(!c) return;
+      vstPadState(c).id=m.id; vstPadApply(false); more.open=false;
+    };
+    all.append(b);
+  });
+  more.append(all); side.append(more);
+  const amtRow=spEl('label','vst-pad-amt'); amtRow.append(spEl('span','','效果强度'));
+  const amt=spEl('input',''); amt.type='range'; amt.min=0;amt.max=1;amt.step=.01;amt.id='vstPadAmt';
+  amt.oninput=()=>{
+    const c=vstProj().clips.find(x=>x.id===VST.sel); if(!c) return;
+    vstPadState(c).a=+amt.value; vstPadApply(true);
+  };
+  amt.onchange=()=>vstPadApply(false);
+  amtRow.append(amt); side.append(amtRow);
+  const curF=spEl('div','vst-pad-cur',''); curF.id='vstPadCurF'; side.append(curF);
+  const acts=spEl('div','vst-pad-acts');
+  const zero=spEl('button','vst-mini','↺ 归零');
+  zero.onclick=()=>{
+    const c=vstProj().clips.find(x=>x.id===VST.sel); if(!c) return;
+    c.pad={id:vstPadState(c).id,x:0,y:0,a:1}; vstPadApply(false); toast('调色盘已归零');
+  };
+  const syncAll=spEl('button','vst-mini','⧉ 盘同步全部');
+  syncAll.title='把当前盘位与强度复制到整条时间线';
+  syncAll.onclick=()=>{
+    const c=vstProj().clips.find(x=>x.id===VST.sel); if(!c) return;
+    const q=deep(vstPadState(c));
+    vstProj().clips.forEach(x=>{ x.pad=deep(q);
+      const v=vstPadTo2D(q.id,q.x,q.y,q.a);
+      x.kf.forEach(k=>{ k.p.sat=v.sat;k.p.bright=v.bright;k.p.temp=v.temp; });
+    });
+    vstSave(); vstRebuild(); toast('调色盘已同步到全部片段');
+  };
+  const noF=spEl('button','vst-mini','✕ 去掉滤镜');
+  noF.title='只清片段上的滤镜，盘调整保留';
+  noF.onclick=()=>{
+    const c=vstProj().clips.find(x=>x.id===VST.sel); if(!c) return;
+    c.lookA={k:'current'}; c.lookB={k:'current'};
+    vstSave(); vstRebuild(); toast('已去掉片段滤镜 · 盘调整保留');
+  };
+  const jump=spEl('button','vst-mini','✦ 去加滤镜 ›');
+  jump.onclick=()=>document.getElementById('vstQuick')?.scrollIntoView({behavior:'smooth',block:'center'});
+  acts.append(zero,syncAll,noF,jump); side.append(acts);
+  body.append(side); box.append(body);
+  box.append(spEl('div','vst-padbox-note',
+    '横轴冷暖、纵轴明暗、半径越远效果越浓。拖动时是实时 2D 合成，松手即存进片段；'+
+    '预览与导出走同一条链路，所见即所得。要语义保肤 / 完整 shader 盘，点「更多风格」。'));
+  return box;
+}
+/* ============================================================
+   一键滤镜速贴条：预览正下方常驻，点一下就把滤镜套到当前片段。
+   不再需要「选片段 → 点风格卡 → 开全屏弹窗 → 切页签 → 点卡片」。
+   ============================================================ */
+let vstQCat='★ 常用', vstQQuery='', vstQMode='all', vstQApply='one',
+    vstQBusy=false, vstQTimer=0;
+const VST_Q_HOT=42;
+function vstQGroups(){
+  return ['★ 常用',...new Set(FILTERS.map(f=>f.group).filter(Boolean))];
+}
+function vstQList(){
+  const q=vstQQuery.trim().toLowerCase();
+  let list;
+  if(q) list=FILTERS.filter(f=>(f.name||'').toLowerCase().includes(q)
+    ||(f.group||'').toLowerCase().includes(q));
+  else if(vstQCat==='★ 常用') list=FILTERS.slice(0,VST_Q_HOT);
+  else list=FILTERS.filter(f=>f.group===vstQCat);
+  return list.slice(0,120);
+}
+/* 一键套用：默认整段 A=B（否则 A 仍是原图，会变成半段渐显） */
+function vstApplyFilterQuick(name,opt){
+  const o=opt||{}, p=vstProj();
+  const targets=o.all?p.clips.filter(c=>{
+    const s=VST.src.get(c.srcId); return !s||s.kind!=='video';
+  }):[p.clips.find(c=>c.id===VST.sel)].filter(Boolean);
+  if(!targets.length){ toast('先点选时间线上的一个片段'); return; }
+  const spec={k:'filter',id:name,a:1};
+  targets.forEach(c=>{
+    if(vstQMode==='reveal'){
+      c.lookA={k:'original'}; c.lookB=deep(spec);
+      c.kf.forEach(k=>{ k.p.mix=vstClamp(k.t,0,1); });
+    }else{
+      /* 整段：起点与终点都是这个滤镜，mix 怎么插值结果都一致 */
+      c.lookA=deep(spec); c.lookB=deep(spec);
+    }
+  });
+  vstSave(); vstRebuild();
+  toast((o.all?'已给全部片段':'已给当前片段')+'套用「'+name+'」'+
+    (vstQMode==='reveal'?' · 渐显':' · 整段'));
+}
+function vstClearFilterQuick(){
+  const c=vstProj().clips.find(x=>x.id===VST.sel); if(!c) return;
+  c.lookA={k:'original'}; c.lookB={k:'current'};
+  c.kf.forEach(k=>{ k.p.mix=1; });
+  vstSave(); vstRebuild(); toast('已清除滤镜 · 回到当前编辑');
+}
+function vstQCard(f){
+  const spec={k:'filter',id:f.name,a:1};
+  const d=spEl('button','vst-q-card','');
+  d.dataset.filter=f.name;
+  /* 只给内部缩略图挂 data-look：卡片本体若也挂，缩略图队列会翻倍，
+     一半生成白白落在按钮背景上（v1.0.7 实测 filled 只有 1 张的根因） */
+  d.title=f.name+' · '+f.group+'（点一下套用，或拖到时间线片段上）';
+  d.draggable=true;
+  d.addEventListener('dragstart',e=>{
+    try{ e.dataTransfer.setData('text/plain',f.name);
+      e.dataTransfer.effectAllowed='copy'; }catch(err){}
+    d.classList.add('dragging');
+  });
+  d.addEventListener('dragend',()=>d.classList.remove('dragging'));
+  const th=spEl('div','vst-q-th'); th.dataset.look=vstLookKey(spec);
+  th.dataset.spec=encodeURIComponent(JSON.stringify(spec)); d.append(th);
+  d.append(spEl('b','',f.name));
+  d.append(spEl('small','',f.group));
+  d.onclick=()=>vstApplyFilterQuick(f.name);
+  return d;
+}
+function vstQRenderStrip(){
+  const strip=document.getElementById('vstQStrip'); if(!strip) return;
+  strip.innerHTML='';
+  const list=vstQList();
+  const frag=document.createDocumentFragment();
+  list.forEach(f=>frag.append(vstQCard(f)));
+  strip.append(frag);
+  const note=document.getElementById('vstQNote');
+  if(note) note.textContent=vstQQuery.trim()
+    ? '匹配 '+list.length+' 款 · 点一下就套到当前片段'
+    : (vstQCat==='★ 常用'
+       ? '常用 '+list.length+' 款 · 共 '+FILTERS.length+' 款，点分类或搜索找全部'
+       : vstQCat+' · '+list.length+' 款 · 点一下就套到当前片段');
+  vstQSyncSel();
+  vstQFillThumbs(true);
+  setTimeout(()=>vstQFillThumbs(true),130);
+}
+function vstQSyncSel(){
+  const c=vstProj().clips.find(x=>x.id===VST.sel);
+  const lab=document.getElementById('vstQTarget');
+  if(lab){
+    const src=c?VST.src.get(c.srcId):null;
+    lab.textContent=c?('当前：'+((c.name||src?.label||'片段'))+' · '+
+      vstClipStyleLabel(c)):'未选中片段 · 点时间线上任意一段';
+  }
+  const cur=c?vstClipStyle(c):null;
+  document.querySelectorAll('.vst-q-card').forEach(el=>{
+    el.classList.toggle('on',!!(cur&&cur.filter===el.dataset.filter));
+  });
+}
+/* 只生成横向可视区附近的缩略图：滚动节流 + 每帧最多 4 张 + 批末一次 render，
+   433 款不会一口气把主线程堵死 */
+function vstQFillThumbs(force){
+  const strip=document.getElementById('vstQStrip'); if(!strip) return;
+  if(vstQBusy&&!force) return;
+  const view=strip.getBoundingClientRect();
+  /* openSubPage 里 render() 先于 .show，此时 getBoundingClientRect 全为 0。
+     兜底：先出前 16 张，页面显示后再由 vstQRenderStrip 的延时补一次。 */
+  const hidden=view.width<10;
+  let todo=[...strip.querySelectorAll('[data-look]')].filter(el=>{
+    if(el.style.backgroundImage) return false;
+    if(hidden) return true;
+    const r=el.getBoundingClientRect();
+    return r.right>view.left-320&&r.left<view.right+320;
+  });
+  if(hidden) todo=todo.slice(0,16);
+  if(!todo.length) return;
+  vstQBusy=true;
+  const run=()=>{
+    if(!strip.isConnected){ vstQBusy=false; return; }
+    const batch=todo.splice(0,4).filter(el=>el.isConnected&&!el.style.backgroundImage);
+    batch.forEach(el=>{
+      try{
+        const spec=JSON.parse(decodeURIComponent(el.dataset.spec));
+        const url=vstLookThumb(spec,true);
+        if(url) el.style.backgroundImage='url('+url+')';
+      }catch(e){}
+    });
+    try{ ensureToneLut(); }catch(e){} render();
+    if(todo.length) requestAnimationFrame(run);
+    else vstQBusy=false;
+  };
+  requestAnimationFrame(run);
+}
+function vstQBuild(){
+  const box=spEl('div','vst-quick'); box.id='vstQuick';
+  const head=spEl('div','vst-q-head');
+  const left=spEl('div','vst-q-title');
+  left.append(spEl('b','','✦ 给片段加滤镜'));
+  left.append(spEl('small','','点一下就套上 · 也可拖到时间线片段'));
+  head.append(left);
+  const target=spEl('div','vst-q-target',''); target.id='vstQTarget'; head.append(target);
+  const acts=spEl('div','vst-q-acts');
+  const mode=spEl('select','vst-q-sel','');
+  [['all','整段套用'],['reveal','渐显出现']].forEach(([v,n])=>{
+    const o=document.createElement('option'); o.value=v;o.textContent=n;
+    if(v===vstQMode)o.selected=true;mode.append(o); });
+  mode.title='整段套用＝从头到尾都是这个滤镜；渐显出现＝从原图渐变到滤镜';
+  mode.onchange=()=>{ vstQMode=mode.value; toast(vstQMode==='reveal'?'已切为渐显出现':'已切为整段套用'); };
+  acts.append(mode);
+  const all=spEl('button','vst-q-btn','套到全部片段');
+  all.title='把最后点过的滤镜应用到整条时间线'; all.onclick=()=>{
+    const c=vstProj().clips.find(x=>x.id===VST.sel), st=c?vstClipStyle(c):null;
+    if(!st||!st.filter){ toast('先点一款滤镜，再套到全部片段'); return; }
+    vstApplyFilterQuick(st.filter,{all:true});
+  };
+  acts.append(all);
+  const clr=spEl('button','vst-q-btn','↺ 清除'); clr.onclick=vstClearFilterQuick; acts.append(clr);
+  const more=spEl('button','vst-q-btn','模板 / 调色盘 ›');
+  more.title='78 套模板、20 种盘模式、A-B 高级设置';
+  more.onclick=()=>vstOpenStyleLibrary('B'); acts.append(more);
+  head.append(acts); box.append(head);
+  const bar=spEl('div','vst-q-bar');
+  const search=spEl('input','vst-q-search','');
+  search.type='search'; search.placeholder='搜 '+FILTERS.length+' 款滤镜…';
+  search.oninput=()=>{ vstQQuery=search.value; clearTimeout(vstQTimer);
+    vstQTimer=setTimeout(()=>vstQRenderStrip(),110); };
+  bar.append(search);
+  const cats=spEl('div','vst-q-cats'); cats.id='vstQCats';
+  vstQGroups().forEach(g=>{
+    const b=spEl('button','vst-q-cat'+(vstQCat===g?' on':''),g);
+    b.onclick=()=>{
+      vstQCat=g; vstQQuery=''; search.value='';
+      [...cats.children].forEach(x=>x.classList.remove('on')); b.classList.add('on');
+      vstQRenderStrip();
+    };
+    cats.append(b);
+  });
+  bar.append(cats); box.append(bar);
+  const note=spEl('div','vst-q-note',''); note.id='vstQNote'; box.append(note);
+  const strip=spEl('div','vst-q-strip',''); strip.id='vstQStrip';
+  strip.addEventListener('scroll',()=>{ clearTimeout(vstQTimer);
+    vstQTimer=setTimeout(()=>vstQFillThumbs(),90); },{passive:true});
+  box.append(strip);
+  /* 拖到时间线片段：drop 时套到那一段 */
+  const onDrop=e=>{
+    const clip=e.target.closest?e.target.closest('.vst-clip'):null;
+    const name=(()=>{ try{return e.dataTransfer.getData('text/plain');}catch(x){return '';} })();
+    if(!name) return;
+    e.preventDefault();
+    if(clip){ VST.sel=clip.dataset.id; vstApplyFilterQuick(name); }
+    else vstApplyFilterQuick(name);
+  };
+  if(!VST.qDropBound){
+    VST.qDropBound=true;
+    document.addEventListener('dragover',e=>{
+      if(e.target.closest&&e.target.closest('.vst-track')) e.preventDefault();
+    },{passive:false});
+    document.addEventListener('drop',onDrop,true);
+  }
+  return box;
+}
+function vstOnLeave(){
+  vstPause(); vstCloseLib();
+  VST.preview=null; VST.pctx=null; VST.body=null;
+  if(VST.exporting) toast('影片仍在后台导出，进度会在回到视频工作台后显示');
+}
+function renderVideoPage(body){
+  VST.body=body;
+  vstEnsureProject();
+  const w=spWrap(body);
+  const hero=spEl('div','vst-hero');
+  const ht=spEl('div','vst-hero-t');
+  ht.append(spEl('b','','视频工作台'));
+  ht.append(spEl('small','','点滤镜 · 拖调色盘 · 拖片段排序 · 导出'));
+  hero.append(ht);
+  hero.append(spEl('div','vst-hero-tag','IRIS · VIDEO STUDIO'));
+  w.append(hero);
+  const stat=spEl('div','pc-stat vst-stat');
+  [[vstProj().clips.length,'片段'],[vstTotal().toFixed(1)+'s','总时长'],
+   [vstProj().fps+' fps','帧率'],[FILTERS.length+'+'+QUICK.length+'+'+PAD_MODES.length,'可用风格']]
+    .forEach(([v,t])=>{ const d=spEl('div',''); d.innerHTML='<b>'+v+'</b><small>'+t+'</small>'; stat.append(d); });
+  w.append(stat);
+
+  /* 预览 + 播放控制 */
+  const stage=spEl('div','vst-stage');
+  const cv=spEl('canvas','vst-canvas'); cv.id='vstCanvas'; cv.setAttribute('aria-label','视频预览');
+  VST.preview=cv; VST.pctx=cv.getContext('2d',{alpha:false});
+  stage.append(cv);
+  const over=spEl('div','vst-over');
+  over.append(spEl('span','vst-live','● PREVIEW'));
+  stage.append(over); w.append(stage);
+  const bar=spEl('div','vst-playbar');
+  const pb=spEl('button','vst-pbtn primary','▶ 播放'); pb.id='vstPlayBtn';
+  pb.onclick=()=>{ VST.playing?vstPause():vstPlay(); };
+  const stop=spEl('button','vst-pbtn','■ 停止');
+  stop.onclick=()=>{ vstPause(); vstSeek(0,false); };
+  const back=spEl('button','vst-pbtn','◀|'); back.title='上一帧';
+  back.onclick=()=>vstSeek(Math.max(0,VST.t-1/vstProj().fps),false);
+  const fwd=spEl('button','vst-pbtn','|▶'); fwd.title='下一帧';
+  fwd.onclick=()=>vstSeek(Math.min(vstTotal()-.001,VST.t+1/vstProj().fps),false);
+  const loop=spEl('label','vst-check'); const cb=spEl('input',''); cb.type='checkbox'; cb.checked=VST.loop;
+  cb.onchange=()=>VST.loop=cb.checked; loop.append(cb,spEl('span','','循环'));
+  const sc=spEl('input','vst-scrub'); sc.type='range'; sc.min=0;sc.max=1000;sc.value=0;sc.id='vstScrub';
+  sc.oninput=()=>vstSeek(vstTotal()*(+sc.value/1000),false);
+  const tc=spEl('span','vst-tc',''); tc.id='vstTC';
+  bar.append(pb,stop,back,fwd,loop,sc,tc); w.append(bar);
+
+  /* 片段调色盘 + 一键滤镜：预览下方两个核心控件，都不需要理解 A/B */
+  const padBox=vstPadBuild(); w.append(padBox);
+  vstPadSync();
+  const quickBar=vstQBuild(); w.append(quickBar);
+  vstQRenderStrip();
+
+  /* 工具栏 */
+  const tools=spEl('div','vst-tools');
+  w.append(tools);
+  const moreT=document.createElement('details'); moreT.className='vst-more-tools';
+  moreT.append(spEl('summary','','更多操作 ▾'));
+  const moreRow=spEl('div','vst-more-row'); moreT.append(moreRow); tools.after(moreT);
+  const tb=(text,fn,cls,host)=>{ const b=spEl('button','vst-tbtn '+(cls||''),text);
+    b.onclick=fn; (host||tools).append(b); return b; };
+  tb('＋ 当前照片',()=>{ vstAddClip('photo',3); vstRebuild(); toast('已添加照片片段'); });
+  tb('＋ 实况视频',()=>{
+    if(!vstRegisterLive()){ toast('请先导入实况照片（HEIC + MOV）'); return; }
+    vstAddClip('live',Math.min(4,LIVE.duration||3)); vstRebuild(); toast('已添加实况片段');
+  });
+  tb('＋ 导入视频',()=>{
+    const i=document.createElement('input'); i.type='file'; i.accept='video/*'; i.multiple=true;
+    i.onchange=async()=>{
+      for(const f of [...(i.files||[])]){
+        try{ const id=await vstRegisterFile(f); vstAddClip(id,Math.min(4,3)); }
+        catch(e){ toast('无法读取视频：'+f.name); }
+      }
+      vstRebuild(); if((i.files||[]).length) toast('视频片段已导入');
+    };
+    i.click();
+  });
+  tb('＋ 文字卡',()=>{ const id=vstAddColor('文字卡','Iris 调色盘');
+    vstAddClip(id,2,{trans:'fade'}); vstRebuild(); },'',moreRow);
+  tb('⋯ 更多风格（模板 / 完整 shader 盘 / A-B）',()=>{
+    if(!VST.sel){ toast('先点选一个片段'); return; }
+    vstOpenStyleLibrary('B');
+  },'',moreRow);
+  tb('✧ 快速模板',()=>{
+    const box=spEl('div','vst-tpl');
+    VST_TEMPLATES.forEach(t=>{
+      const b=spEl('button','vst-tpl-i','');
+      b.append(spEl('b','',t.name),spEl('small','',t.desc));
+      b.onclick=()=>{ box.remove(); vstApplyTemplate(t.id); };
+      box.append(b);
+    });
+    const close=spEl('button','vst-mini','关闭'); close.onclick=()=>box.remove(); box.append(close);
+    tools.after(box);
+  },'accent');
+  tb('↺ 新建',()=>{ if(confirm('新建影片会清空当前时间线，继续？')){ vstPause(); vstNewProject(''); vstRebuild(); toast('已新建影片'); } },'',moreRow);
+  tb('⧉ 复制项目 JSON',()=>{
+    const d=JSON.stringify({v:2,proj:vstProj(),src:[...VST.src.values()]
+      .filter(s=>s.kind!=='video'||s.internal)
+      .map(s=>({id:s.id,kind:s.kind,label:s.label,text:s.text,c1:s.c1,c2:s.c2,dur:s.dur}))},null,2);
+    if(navigator.clipboard?.writeText) navigator.clipboard.writeText(d).then(()=>toast('项目 JSON 已复制'),()=>toast('复制失败'));
+  },'',moreRow);
+
+  /* 时间线 */
+  const tlWrap=spEl('div','vst-tl-wrap');
+  const tlHead=spEl('div','vst-sec-h','时间线 <em>按住片段左右拖＝换顺序 · 拖两端金条＝改时长 · 点空白＝跳到那一刻</em>');
+  tlWrap.append(tlHead);
+  const tl=spEl('div','vst-tl'); tl.id='vstTL'; tlWrap.append(tl); w.append(tlWrap);
+  const insp=spEl('div','vst-insp'); insp.id='vstInsp'; w.append(insp);
+
+  /* 项目设置 + 导出 */
+  const ex=spEl('div','vst-export');
+  ex.append(spEl('div','vst-sec-h','项目与导出 <em>帧精确 · 静止段零重绘 · 可随时停止</em>'));
+  const grid=spEl('div','vst-set');
+  const addSel=(label,opts,val,fn)=>{
+    const d=spEl('label','vst-f'); d.append(spEl('span','',label));
+    const s=spEl('select',''); opts.forEach(o=>{ const op=document.createElement('option');
+      op.value=o[0];op.textContent=o[1];if(String(o[0])===String(val))op.selected=true;s.append(op); });
+    s.onchange=()=>fn(s.value); d.append(s); grid.append(d);
+  };
+  addSel('预览画质',[[.25,'流畅 1/4'],[.5,'标准 1/2'],[1,'清晰 1/1']],VST.previewScale,
+    v=>{ VST.previewScale=+v; vstQueuePreview(VST.t); });
+  addSel('帧率',[[24,'24'],[25,'25'],[30,'30'],[48,'48'],[50,'50'],[60,'60']],vstProj().fps,
+    v=>{ vstProj().fps=+v; state.exportVideoFps=+v; vstSave(); vstRebuild(); });
+  addSel('最长边',[[0,'原始'],[640,'640'],[960,'960'],[1280,'1280'],[1920,'1920'],[3840,'4K']],
+    state.exportVideoMaxEdge||0,v=>{ state.exportVideoMaxEdge=+v; });
+  addSel('输出格式',[['source','原格式（推荐）'],['auto','自动'],['mp4','MP4'],['webm','WebM']],
+    state.exportVideoFormat||'source',v=>{ state.exportVideoFormat=v; });
+  addSel('画质',[['lossless','原画质 · 不压缩'],['high','高画质'],['standard','标准'],['custom','自定义码率']],
+    state.exportVideoQuality||'lossless',v=>{ state.exportVideoQuality=v; });
+  ex.append(grid);
+  const prog=spEl('div','vst-prog');
+  const fill=spEl('div','vst-prog-f'); fill.id='vstProgBar';
+  const pt=spEl('span','vst-prog-t','准备就绪'); pt.id='vstProgTxt';
+  prog.append(fill,pt); ex.append(prog);
+  const eb=spEl('div','vst-ebtns');
+  const go=spEl('button','vst-export-btn','⬇ 导出影片'); go.id='vstExportBtn';
+  go.onclick=()=>vstExport();
+  const st=spEl('button','vst-mini danger','■ 停止导出'); st.onclick=()=>vstStopExport();
+  const quick=spEl('button','vst-mini','↗ 快速导出（单段）');
+  quick.onclick=()=>{ closeSubPage(); exportVideo(); };
+  eb.append(go,st,quick); ex.append(eb);
+  ex.append(spEl('div','vst-tip',
+    '默认沿用「原格式 / 原画质 / 不压缩 / 不缩小」，帧率最高 60。导出按帧号对齐墙钟，'
+    +'画面签名没变时只推帧不重绘，所以长时间定格不占 CPU；每 8 帧让出主线程，进度与取消都实时。'
+    +'浏览器录制一律有损编码，要真正零重编码的原始视频文件请用导出菜单里的「导出实况配对素材」。'));
+  w.append(ex);
+
+  /* 隐私说明 */
+  const pv=spEl('div','vst-priv');
+  pv.append(spEl('div','vst-sec-h','隐私与性能 <em>本机完成</em>'));
+  const lines=[
+   '片段、关键帧与项目名只写本机 localStorage；照片与视频本体不进参数存档、不进自动保存快照。',
+   '导入的本地视频用 ObjectURL 在内存里解码，不上传、不写服务器；重新打开后需重新选择该文件。',
+   '预览默认 1/2 分辨率，拖动播放头可切到 1/4；时间线缩略图按视口分批生成、每批让出一帧。',
+   '导出期间静态段不重绘、不跑 WebGL；视频段按时间线播放取帧，不做逐帧 seek。'];
+  lines.forEach(t=>{ const d=spEl('div','vst-priv-i',''); d.textContent=t; pv.append(d); });
+  w.append(pv);
+
+  vstBuildTimeline(body); vstBuildInspector(body);
+  vstPosterFrame();
+  requestAnimationFrame(()=>{ vstPaintPreview(VST.t); vstUpdatePlayBtn(); });
+}
+/* ============================================================
    Iris 检查更新 · 版本元数据 / GitHub 通道 / 独立页面
    ------------------------------------------------------------
    1) 默认零网络请求：只有用户主动点「检查更新」才发请求；
@@ -8173,8 +10596,8 @@ function irisMark(size){
    4) 断网、限流、404、旧版页面格式都有明确降级与提示，
       检查失败不影响任何编辑与导出功能。
    ============================================================ */
-const IRIS_VERSION='1.0.4';
-const IRIS_BUILD='2026-11-11';
+const IRIS_VERSION='1.0.9';
+const IRIS_BUILD='2026-11-12';
 const IRIS_CHANNEL='rc';                 /* rc = 近乎最终版 */
 const IRIS_SOURCE_TAG='v1.0.3';          /* 本版基于仓库的哪个已发布版本 */
 const IRIS_REPO_DEFAULT={
@@ -8762,6 +11185,20 @@ function renderAppearancePage(body){
     });
     w.append(ug);
 
+    /* 工具栏位置：默认回到底部编辑区，喜欢顶栏的可随时切回 */
+    const htp=spEl('div','sk-sec','工具栏位置 <em>默认在编辑区底部 · 随时可切</em>'); w.append(htp);
+    const tplead=spEl('p','sk-lead','5 个工具切换（调色盘 / 滤镜 / 调整 / 元素 / 更多）的位置。'
+      +'默认是<b>编辑区底部</b>，也就是最初那套布局；切到「顶栏」时宽屏与品牌、导出按钮同排，窄屏自动变成顶栏第二行。'
+      +'两种位置功能完全一致，偏好存本机。');
+    w.append(tplead);
+    const tpb=spEl('div','sk-bar');
+    [['dock','▤ 编辑区底部（默认）'],['top','▔ 顶栏']].forEach(([v,label])=>{
+      const b=spEl('button','sk-pill'+(irisToolPos===v?' on':''),label);
+      b.onclick=()=>{ setToolPos(v); draw(); };
+      tpb.append(b);
+    });
+    w.append(tpb);
+
     /* 配色主题 */
     const h2=spEl('div','sk-sec','配色主题 <em>点一张就换，含两套浅色</em>'); w.append(h2);
     const tg=spEl('div','sk-grid');
@@ -8841,7 +11278,7 @@ function renderAppearancePage(body){
     const acts=spEl('div','sk-acts');
     const reset=spEl('button','pri','↺ 恢复默认外观');
     reset.onclick=()=>{ setIrisSkin({theme:'aurum',ui:'classic',radius:'standard',motion:true,glass:true,glassAlpha:.55});
-      draw(); toast('已恢复：琥珀金 · 原版界面'); };
+      applyToolPos('dock'); draw(); toast('已恢复：琥珀金 · 原版界面 · 工具在底部'); };
     const hub=spEl('button','','◫ 页面中心');
     hub.onclick=()=>openSubPage('pages');
     acts.append(reset,hub); w.append(acts);
@@ -8954,6 +11391,33 @@ const PANEL_META={
   presets:['预设','风格 · 导出 · 关于（分栏）',5],
   guide:['使用说明书','带目录 · 可搜索 · 复杂功能详解',1]
 };
+/* ---------- 工具栏位置（v1.0.9） ----------
+   默认 = 底部编辑区（dock），恢复最初熟悉的布局；top = 顶栏（可选）。
+   只搬 DOM 节点，不重建按钮、不碰任何事件；buildTools 仍按 #tools 重绘内容。
+   偏好单独存一个 localStorage 键，与主题 / 界面版本互不干扰。 */
+let irisToolPos=(()=>{ try{ const v=localStorage.getItem('iris_tool_pos');
+  return v==='top'?'top':'dock'; }catch(e){ return 'dock'; } })();
+function applyToolPos(pos){
+  if(pos) irisToolPos=(pos==='top'?'top':'dock');
+  const t=$('#tools'), bar=$('.topbar'), dock=$('.dock'),
+        barEl=dock&&dock.querySelector('#cropBar'), menu=dock&&dock.querySelector('#moreMenu');
+  if(!t||!bar||!dock) return;
+  if(irisToolPos==='top'){
+    if(t.parentElement!==bar) bar.appendChild(t);
+  }else{
+    if(t.parentElement!==dock){
+      /* 顺序：grip → cropBar → tools → moreMenu → panel */
+      if(menu&&menu.parentElement===dock) dock.insertBefore(t,menu);
+      else if(barEl&&barEl.parentElement===dock) dock.insertBefore(t,barEl.nextSibling);
+      else dock.appendChild(t);
+    }
+  }
+  document.documentElement.setAttribute('data-toolpos',irisToolPos);
+  try{ localStorage.setItem('iris_tool_pos',irisToolPos); }catch(e){}
+  if(typeof renderMoreMenu==='function') renderMoreMenu();
+}
+function setToolPos(pos){ applyToolPos(pos); toast(irisToolPos==='dock'?'工具已回到编辑区底部':'工具已移到顶栏'); }
+applyToolPos();
 function buildTools(){
   const t=$('#tools'); t.innerHTML='';
   PRIMARY.forEach(id=>{
@@ -8976,7 +11440,10 @@ function renderMoreMenu(){
   menu.innerHTML='';
   if(!moreOpen) return;
   const tools=$('#tools');
-  menu.style.top=(tools.offsetTop+tools.offsetHeight+7)+'px';
+  /* tools 可能在顶栏也可能在 dock，offsetTop 基准不同；统一换算成相对菜单定位父级 */
+  const tr=tools.getBoundingClientRect();
+  const pr=menu.offsetParent?menu.offsetParent.getBoundingClientRect():{top:0};
+  menu.style.top=(tr.bottom-pr.top+7)+'px';
   const title=document.createElement('div'); title.className='more-title';
   title.textContent='更多编辑工具 · 按用途分组'; menu.append(title);
   const groups=[
@@ -9003,7 +11470,7 @@ function renderMoreMenu(){
   pgrid.append(hub);
   menu.append(pgrid);
   const tip=document.createElement('div'); tip.className='more-tip';
-  tip.textContent='数字键 1–9 / 0 切换工具 · 22 个独立页面统一收在「页面中心」，折叠分组不刷屏'; menu.append(tip);
+  tip.textContent='数字键 1–9 / 0 切换工具 · 23 个独立页面统一收在「页面中心」，折叠分组不刷屏'; menu.append(tip);
 }
 document.addEventListener('click',e=>{
   if(moreOpen&&!e.target.closest('#moreMenu')&&!e.target.closest('.tool')){
@@ -11506,8 +13973,8 @@ const GUIDE_CHAPTERS=[
    +'<br>关于作者、开发方式、版本状态、完整隐私说明与联系方式，见独立的「关于 Iris 与作者」页（顶栏「⋯」或全局搜索「关于」）。'
    +'<br>想了解这些功能具体是怎么实现的（渲染管线、着色器生成、坐标系统、语义 matte、涂抹遮罩、色彩迁移与导出），'
    +'请打开独立页面「<b>技术实现</b>」，共 18 章，带目录与搜索；本篇只讲怎么用。'},
- {id:'appearance',t:'21 · 外观、主题与双界面',k:'主题 外观 皮肤 配色 Nova 原版界面 圆角 动效 浅色 深色 切换',
-  b:'顶栏「⋯ → 外观与主题」或全局搜索「主题」打开独立设置页，里面有<b>三件事</b>：'
+ {id:'appearance',t:'21 · 外观、主题与双界面',k:'主题 外观 皮肤 配色 Nova 原版界面 圆角 动效 浅色 深色 切换 工具栏位置 底部 顶栏',
+  b:'顶栏「⋯ → 外观与主题」或全局搜索「主题」打开独立设置页，里面有<b>五件事</b>：'
    +'<br><b>① 9 套配色主题</b>：琥珀金（默认）、曜石黑、石墨蓝、青瓷、樱粉、熔金六套深色，'
    +'晨雾白、纸白暖两套浅色，外加一套<b>液态玻璃</b>（高斯模糊玻璃 + 折射高光 + 冷蓝虹彩）。'
    +'主题只覆盖 CSS 变量（底色 / 面板 / 文字 / 强调色 / 玻璃层），'
@@ -11515,6 +13982,7 @@ const GUIDE_CHAPTERS=[
    +'<br><b>② 两套完整界面</b>：<b>原版</b>是从第一版沿用到现在的紧凑布局；'
    +'<b>Nova</b> 是全新重做的视觉语言 —— 悬浮玻璃顶栏、浮起的大圆角工作卡、卡片化分组、药丸控件、柔和光影与更宽的留白。'
    +'两套共用同一套 DOM、事件、坐标与着色器，所有滑杆、拖拽、裁剪手柄、涂抹、导出在任意一套下逐项一致，随时可切回。'
+   +'<br><b>②b 工具栏位置</b>：5 个工具切换（调色盘 / 滤镜 / 调整 / 元素 / 更多）默认在<b>编辑区底部</b>，这是从第一版沿用至今的布局；切到「顶栏」时宽屏与品牌、导出按钮同排，窄屏自动变成顶栏第二行。两种位置功能完全一致，偏好存本机、刷新后保留，点「↺ 恢复默认外观」也会一并回到底部。'
    +'<br><b>③ 三档圆角、玻璃模糊与动效开关</b>：圆角只作用于 Nova（柔和 16px / 标准 26px / 超大 38px）；'
    +'<b>高斯模糊开关对所有 9 套主题都生效</b>：开则顶栏、菜单、提示条与欢迎卡统一走 backdrop-filter，关则包括 Nova 自带 blur 在内全部置 none，移动端明显更轻；'
    +'动效可一键全关，系统开启「减少动画」时也会自动关闭。'
@@ -11531,11 +13999,59 @@ const GUIDE_CHAPTERS=[
    +'<br><b>④ 三种结论</b>：线上更新 → 「发现新版本」；一致 → 「已是最新版本」；本地更超前 → 「本地版本更新」'
    +'（通常说明你手上这份还没上传 / 还没打 tag）。查不到版本号时如实列出原因，不会假装成功。'
    +'<br><b>⑤ 自动检查</b>默认关闭；开启后每次启动延迟 2 秒发一次快速检查，只有确实发现新版本才提示一次，其余完全静默。'
-   +'<br><b>⑥ 发布新版本</b>：把这版 HTML 传到仓库（web/index.html 等几处同源副本），再打一个形如 <code>v1.0.4</code> 的 Release tag，'
+   +'<br><b>⑥ 发布新版本</b>：把这版 HTML 传到仓库（web/index.html 等几处同源副本），再打一个形如 <code>v1.0.9</code> 的 Release tag，'
    +'页面里的版本 meta 与 tag 就会一起生效。想让限流时也能比对，可在根目录放一个 <code>version.json</code>。'
    +'<br><b>隐私</b>：请求不带 Cookie / Referrer / 自定义头，不发送照片、编辑参数或本机存档；远端文本只用于显示，'
    +'绝不插入页面或执行；外链只放行 https 的 GitHub 域名。检查更新不会自动下载或替换文件。'
-   +'<br>GitHub 匿名接口限流 60 次/小时，达到上限会自动降级到 raw 文件通道，并在结果里显示剩余次数。'}
+   +'<br>GitHub 匿名接口限流 60 次/小时，达到上限会自动降级到 raw 文件通道，并在结果里显示剩余次数。'},
+    {id:'video',t:'23 · 视频工作台',k:'视频工作台 加滤镜 一键滤镜 滤镜条 调色盘 片段调色盘 圆盘 二维盘 拖盘 强度 常用盘 全部盘模式 盘同步全部 去掉滤镜 顶部 tab 工具 tab 时间线 拖拽 排序 拖不动 播放头 裁时长 触屏 检查器 折叠 关键帧 转场 运镜 帧精确 导出视频 流畅 风格库 433 78 模板 20 盘模式 combo 样式统一',
+  b:'顶栏「导出 ▾ → 视频工作台」、顶栏「⋯ → 视频工作台」、页面中心「输出与文件」、全局搜索「视频工作台」「加滤镜」「调色盘」打开独立全屏页。'
+   +'<br><b>① 先说主界面的顶部 tab</b>：原来 5 个工具切换（调色盘 / 滤镜 / 调整 / 元素 / 更多）挂在底部编辑区，'
+   +'屏幕 64% 处才出现，看着像掉到页面下半截。现在它们<b>搬进顶栏</b>：宽屏与品牌、导出按钮同排居中，'
+   +'窄屏自动变成顶栏第二行；点「全屏看图」收起编辑区时一起隐藏。预设页的「风格 / 导出 / 关于」三栏也改成滚动吸顶。'
+   +'<br><b>② 视频页首屏只有三件事</b>：预览 + 播放条、<b>片段调色盘</b>、<b>一键滤镜条</b>。'
+   +'大段介绍、统计卡、8 个工具栏按钮、11 根滑杆全部收进折叠或压缩成一行，不再一屏塞满。'
+   +'<br><b>③ 片段调色盘：一个圆盘 + 一根强度条</b>'
+   +'（不需要理解「起点 A / 终点 B」、不需要打关键帧、不需要选 20 种模式才能开始）。'
+   +'<b>横轴 COLOR 冷↔暖、纵轴 TONE 亮↔暗，白点离中心越远效果越浓</b>，拖动时画面立刻变，松手即存进当前片段。'
+   +'右侧只有 4 个常用盘 chip（鲜艳 / 电影双色 / 暖金日落 / 冷调电影），其余 16 种收在「全部 20 种盘模式」折叠里；'
+   +'下面一根「效果强度」，四个按钮：<b>↺ 归零</b>、<b>⧉ 盘同步全部</b>（把当前盘位复制到整条时间线）、'
+   +'<b>✕ 去掉滤镜</b>（只清滤镜、盘调整保留）、<b>✦ 去加滤镜</b>。'
+   +'卡上实时显示盘位数值与「当前滤镜」，切换片段时盘跟着切。'
+   +'<br>实现上拖动走<b>实时 2D 合成</b>（把盘模式表直接映射成亮度 / 色温 / 饱和三个量，零 WebGL、跟手），'
+   +'松手写进片段关键帧；<b>预览与导出是同一条链路</b>，所以不会「拖着好看、导出变样」。'
+   +'主编辑器的图层、参数、状态一个字节都不改。'
+   +'<br><b>④ 滤镜与调色盘可以同时用</b>：点滤镜卡套上滤镜，再拖盘微调，两者叠加生效。'
+   +'滤镜走完整 shader 基准帧，盘调整以实时 2D 参数叠加在其上，两条链路各自独立又同时生效；'
+   +'界面上不再出现「起点 / 终点」，只在高级风格库里保留 A/B 过渡给想做风格互溶的人。'
+   +'<br><b>⑤ 一键加滤镜</b>：预览下方常驻横排，默认 42 款常用缩略图，'
+   +'25 个分类 chips + 搜索框（可跨全部 <b>433 款</b>，搜「徕卡」「哈苏」「柯达金」），'
+   +'点一下整段套用，也能<b>把卡片直接拖到时间线某一段</b>。'
+   +'四个控件：整段套用 / 渐显出现、套到全部片段、↺ 清除、模板 / 调色盘 ›（高级风格库）。'
+   +'已套用的卡片有金色描边，条上实时显示当前片段与它正在用的风格。'
+   +'<br><b>⑥ 时间线真的能拖了</b>：上一版「拖片段排序」根本不生效 —— '
+   +'旧代码用 <code>elementFromPoint</code> 找目标，拖动时指针还落在原片段上，命中的永远是自己，'
+   +'加上监听器只绑一次、页面重开后闭包抓着已失效的 DOM，桌面和触屏都拖不动。'
+   +'这版重写：每次重建先解绑旧监听、按指针 X 落在哪一段就换到那个索引、'
+   +'<code>setPointerCapture</code> 捕获指针、track 改 <code>touch-action:none</code> 让手机横向拖不被浏览器接管。'
+   +'现在：<b>按住片段左右拖＝换顺序</b>、<b>拖两端金条＝改时长</b>、<b>拖红色播放头或点空白＝跳到那一刻</b>、'
+   +'拖菱形＝改关键帧位置。片段卡上有序号与风格名，拖动时有半透明虚线反馈。'
+   +'<br><b>⑦ 检查器默认很轻</b>：只显示名称、时长、转场、运镜四个字段和一行「当前风格 → ⇄ 换滤镜」。'
+   +'「高级：起点 A → 终点 B 混合」与「高级：关键帧与动画参数」（11 根滑杆）都收进折叠，'
+   +'展开状态跨重建保留，功能一个没删。工具栏次要操作收进「更多操作」。'
+   +'<br><b>⑧ 高级风格库仍完整保留</b>（点「⋯ 更多风格」）：433 款滤镜 / 78 套模板 / 20 种盘模式 / 当前编辑 / 原图，'
+   +'每个风格临时构造完整渲染状态走<b>主编辑器同一套 WebGL 管线</b>，渲染后严格还原。'
+   +'五套一键成片模板、四种转场、六种运镜、11 项关键帧参数也都在。'
+   +'<br><b>⑨ 导出不卡</b>：导出前按帧率采样关键帧参数 → 量化去重 → 分批预生成风格帧（进度可见），'
+   +'之后录制循环 <code>captureStream(0) + requestFrame()</code> 手工推帧、画面签名没变就只推帧不重绘，'
+   +'4 秒定格 120 帧只重绘约 4 次；每 8 帧让出主线程，进度与「停止导出」实时。'
+   +'帧率 24~60、最长边到 4K、默认「原画质 · 不压缩」。'
+   +'<br><b>⑩ 本机与隐私</b>：片段、关键帧、盘位、风格 spec、项目名只写本机 localStorage；'
+   +'导入的本地视频用 ObjectURL 在内存里解码，不上传、不写服务器、不进参数存档与自动保存快照。'
+   +'旧项目缺盘位时自动补默认值，行为与上一版一致。'
+   +'<br><b>⑪ 如实说明</b>：片段调色盘的拖动是<b>实时 2D 盘</b>（亮度 / 色温 / 饱和三量映射），'
+   +'不是端侧语义分割 + 肤色锁那套完整 shader 盘；要语义保肤请用高级风格库里的盘模式。'
+   +'视频源片段使用原始画面，不逐帧跑 WebGL。浏览器录制一律有损编码。'}
 ];
 /* ============================================================
    独立二级页面：把「说明书 / 快捷键 / 滤镜库 / 导出 / 关于」等
@@ -11543,7 +14059,7 @@ const GUIDE_CHAPTERS=[
    ============================================================ */
 const SP_ENTRIES=[
   {id:'mine',name:'我的空间',sub:'历史图片 / 我的滤镜 / 书签 / 导出 · 一键存全套参数',icon:'◉',sv:'aperture'},
-  {id:'guide',name:'使用说明书',sub:'22 章全文 · 目录 / 搜索',icon:'▤',sv:'book'},
+  {id:'guide',name:'使用说明书',sub:'23 章全文 · 目录 / 搜索',icon:'▤',sv:'book'},
   {id:'tech',name:'技术实现',sub:'18 章长文 · 目录 / 搜索 · 源码级拆解',icon:'⌘',sv:'tech'},
   {id:'shortcuts',name:'快捷键总表',sub:'全部按键一处查',icon:'⌨',sv:'sliders'},
   {id:'tools',name:'全部工具',sub:'14 个编辑页直达',icon:'◫',sv:'sliders'},
@@ -11561,23 +14077,24 @@ const SP_ENTRIES=[
   {id:'changelog',name:'版本演进',sub:'12 个版本 · 从调色盘到四端',icon:'▤',sv:'book'},
   {id:'gestures',name:'手势与操作地图',sub:'触控 / 鼠标 / 键盘 · 可直达工具',icon:'✆',sv:'draw'},
   {id:'colorbook',name:'色彩术语表',sub:'28 个词条 · 可搜 · 直达实现章节',icon:'◈',sv:'aperture'},
-  {id:'appearance',name:'外观与主题',sub:'9 套配色（含液态玻璃）/ 原版 · Nova 双界面 / 圆角 / 动效',icon:'◐',sv:'aperture'},
+  {id:'appearance',name:'外观与主题',sub:'9 套配色（含液态玻璃）/ 原版 · Nova 双界面 / 工具栏位置 / 圆角 / 动效',icon:'◐',sv:'aperture'},
   {id:'zones',name:'区域工作台',sub:'语义 matte 看得见 · 四区独立调色 · 一键生成蒙版与虚化',icon:'◈',sv:'aperture'},
-  {id:'update',name:'检查更新',sub:'对比本机版本与 GitHub 最新 Release · 默认不联网',icon:'⟳',sv:'aperture'}
+  {id:'update',name:'检查更新',sub:'对比本机版本与 GitHub 最新 Release · 默认不联网',icon:'⟳',sv:'aperture'},
+  {id:'video',name:'视频工作台',sub:'多片段时间线 · 关键帧调色 · 转场运镜 · 帧精确导出',icon:'▷',sv:'video'}
 ];
 
-/* 页面中心的分组：22 个内容页按用途归到 6 组，一次只看一组。
+/* 页面中心的分组：23 个内容页按用途归到 6 组，一次只看一组。
    「页面中心」本身是枢纽，不混进 SP_ENTRIES，避免目录里出现自己。 */
 const PAGE_GROUPS=[
   {id:'help',name:'帮助与阅读',ids:['guide','tech','shortcuts','gestures','colorbook']},
   {id:'browse',name:'编辑与浏览',ids:['tools','filters','templates','zones']},
-  {id:'output',name:'输出与文件',ids:['export','archive','exports','autosave']},
+  {id:'output',name:'输出与文件',ids:['export','video','archive','exports','autosave']},
   {id:'status',name:'设备与状态',ids:['mine','history','recent','diagnostics','info','changelog','update']},
   {id:'about',name:'关于',ids:['about']},
   {id:'look',name:'外观与偏好',ids:['appearance']}
 ];
 const PAGE_FAV=['appearance','mine','zones','guide','tech','autosave','export','shortcuts'];
-const PAGE_HUB={title:'页面中心',sub:'22 个独立页面 · 按用途分组 · 可搜索 · 记录最近打开',
+const PAGE_HUB={title:'页面中心',sub:'23 个独立页面 · 按用途分组 · 可搜索 · 记录最近打开',
   render:renderPageCenter};
 let recentPages=[];
 try{ recentPages=JSON.parse(localStorage.getItem('iris_recent_pages')||'[]'); }catch(e){ recentPages=[]; }
@@ -11598,6 +14115,7 @@ function spSection(w,title){
 }
 function closeSubPage(){
   if(!spCurrent) return;
+  if(typeof vstOnLeave==='function'){ try{ vstOnLeave(); }catch(e){} }
   /* 技术页的目录跟随监听挂在 #spBody 上，关闭时统一摘掉，避免切到别的页面后空跑 */
   if(window.__irisTechScroll){
     $('#spBody').removeEventListener('scroll',window.__irisTechScroll);
@@ -11985,7 +14503,7 @@ const AB_CHAPTERS=[
  <div class="ab-item"><b>◐ 局部与空间</b><small>涂抹式局部蒙版（直接刷出选区，可擦除 / 撤销 / 伪彩预览，形状渐变保留为可选）、背景虚化（一键检测人物或物品 + 涂抹选取主体或虚化区域 + 六种模糊）、光场计算（重聚焦、视差微动、方向重打光）、涂抹式马赛克 / 柔焦 / 动态 / 径向模糊，最多 6 块区域、可调范围与羽化。</small></div>
  <div class="ab-item"><b>▣ 构图与元素</b><small>可视化拖拽裁剪（角点、边框、比例锁、精确数值兜底）、文字 / 贴纸 / 形状 / 涂鸦（可拖动、缩放、旋转、改字体颜色描边）、留白画框、旋转翻转与透视矫正。</small></div>
  <div class="ab-item"><b>▷ 动态与输出</b><small>iOS 实况照片逐帧编辑与选封面、不限时长视频（默认原格式 / 原画质 / 不压缩 / 无变化，最高 60fps）、GIF 动图、PNG / JPG / WebP、原始视频零重编码直出、实况配对素材与全格式 ZIP 打包。</small></div>
- <div class="ab-item"><b>⌕ 效率</b><small>全局搜索（工具 / 滤镜 / 参数 / 模板 / 操作一处直达）、12 个一键快捷、22 章说明书 + 18 章技术实现、22 个独立二级页面（收拢进「页面中心」分组浏览）、本机自动保存与恢复、撤销重做、参数复制与 JSON 存档、自定义滤镜与我的色调、20 种主盘模式、「我的空间」历史图片与一键保存整套参数。</small></div>
+ <div class="ab-item"><b>⌕ 效率</b><small>全局搜索（工具 / 滤镜 / 参数 / 模板 / 操作一处直达）、12 个一键快捷、23 章说明书 + 18 章技术实现、23 个独立二级页面（收拢进「页面中心」分组浏览）、本机自动保存与恢复、撤销重做、参数复制与 JSON 存档、自定义滤镜与我的色调、20 种主盘模式、「我的空间」历史图片与一键保存整套参数，以及多片段「视频工作台」。</small></div>
  <div class="ab-item"><b>◇ 体验</b><small>移动端大图优先、编辑栏可拖动可收起、25%–800% 缩放、按住看原图与可拖动分屏线、直方图三模式、轻动画（尊重系统「减少动画」）、统一细线图标、桌面与手机自适应。</small></div>
 </div>`},
 {id:'architecture',n:'04',eyebrow:'ARCHITECTURE',t:'技术架构 · 四层与实现',html:`
@@ -12029,10 +14547,10 @@ const AB_CHAPTERS=[
  <div class="ab-step"><b>拆掉绑定 · 让色调自由</b>4 层滤镜各自独立调色盘、12 种色调、语义主盘与肤色锁。</div>
  <div class="ab-step"><b>长成编辑器</b>文字贴纸涂鸦、涂抹式马赛克与模糊、可视化裁剪、背景虚化与光场。</div>
  <div class="ab-step"><b>动态与输出</b>实况照片、不限时长视频、GIF、多格式与全格式打包。</div>
- <div class="ab-step"><b>工程化与收敛</b>色彩迁移、22 章说明书、18 章技术实现、22 个二级页面与「页面中心」分组浏览、自动保存与恢复、界面精简与移动端重排。</div>
+ <div class="ab-step"><b>工程化与收敛</b>色彩迁移、23 章说明书、18 章技术实现、22 个二级页面与「页面中心」分组浏览、自动保存与恢复、界面精简与移动端重排。</div>
  <div class="ab-step"><b>现在 · 近乎最终</b>作者与关于页、细节修复、稳定性优先。</div>
 </div>
- <p style="margin-top:14px">当前内嵌版本 <b>1.0.4</b>（构建 2026-11-11，Release Candidate）。页面头部写有版本 meta，可在独立「检查更新」页与 GitHub 上发布的最新 Release 对比；<b>默认不联网</b>，只有主动点击才会读取公开版本信息。</p>
+ <p style="margin-top:14px">当前内嵌版本 <b>1.0.9</b>（构建 2026-11-12，Release Candidate）。页面头部写有版本 meta，可在独立「检查更新」页与 GitHub 上发布的最新 Release 对比；<b>默认不联网</b>，只有主动点击才会读取公开版本信息。</p>
  <div class="sp-row"><button data-goupdate="1">⟳ 检查更新</button></div>`},
 {id:'limits',n:'07',eyebrow:'BOUNDARIES',t:'已知边界 · 如实说明',html:`
 <div class="ab-grid">
@@ -12174,7 +14692,7 @@ const TECH_CHAPTERS=[
 <p><b>① 样式</b>：用 CSS 自定义属性收拢配色（深灰底、暖金强调色、次级文字色），后面所有组件、二级页面、关于页、技术页都引用同一组变量，所以改一个色值整站同步。响应式不是两套 UI，而是同一套 DOM 在 <code>760px</code> / <code>520px</code> 断点上重排。</p>
 <p><b>② DOM</b>：顶栏、画布（<code>#stage</code> 里的 WebGL canvas + 2D 叠加层 canvas）、编辑栏、底栏工具、隐藏的 <code>&lt;input type="file"&gt;</code>、二级页面容器、导出菜单、全局搜索、提示条。两个 canvas 叠在一起是关键：<b>一个只画照片，一个只画框、圈、文字元素</b>，互不干扰，也方便「对比原图」时只隐藏叠加层。</p>
 <p><b>③ 工具层</b>：<code>$()</code>、<code>clamp()</code>、<code>svg()</code>（内联 ICONS 字典生成细线图标）、<code>toast()</code>、<code>deep()</code>、<code>normalizeState()</code>。图标是一套 stroke 风格 SVG 字符串，保证任何缩放都清晰、不需要字体文件。</p>
-<p><b>④ 数据层</b>：433 款滤镜、78 套模板、HSV 分色表、22 章说明书、10 章关于、18 章技术文章，全都是字面量数组。新增一款滤镜就是往数组里加一个对象；模板则是「滤镜层 + 分色调盘 + 语义主盘 + 基础参数 + 画框」的组合描述，<b>不是把参数复制一遍</b>。</p>
+<p><b>④ 数据层</b>：433 款滤镜、78 套模板、HSV 分色表、23 章说明书、10 章关于、18 章技术文章，全都是字面量数组。新增一款滤镜就是往数组里加一个对象；模板则是「滤镜层 + 分色调盘 + 语义主盘 + 基础参数 + 画框」的组合描述，<b>不是把参数复制一遍</b>。</p>
 <p><b>⑤ 着色器</b>：VS / FS 是模板字符串，其中几段用代码生成后插入占位符（下一章详述）。</p>
 <p><b>⑥ 运行时</b>：<code>state</code> 单一状态树 + <code>render()</code> 单一渲染入口 + pointer 事件分发。</p>
 <p><b>⑦ 外围</b>：导出、独立页面系统 <code>SUBPAGES</code>、全局搜索 <code>CMD</code>、启动逻辑 <code>uploadImage(demoImage())</code>。</p>
@@ -12426,7 +14944,7 @@ c = mix(shifted, clampToSkin(shifted, src), skinMask * u_semLock);</pre>
  <li><b>撤销历史改差分存储</b>：以前每步都把整份 <code>state</code> 序列化成字符串（含笔迹、元素、蒙版、图层），60 步就是 60 份完整副本。现在 <code>irisDiff / irisApply</code> 只记录「相对上一步变化了的叶子路径」，undo / redo 共用一个 <code>{f, b, m}</code> step（正向、反向、摘要）；<code>irisEqual</code> 做深度相等，数组里装数组（笔迹坐标点）内容相同就不误记；<code>irisApply</code> 对对象值深拷贝，避免历史 step 与当前 state 共享引用被后续编辑污染。</li>
  <li><b>书签与自动保存快照</b>改成「相对默认状态的差分」打包（<code>packState / unpackState</code>），带版本标记并兼容旧版完整 JSON；历史页新增占用面板与「压缩旧书签」「清空撤销历史」。实测单份状态 4479 B → 733 B（<b>−84%</b>），13 步历史 2116 B，60 步上限 6931 B（旧方案约 269 KB）。</li>
  <li><b>裁剪会话</b>：拖动过程不逐步写历史，点「完成裁剪」才一次性提交一步，「取消」连中间步一起回滚；切走工具自动完成。既减少历史占用，也让「什么时候算裁完」变得明确。</li>
- <li><b>页面中心</b>：22 个页面从一次全铺改成 6 张常用卡 + 5 个<b>懒构建折叠分组</b>（收起时连 DOM 都不创建），全局搜索里页面类结果限流 3 条。</li>
+ <li><b>页面中心</b>：23 个页面从一次全铺改成 6 张常用卡 + 5 个<b>懒构建折叠分组</b>（收起时连 DOM 都不创建），全局搜索里页面类结果限流 3 条。</li>
  <li><b>字体确实生效</b>：旧版把 <code>PingFang SC</code> / <code>Georgia</code> 直接写死，Windows 与 Linux 上大多不存在，"
     "中文静默回落到与黑体相同的 <code>sans-serif</code>，实测 4 款只有 3 种画面。现在启动时用「候选字体 + 基准通用族」"
     "对 <code>measureText</code> 宽度差做探测（<code>document.fonts.check</code> 对系统字体恒为 true，不能判存在），"
@@ -12456,7 +14974,7 @@ c = mix(shifted, clampToSkin(shifted, src), skinMask * u_semLock);</pre>
 <p><b>动画</b>：开机时顶栏 / 画面 / 编辑区依次轻浮起，按钮按压回弹、折叠盒内容淡入滑下、选中态短脉冲、换照片轻微淡入、提示条弹起。全部用 CSS transition / keyframes，并且包在 <code>@media (prefers-reduced-motion: reduce)</code> 里 —— 系统开了「减少动画」就自动关掉。</p>
 <p><b>独立页面系统</b>是后期为「界面太挤」做的重构：一个 <code>#subPage</code> 容器 + 一张 <code>SUBPAGES</code> 注册表，每项提供 <code>{title, sub, render(body)}</code>。<code>openSubPage(id, anchor)</code> 负责清容器、改标题、调 render、加 <code>show</code>、按锚点滚动；<code>closeSubPage()</code> 与 Esc / 返回按钮统一收口。</p>
 <p>技术实现页、自动保存、编辑历史、最近使用、导出记录、诊断、版本演进、手势地图与色彩术语页，都是这张 <code>SUBPAGES</code> 表里的项，和说明书、关于页共用同一套排版语言：左侧粘性目录（手机变横向可滚动目录）、右上搜索框、章节卡片、每章「↑ 回目录」，点目录即定位并高亮；滚动时目录也会跟着高亮当前章。搜索直接过滤章节正文，不是只搜标题。</p>
-<p>入口统一收敛：顶栏「⋯」与「更多」里只留一个「<b>页面中心</b>」入口（外加说明书一个快捷），22 个页面在页面中心按 5 组折叠，首屏只显示 6 张常用卡；全局搜索搜「渲染管线」「涂抹」「3D LUT」「坐标」等可直达对应章节，但页面类结果最多 3 条，不再刷屏。说明书末章与关于页的架构章都留了交叉引用，不重复堆内容。</p>
+<p>入口统一收敛：顶栏「⋯」与「更多」里只留一个「<b>页面中心</b>」入口（外加说明书一个快捷），23 个页面在页面中心按 5 组折叠，首屏只显示 6 张常用卡；全局搜索搜「渲染管线」「涂抹」「3D LUT」「坐标」等可直达对应章节，但页面类结果最多 3 条，不再刷屏。说明书末章与关于页的架构章都留了交叉引用，不重复堆内容。</p>
 <div class="tech-note">页面内容全部是字面量字符串，不是运行时再去 fetch 一个 Markdown。这样离线双击、静态托管、Electron 打包三种分发方式的行为完全一致。</div>`},
 
 {id:'verify',n:'18',eyebrow:'VERIFY & LIMITS',t:'验证方法、已知边界与桌面移植',k:'验证 node --check GLSL 编译链接 离屏渲染 像素比对 Playwright 回归 边界 Electron 主进程 适配层',html:`
@@ -13637,7 +16155,12 @@ const AS_CHANGELOG=[
   {v:'v1.0',t:'光场 · 虚化 · 色彩迁移',d:'319 款滤镜、78 套模板、可视化拖拽裁剪、背景虚化与光场、Lab 三档色彩迁移（保存的是色调而不是编辑）。'},
   {v:'v1.1',t:'技术实现长文',d:'新增 18 章源码级技术实现页；Electron 三端桌面工程（Win / macOS / Linux）与 Capacitor 移动工程（APK / IPA），HTML 始终逐字节一致。'},
   {v:'v1.2',t:'自动保存',d:'加入本机自动保存与「是否编辑上次的照片」询问卡；新增 8 个独立页面，桌面与移动外壳同步补齐落盘与导出记录，四端行为一致。随后做了一轮系统性提速，并把页面收进「页面中心」分组浏览，顶栏与「更多」不再平铺。'},
- {v:'v1.0.4',t:'检查更新 · 当前版本',d:'页面内嵌版本 meta，新增独立「检查更新」页：对比 GitHub 最新 Release、可选深度比对线上文件、自动检查开关与限流降级。默认零网络请求，只有主动触发才联网；四端同源。'}
+ {v:'v1.0.4',t:'检查更新',d:'页面内嵌版本 meta，新增独立「检查更新」页：对比 GitHub 最新 Release、可选深度比对线上文件、自动检查开关与限流降级。默认零网络请求，只有主动触发才联网；四端同源。'},
+ {v:'v1.0.5',t:'视频工作台',d:'多片段时间线、关键帧调色、四种转场与六种运镜、五套成片模板；导出改为手工推帧 + 画面签名跳过重绘，静止段几乎零 CPU，预览与缩略图分批让帧；四端同源。'},
+ {v:'v1.0.6',t:'视频风格库',d:'视频工作台接入完整色彩引擎：433 款滤镜、78 套模板、20 种盘模式可作为片段风格 A/B；新增可拖二维盘与盘动画、11 项关键帧参数、风格帧预生成导出；四端同源。'},
+ {v:'v1.0.7',t:'一键滤镜',d:'预览正下方新增常驻滤镜速贴条：分类 + 搜索 + 缩略图横排，点一下就整段套用，也可拖到时间线片段；修复改滤镜后预览不重绘、只换终点导致半段渐显两个真 bug；签名改用轻量标签避免每帧序列化整份编辑状态；四端同源。'},
+ {v:'v1.0.9',t:'工具栏位置回到底部 · 当前版本',d:'纠正上一版把 5 个工具切换搬进顶栏的误读：默认恢复为「编辑区底部」的最初布局，顶栏重新变回一行；外观与主题页新增「工具栏位置」开关，喜欢顶栏布局的可随时切回，偏好存本机、刷新保留；顺手修正「更多」弹出菜单在两种位置下的定位基准。视频工作台、时间线拖拽、片段调色盘与滤镜叠加全部保留；四端同源。'},
+ {v:'v1.0.8',t:'全面直观化',d:'主界面 5 个工具 tab 提到顶栏；视频工作台重写首屏：紧凑标题 + 片段调色盘（一个圆盘 + 强度条，拖一下就变）+ 一键滤镜条，滤镜与盘可叠加且界面不再出现 A/B；时间线拖拽修复（按索引排序、解绑旧监听、触屏支持、播放头可拖）；检查器 11 根滑杆与高级风格收进折叠；四端同源。'}
 ];
 function renderChangelogPage(body){
   const w=spWrap(body);
@@ -13967,7 +16490,7 @@ async function renderMinePage(body){
 const SUBPAGES={
   zones:{title:'区域工作台',sub:'语义 matte 可视化 · 四区独立调色 · 一键转成蒙版 / 虚化',render:renderZonesPage},
   mine:{title:'我的空间',sub:'历史图片 · 我的滤镜 / 全套参数 · 书签 · 导出 · 最近使用',render:renderMinePage},
-  guide:{title:'使用说明书',sub:'22 章全文 · 目录 / 搜索 / 复杂功能详解',render:renderGuidePage},
+  guide:{title:'使用说明书',sub:'23 章全文 · 目录 / 搜索 / 复杂功能详解',render:renderGuidePage},
   tech:{title:'技术实现',sub:'18 章长文 · 渲染管线 / 着色器 / 坐标 / 语义 / 导出 / 验证',render:renderTechPage},
   shortcuts:{title:'快捷键总表',sub:'全部按键一处查',render:renderShortcuts},
   tools:{title:'全部工具',sub:'14 个编辑页直达',render:renderToolsPage},
@@ -13986,16 +16509,17 @@ const SUBPAGES={
   gestures:{title:'手势与操作地图',sub:'触控 / 鼠标 / 键盘 · 点「去试试」直达工具',render:renderGesturesPage},
   colorbook:{title:'色彩术语表',sub:'28 个词条 · 可搜索 · 直达对应实现章节',render:renderColorbookPage},
   appearance:{title:'外观与主题',sub:'9 套配色 · 原版 / Nova 双界面 · 圆角 / 玻璃 / 动效',render:renderAppearancePage},
-  update:{title:'检查更新',sub:'本机版本 / GitHub 最新 Release · 默认不联网 · 可深度比对线上文件',render:renderUpdatePage}
+  update:{title:'检查更新',sub:'本机版本 / GitHub 最新 Release · 默认不联网 · 可深度比对线上文件',render:renderUpdatePage},
+  video:{title:'视频工作台',sub:'多片段时间线 · 关键帧 / 转场 / 运镜 · 静止段零重绘导出',render:renderVideoPage}
 };
 /* ============================================================
-   页面中心：把 22 个独立页面从「一排平铺」改成「分组 + 搜索 + 最近」
+   页面中心：把 23 个独立页面从「一排平铺」改成「分组 + 搜索 + 最近」
    默认只显示 5 张常用卡；点分类 tab 才展开该组；搜索跨全部分组。
    ============================================================ */
 function renderPageCenter(body){
   const w=spWrap(body);
   asHero(w,'IRIS · PAGES','页面中心',
-    '22 个独立页面不再一次全铺出来：首屏只有 7 个常用入口，其余按用途收进折叠分组，点组名才展开；也可以直接搜名字，或点最近打开。',
+    '23 个独立页面不再一次全铺出来：首屏只有 7 个常用入口，其余按用途收进折叠分组，点组名才展开；也可以直接搜名字，或点最近打开。',
     '所有页面原样保留，全局搜索 Ctrl/⌘+K 依旧能直达任意一页。');
   const st=spEl('div','pc-stat');
   [[SP_ENTRIES.length,'独立页面'],[PAGE_GROUPS.length,'用途分组'],
@@ -14103,14 +16627,14 @@ function toggleTbMenu(v){
   $('#tbMenu').classList.toggle('show',tbMenuOpen);
   if(tbMenuOpen){ setExportMenu(false); closeCmd?.(); }
 }
-/* 以前这里把 22 个页面一次全铺出来，菜单长得要滚很久。
+/* 以前这里把 23 个页面一次全铺出来，菜单长得要滚很久。
    现在只留「页面中心」总入口 + 说明书一个快捷，其余全部收进折叠分组浏览。 */
 function buildTbPages(){
   const box=$('#tbPages'); if(!box) return; box.innerHTML='';
   const hub=spEl('button','tbm-page tbm-hub',
-    `<i>◫</i><span><b>页面中心 · 全部 22 页</b><small>按用途分组浏览 / 搜索 / 最近打开</small></span>`);
+    `<i>◫</i><span><b>页面中心 · 全部 23 页</b><small>按用途分组浏览 / 搜索 / 最近打开</small></span>`);
   hub.dataset.spid='pages'; hub.onclick=()=>openSubPage('pages'); box.append(hub);
-  ['appearance','mine','guide','update'].forEach(id=>{
+  ['appearance','mine','video','guide','update'].forEach(id=>{
     const e=SP_ENTRIES.find(v=>v.id===id); if(!e) return;
     const b=spEl('button','tbm-page',`<i>${svg(e.sv,15)}</i><span><b>${e.name}</b><small>${e.sub}</small></span>`);
     b.dataset.spid=e.id; b.onclick=()=>{ openSubPage(e.id); };
@@ -14386,7 +16910,7 @@ let guideQuery='';
 function buildGuide(p){
   const head=section('使用说明书 · '+GUIDE_CHAPTERS.length+' 章');
   head.classList.add('iris-fixed');
-  head.append(hint('<b>完整内容已做成独立页面</b>：左侧目录、右侧 22 章全文，可搜索、可跳转、可返回。'
+  head.append(hint('<b>完整内容已做成独立页面</b>：左侧目录、右侧 23 章全文，可搜索、可跳转、可返回。'
     +'下面点目录或章节标题，会直接打开对应章节。'));
   const open=document.createElement('button'); open.className='btn sp-primary';
   open.textContent='▤ 打开完整说明书（独立页）';
@@ -14633,6 +17157,12 @@ function buildPresets(p){
   sf.dataset.ptab='export'; p.append(sf);
 
   const sv=section('导出视频 · 原画质 / 最高 60fps / 不限时长');
+  const vrow=document.createElement('div'); vrow.className='row';
+  vrow.append(button('▷ 打开视频工作台（多片段 / 关键帧 / 转场）',()=>openSubPage('video'),'accent'));
+  sv.append(vrow);
+  sv.append(hint('复杂视频在时间线里编辑：拖片段排序与裁时长、打关键帧调色强度 / 亮度 / 色温 / 缩放、'
+    +'加淡入淡出与交叉溶解、一键套用成片模板，导出按帧精确推进且静止段零重绘。'
+    +'下面这些是<b>单段快速导出</b>的规格，工作台也会沿用。'));
   const vm=videoMimeChoice();
   sv.append(hint(LIVE.pair
     ? '已载入实况视频（'+LIVE.duration.toFixed(1)+'s）：默认按原格式、原始分辨率、不主动限码率逐帧套用编辑导出。'
@@ -15114,6 +17644,7 @@ function refreshExportMenu(){
   exportMenu.querySelector('[data-act="photo"] i').innerHTML=svg('photo',15);
   exportMenu.querySelector('[data-act="gif"] i').innerHTML=svg('video',15);
   exportMenu.querySelector('[data-act="video"] i').innerHTML=svg('video',15);
+  exportMenu.querySelector('[data-act="studio"] i').innerHTML=svg('sliders',15);
   exportMenu.querySelector('[data-act="pair"] i').innerHTML=svg('zip',15);
   exportMenu.querySelector('[data-act="bundle"] i').innerHTML=svg('zip',15);
   exportMenu.querySelector('[data-act="settings"] i').innerHTML=svg('sliders',15);
@@ -15139,6 +17670,7 @@ exportMenu.addEventListener('click',e=>{
   if(act==='photo') doExport();
   else if(act==='gif') exportGif();
   else if(act==='video') exportVideo();
+  else if(act==='studio') openSubPage('video');
   else if(act==='pair') exportLivePair();
   else if(act==='bundle') exportBundle();
   else if(act==='settings'){
@@ -15352,6 +17884,14 @@ function cmdActions(){
       const sec=[...document.querySelectorAll('#panel .sec-h')].find(h=>h.textContent.includes('一键模板'));
       if(sec) sec.scrollIntoView({block:'start',behavior:'smooth'});
     }},
+    {name:'视频工作台',desc:'多片段时间线 · 关键帧 / 转场 / 运镜 · 帧精确导出',
+      key:'video 视频工作台 时间线 关键帧 转场 运镜 剪辑 studio 片段',hint:'',icon:'▷',run:()=>openSubPage('video')},
+    {name:'视频成片模板',desc:'单张定格 / 缓慢推近 / 双段溶解 / 片头片尾 / 实况混剪',
+      key:'视频模板 成片 片头 片尾 溶解 kenburns 快速成片',hint:'',icon:'✧',run:()=>{
+        openSubPage('video');
+        setTimeout(()=>{ const b=[...document.querySelectorAll('.vst-tbtn')].find(x=>x.textContent.includes('快速模板'));
+          if(b) b.click(); },80);
+      }},
     {name:'检查更新',desc:'对比本机版本与 GitHub 上的最新 Release（默认不联网）',
       key:'update 检查更新 版本 新版 github release 最新 tag 升级 更新',hint:'',icon:'⟳',run:()=>openSubPage('update')},
     {name:'深度比对线上文件',desc:'读取仓库页面头部版本标记，确认线上 HTML 是哪一版',
@@ -15427,7 +17967,7 @@ function buildCmdItems(){
     push('页面','◈','页面 · '+e.name,e.sub,
       '页面 独立 '+e.name+' '+e.id,'',()=>openSubPage(e.id));
   });
-  push('页面','◫','页面 · 页面中心','22 个独立页面按用途分组，一次只看一组，可搜索 / 最近打开',
+  push('页面','◫','页面 · 页面中心','23 个独立页面按用途分组，一次只看一组，可搜索 / 最近打开',
     '页面中心 全部页面 pages hub 分组 目录 独立页面','',()=>openSubPage('pages'));
   /* 自动保存的常用操作 */
   [['立即保存到本机','把当前照片与全部编辑立刻写入本机存储',
@@ -15577,12 +18117,6 @@ window.addEventListener('resize',()=>{
   invalidateStageRect();
   const now=isMobile()+'|'+isCompact();
   if(now!==lastLayout){
-    /* 输入法弹出/收起会把窗口高度压掉一大截，这个 resize 很容易被误判成「真的换布局了」。
-       而一旦在编辑途中重建面板，正在打字的 textarea 会连同焦点一起被销毁，
-       Android WebView 随即收走输入法——表现就是「刚改文字键盘就没了」。
-       所以只要焦点还在输入控件里，就只重画布，不动面板 DOM。 */
-    const ae=document.activeElement;
-    if(ae&&ae.closest&&ae.closest(EDITABLE_SEL)){ render(); return; }
     lastLayout=now; applyMobileUI(); buildTools(); buildPanel(); render();
   }
 });

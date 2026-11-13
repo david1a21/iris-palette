@@ -9,7 +9,7 @@ set -euo pipefail
 cd "$(dirname "$0")"
 
 APP_NAME="IrisPalette"
-VERSION="1.0.6"
+VERSION="1.0.9"
 IPA="Iris-Palette-iOS-${VERSION}.ipa"
 ADHOC=0
 [ "${1:-}" = "--adhoc" ] && ADHOC=1
