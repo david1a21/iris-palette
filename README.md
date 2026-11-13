@@ -22,7 +22,7 @@
 
 - 🌐 在线直接体验：<https://david1a21.github.io/iris-palette-web/>
 - 📦 全平台安装包：[Releases](https://github.com/david1a21/iris-palette/releases)
-- 📄 页面本体：`web/index.html`（785,822 字节，单个 HTML 文件，内联全部 CSS / JS / GLSL）
+- 📄 页面本体：`web/index.html`（1,059,385 字节，单个 HTML 文件，内联全部 CSS / JS / GLSL）
 
 ### 一眼看界面
 
@@ -421,7 +421,7 @@ bash build_ipa.sh --adhoc      # 额外 ad-hoc 签名
 | macOS arm64 | `Iris-Palette-macOS-arm64-1.0.1.zip` | 1.0.1 | ≈ 93 MB |
 | macOS x64 | `Iris-Palette-macOS-x64-1.0.1.zip` | 1.0.1 | ≈ 99 MB |
 
-页面本体：`web/index.html`，**785,822 字节**，MD5 `b8e24c9d57c8c00ccf042be55c6e24e7`。
+页面本体：`web/index.html`，**1,059,385 字节**，MD5 `e9147619f464c9d7b23461d55e73f768`。
 
 校验和见 `SHA256SUMS.txt`：
 
