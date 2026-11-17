@@ -35,38 +35,38 @@ final class ShellViewController: UIViewController, WKScriptMessageHandler, WKNav
         }
         conf.userContentController = ucc
 
-        web = WKWebView(frame: view.bounds, configuration: conf)
-        web.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        web = WKWebView(frame: .zero, configuration: conf)
+        web.translatesAutoresizingMaskIntoConstraints = false
         web.isOpaque = false
         web.backgroundColor = ink
         web.scrollView.backgroundColor = ink
         web.scrollView.bounces = false
-        web.scrollView.contentInsetAdjustmentBehavior = .never  // 安全区交给页面里的 CSS，避免二次留白
+        web.scrollView.contentInsetAdjustmentBehavior = .never  // 安全区由外壳让位，页面 CSS 不再二次留白
         web.allowsLinkPreview = false
         web.navigationDelegate = self
         view.addSubview(web)
+
+        // 顶边绑到安全区下沿，交给 Auto Layout 跟随状态栏/灵动岛高度自动更新。
+        // 之前用手动 frame，首次布局时 safeAreaInsets 还是 0，之后没有再次纠正，
+        // 于是每次装新包顶栏都会被状态栏压住。约束没有这个问题。
+        // 底边仍然通栏，下沿交给页面自己处理。
+        NSLayoutConstraint.activate([
+            web.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            web.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            web.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            web.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+        ])
         installEdgeSwipe()
 
         guard let page = Bundle.main.url(forResource: "index", withExtension: "html") else { return }
         web.loadFileURL(page, allowingReadAccessTo: page.deletingLastPathComponent())
     }
 
-    override func viewDidLayoutSubviews() {
-        super.viewDidLayoutSubviews()
-        applyWebFrame()
-    }
-
-    /// 顶栏不能被状态栏压住。
-    /// 做法：WebView 的顶边落在安全区下沿（刘海/灵动岛/状态栏高度），
-    /// 底部仍然通栏，下沿交给页面里的 env(safe-area-inset-bottom) 自己处理。
-    /// 这样页面里那些 position:fixed / position:absolute 的顶栏即使带着 top:0，
-    /// 也只会在安全区之下的坐标系里贴顶，不会钻进状态栏，也不会和 CSS 二次留白。
-    private func applyWebFrame() {
-        let top = max(0, view.safeAreaInsets.top)
-        web.frame = CGRect(x: 0,
-                           y: top,
-                           width: view.bounds.width,
-                           height: max(0, view.bounds.height - top))
+    /// 安全区变化（旋转、状态栏出现/消失、灵动岛机型切换）时，约束会自己重算；
+    /// 这里只补一次布局，确保页面在第一帧就拿到正确的高度。
+    override func viewSafeAreaInsetsDidChange() {
+        super.viewSafeAreaInsetsDidChange()
+        view.setNeedsLayout()
     }
 
     // MARK: - 侧滑返回
