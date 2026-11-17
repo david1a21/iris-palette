@@ -6,7 +6,7 @@
 <title>Iris 调色盘 · 语义感知的在线照片编辑器</title>
 <meta name="theme-color" content="#0b0b0d">
 <!-- 版本元数据：检查更新时远端只需读取文件头部即可比对，不必下载整份页面 -->
-<meta name="iris-version" content="1.0.9">
+<meta name="iris-version" content="1.0.12">
 <meta name="iris-build" content="2026-11-12">
 <meta name="iris-repo" content="david1a21/iris-palette">
 <meta name="description" content="Iris 调色盘：语义感知的二维色彩控制器。Tone × Color 两轴、端侧区域分割与肤色锁，433 款滤镜、78 套模板，支持照片 / 视频 / GIF 导出，纯前端不上传。">
@@ -2947,6 +2947,285 @@ html[data-theme="liquid"] .subpage{
 .zone-tip{font-size:10px;color:var(--sub);line-height:1.65;margin:7px 0 3px}
 .zone-preset-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
 .zone-preset-grid .btn{font-size:10.5px;padding:8px 3px}
+
+/* ============================================================
+   v1.0.10 · 顶栏留白
+   classic 界面原本是 top:0;left:0;right:0 的全宽贴边条，搜索 / ⋯ /
+   换照片 / 导出几乎贴着视口边缘。这里让它四边留出呼吸空间、变成
+   一张悬浮卡片；Nova 本来就是悬浮胶囊，不重复覆盖。
+   data-bar="edge" 时完全不加任何规则 = 原样贴边，可随时切回。
+   ============================================================ */
+/* 只补边框宽度 / 圆角 / 投影，不覆盖 background 与 border-color：
+   玻璃开时由 .tb-glass 透出照片、关时由既有规则换回实色，两条链路都不被打断。 */
+html[data-bar="float"]:not([data-ui="nova"]) .topbar{
+  border-width:1px;border-style:solid;
+  border-radius:14px;
+  box-shadow:0 12px 34px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.07)}
+html[data-bar="float"]:not([data-ui="nova"]) .topbar::before{
+  left:12px;right:12px;top:0;border-radius:14px}
+html[data-bar="float"]:not([data-ui="nova"]) .tb-menu{top:calc(100% + 8px)}
+@media(min-width:900px){
+  html[data-bar="float"]:not([data-ui="nova"]) .topbar{
+    top:10px;left:14px;right:14px}
+  /* 顶栏浮起后底边下移，右侧编辑栏顶部要跟着让位，避免工具行被压住 */
+  html[data-bar="float"]:not([data-ui="nova"]) .dock{padding-top:66px}
+  html[data-bar="float"]:not([data-ui="nova"]) #hist,
+  html[data-bar="float"]:not([data-ui="nova"]) .live-bar{top:78px}
+  html[data-bar="float"][data-toolpos="top"]:not([data-ui="nova"]) .dock{padding-top:78px}
+}
+@media(max-width:899px){
+  html[data-bar="float"]:not([data-ui="nova"]) .topbar{
+    margin:calc(8px + env(safe-area-inset-top,0px)) 9px 0;
+    padding:8px 12px 7px}
+  html[data-bar="float"]:not([data-ui="nova"]) .tb-menu{top:calc(100% + 8px)}
+}
+@media(max-width:520px){
+  html[data-bar="float"]:not([data-ui="nova"]) .topbar{
+    margin:calc(8px + env(safe-area-inset-top,0px)) 8px 0;
+    padding:7px 10px 6px}
+}
+
+/* ============================================================
+   v1.0.11 · 启动加载页（Splash）
+   每次打开 / 刷新都出现，最多 3 秒。跟随 9 套主题的变量，
+   纯视觉覆盖层：pointer-events:none，不拦截任何点击或拖拽，
+   启动期间后面的界面照常可操作，不会出现「点了没反应」。
+   ============================================================ */
+#irisSplash{position:fixed;inset:0;z-index:9999;pointer-events:none;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:0;overflow:hidden;color:var(--txt);
+  background:
+    radial-gradient(62% 54% at 50% 43%,rgba(var(--accent-rgb),.13),transparent 70%),
+    radial-gradient(44% 44% at 16% 86%,rgba(96,152,220,.10),transparent 72%),
+    radial-gradient(44% 44% at 86% 12%,rgba(226,168,96,.09),transparent 72%),
+    var(--bg);
+  opacity:1;transform:scale(1);filter:blur(0);
+  transition:opacity .38s ease,transform .38s ease,filter .38s ease}
+#irisSplash.gone{opacity:0;transform:scale(1.035);filter:blur(7px)}
+
+/* 缓慢呼吸的环境光 */
+#irisSplash .sp-aura{position:absolute;width:min(78vw,620px);height:min(78vw,620px);
+  border-radius:50%;top:50%;left:50%;transform:translate(-50%,-50%);
+  background:radial-gradient(circle,rgba(var(--accent-rgb),.10),transparent 62%);
+  animation:sp-breathe 3.4s ease-in-out infinite}
+
+/* 徽记：12 段虹彩环 + 十字准线 + 中心白点 */
+#irisSplash .sp-emblem{position:relative;width:148px;height:148px;
+  animation:sp-rise .5s cubic-bezier(.2,.9,.25,1) both}
+#irisSplash .sp-halo{position:absolute;inset:2px;border-radius:50%;
+  border:1px solid rgba(var(--accent-rgb),.22);
+  animation:sp-spin 16s linear infinite reverse}
+#irisSplash .sp-halo::after{content:"";position:absolute;top:-3px;left:50%;
+  width:5px;height:5px;border-radius:50%;transform:translateX(-50%);
+  background:var(--accent);box-shadow:0 0 10px 2px rgba(var(--accent-rgb),.6)}
+#irisSplash .sp-ring{position:absolute;inset:16px;border-radius:50%;
+  background:conic-gradient(from 0deg,
+    #e6bd76 0deg 30deg,#d9956c 30deg 60deg,#ce8387 60deg 90deg,
+    #b58cb5 90deg 120deg,#8f9cc6 120deg 150deg,#7eb0c3 150deg 180deg,
+    #88bda6 180deg 210deg,#a9bf82 210deg 240deg,#cdbd7c 240deg 270deg,
+    #e0ac6d 270deg 300deg,#d3997f 300deg 330deg,#c199ae 330deg 360deg);
+  -webkit-mask:radial-gradient(circle,transparent 56%,#000 58%,#000 74%,transparent 76%);
+  mask:radial-gradient(circle,transparent 56%,#000 58%,#000 74%,transparent 76%);
+  filter:saturate(.78) brightness(1.06);
+  animation:sp-spin 9s linear infinite}
+#irisSplash .sp-cross{position:absolute;inset:0;opacity:.5}
+#irisSplash .sp-cross::before,#irisSplash .sp-cross::after{content:"";position:absolute;
+  background:linear-gradient(to bottom,transparent,rgba(255,255,255,.42) 22%,
+    rgba(255,255,255,.42) 78%,transparent)}
+#irisSplash .sp-cross::before{left:50%;top:8%;width:1px;height:84%;transform:translateX(-50%)}
+#irisSplash .sp-cross::after{top:50%;left:8%;height:1px;width:84%;transform:translateY(-50%);
+  background:linear-gradient(to right,transparent,rgba(255,255,255,.42) 22%,
+    rgba(255,255,255,.42) 78%,transparent)}
+#irisSplash .sp-dot{position:absolute;left:50%;top:50%;width:11px;height:11px;
+  border-radius:50%;transform:translate(-50%,-50%);background:#fff;
+  box-shadow:0 0 16px 5px rgba(255,255,255,.5),0 0 34px 12px rgba(var(--accent-rgb),.35);
+  animation:sp-pulse 2.1s ease-in-out infinite}
+
+#irisSplash .sp-brand{display:flex;align-items:baseline;gap:10px;margin-top:30px;
+  animation:sp-rise .5s .06s cubic-bezier(.2,.9,.25,1) both}
+#irisSplash .sp-brand b{font-size:31px;font-weight:650;letter-spacing:5px;color:var(--txt)}
+#irisSplash .sp-brand span{font-size:17px;font-weight:500;letter-spacing:4px;color:var(--accent)}
+#irisSplash .sp-tag{margin-top:9px;font-size:9.5px;letter-spacing:3.4px;
+  color:var(--sub);text-transform:uppercase;
+  animation:sp-rise .5s .12s cubic-bezier(.2,.9,.25,1) both}
+#irisSplash .sp-bar{position:relative;width:min(210px,52vw);height:2px;margin-top:34px;
+  border-radius:2px;background:rgba(127,127,140,.22);overflow:visible;
+  animation:sp-rise .5s .18s cubic-bezier(.2,.9,.25,1) both}
+#irisSplash .sp-bar i{display:block;height:100%;width:0;border-radius:2px;
+  background:linear-gradient(to right,rgba(var(--accent-rgb),.35),var(--accent));
+  box-shadow:0 0 12px 1px rgba(var(--accent-rgb),.55);
+  animation:sp-load 1.95s cubic-bezier(.35,.1,.35,1) forwards}
+#irisSplash .sp-note{position:absolute;bottom:34px;font-size:10.5px;letter-spacing:1.1px;
+  color:var(--sub);animation:sp-rise .5s .24s cubic-bezier(.2,.9,.25,1) both}
+#irisSplash .sp-ver{position:absolute;bottom:15px;font-size:9px;letter-spacing:2px;
+  color:var(--sub);opacity:.7;animation:sp-rise .5s .30s cubic-bezier(.2,.9,.25,1) both}
+#irisSplash.quiet .sp-aura,#irisSplash.quiet .sp-halo,
+#irisSplash.quiet .sp-ring,#irisSplash.quiet .sp-dot{animation:none}
+#irisSplash.quiet .sp-bar i{animation:none;width:100%}
+#irisSplash.quiet .sp-brand,#irisSplash.quiet .sp-tag,
+#irisSplash.quiet .sp-bar,#irisSplash.quiet .sp-note,
+#irisSplash.quiet .sp-ver,#irisSplash.quiet .sp-emblem{animation:none}
+@keyframes sp-spin{to{transform:rotate(360deg)}}
+@keyframes sp-pulse{0%,100%{opacity:1;transform:translate(-50%,-50%) scale(1)}
+  50%{opacity:.72;transform:translate(-50%,-50%) scale(.82)}}
+@keyframes sp-breathe{0%,100%{opacity:.55;transform:translate(-50%,-50%) scale(.92)}
+  50%{opacity:1;transform:translate(-50%,-50%) scale(1.06)}}
+@keyframes sp-rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes sp-load{from{width:0}to{width:100%}}
+@media(prefers-reduced-motion:reduce){
+  #irisSplash,#irisSplash *{animation:none!important;transition-duration:.16s!important}
+  #irisSplash .sp-bar i{width:100%}
+}
+@media(max-width:520px){
+  #irisSplash .sp-emblem{width:120px;height:120px}
+  #irisSplash .sp-brand b{font-size:26px;letter-spacing:4px}
+  #irisSplash .sp-brand span{font-size:14px;letter-spacing:3px}
+  #irisSplash .sp-tag{font-size:8px;letter-spacing:2.4px}
+  #irisSplash .sp-note{bottom:28px;font-size:9.5px}
+}
+
+/* ============================================================
+   v1.0.12 · 分级页 / 区域工作台 · 视觉重做
+   全部颜色走主题变量，9 套配色与原版 / Nova 双界面下都成立。
+   ============================================================ */
+.gp-wrap,.zp-wrap{display:flex;flex-direction:column;gap:12px}
+.gp-card,.zp-card{position:relative;border:1px solid var(--w08);
+  border-radius:16px;padding:13px 13px 14px;
+  background:linear-gradient(155deg,rgba(255,255,255,.035),rgba(255,255,255,0) 58%),var(--panel2);
+  box-shadow:0 8px 24px rgba(0,0,0,.16),inset 0 1px 0 rgba(255,255,255,.045)}
+html[data-theme="mist"] .gp-card,html[data-theme="paper"] .zp-card,
+html[data-theme="mist"] .zp-card,html[data-theme="paper"] .gp-card{
+  background:linear-gradient(155deg,rgba(255,255,255,.9),rgba(255,255,255,.42)),var(--panel2);
+  box-shadow:0 8px 22px rgba(20,24,40,.10),inset 0 1px 0 rgba(255,255,255,.85)}
+
+/* ---------- 分级：三档 tab ---------- */
+.gp-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;
+  padding:4px;border-radius:13px;background:rgba(127,127,140,.09);
+  border:1px solid var(--w045)}
+.gp-tab{position:relative;border:0;cursor:pointer;min-width:0;
+  padding:9px 4px 10px;border-radius:10px;color:var(--sub);
+  background:transparent;font-size:11px;letter-spacing:.4px;
+  transition:background .18s,color .18s,transform .18s}
+.gp-tab:hover{color:var(--txt);background:var(--w05)}
+.gp-tab.on{color:var(--txt);background:var(--w12);
+  box-shadow:0 3px 12px rgba(0,0,0,.18),inset 0 1px 0 rgba(255,255,255,.09)}
+.gp-tab .gp-tdot{display:block;width:16px;height:3px;border-radius:3px;margin:0 auto 6px;
+  opacity:.55;transition:opacity .18s,transform .18s}
+.gp-tab.on .gp-tdot{opacity:1;transform:scaleX(1.5)}
+.gp-tab b{display:block;font-weight:600;font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gp-tab small{display:block;margin-top:3px;font-size:9px;opacity:.72;
+  font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* ---------- 分级：大色轮 ---------- */
+.gp-wheelbox{position:relative;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:10px;padding:14px 0 8px}
+.gp-wheel{position:relative;width:min(196px,70%);aspect-ratio:1;border-radius:50%;
+  cursor:crosshair;touch-action:none;display:block;
+  box-shadow:0 0 0 1px var(--w08),0 12px 36px rgba(0,0,0,.32),
+    0 0 46px rgba(var(--accent-rgb),.10)}
+.gp-wheel::after{content:"";position:absolute;inset:-6px;border-radius:50%;
+  border:1px solid rgba(var(--accent-rgb),.18);pointer-events:none}
+.gp-wheel:active{box-shadow:0 0 0 1px var(--w12),0 12px 36px rgba(0,0,0,.32),
+  0 0 60px rgba(var(--accent-rgb),.24)}
+.gp-hue{display:flex;flex-direction:row;justify-content:center;gap:8px;pointer-events:none}
+.gp-read{display:flex;flex-direction:column;align-items:center;gap:1px;
+  padding:6px 12px;border-radius:9px;background:rgba(0,0,0,.28);
+  border:1px solid var(--w045);min-width:70px}
+html[data-theme="mist"] .gp-read,html[data-theme="paper"] .gp-read{
+  background:rgba(255,255,255,.72)}
+.gp-read b{font-size:12px;color:var(--txt);font-variant-numeric:tabular-nums;letter-spacing:.3px}
+.gp-read small{font-size:8px;letter-spacing:1.2px;color:var(--sub);text-transform:uppercase}
+
+/* ---------- 分级：精调滑杆 ---------- */
+.gp-sliders{display:flex;flex-direction:column;gap:9px;margin-top:10px}
+.gp-sl{display:grid;grid-template-columns:52px minmax(0,1fr) 46px;
+  align-items:center;gap:9px;font-size:10.5px;color:var(--sub)}
+.gp-sl>span:first-child{white-space:nowrap}
+.gp-sl>b{text-align:right;color:var(--accent);font-size:10.5px;
+  font-variant-numeric:tabular-nums;font-weight:600}
+.gp-sl input[type=range]{width:100%;height:18px;accent-color:var(--accent)}
+
+/* ---------- 分级：三档色卡 ---------- */
+.gp-bars{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:12px}
+.gp-bar{cursor:pointer;border:1px solid var(--w06);border-radius:10px;overflow:hidden;
+  background:rgba(0,0,0,.18);transition:transform .18s,border-color .18s}
+.gp-bar:hover{transform:translateY(-2px)}
+.gp-bar.on{border-color:rgba(var(--accent-rgb),.75);
+  box-shadow:0 0 0 1px rgba(var(--accent-rgb),.32)}
+.gp-bar i{display:block;height:24px;border-radius:0}
+.gp-bar span{display:block;padding:5px 3px 6px;text-align:center;font-size:9.5px;color:var(--sub)}
+
+/* ---------- 通用小控件 ---------- */
+.gp-row,.zp-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.gp-btn,.zp-btn{flex:1 1 auto;min-width:0;cursor:pointer;border-radius:10px;
+  border:1px solid var(--w08);background:var(--w045);color:var(--body);
+  padding:8px 7px;font-size:10.5px;line-height:1.3;
+  transition:background .18s,color .18s,transform .18s,border-color .18s}
+.gp-btn:hover,.zp-btn:hover{background:var(--w12);color:var(--txt);transform:translateY(-1px)}
+.gp-btn.on,.zp-btn.on{background:rgba(var(--accent-rgb),.16);
+  border-color:rgba(var(--accent-rgb),.55);color:var(--txt)}
+.gp-btn.pri,.zp-btn.pri{background:rgba(var(--accent-rgb),.20);
+  border-color:rgba(var(--accent-rgb),.6);color:var(--txt);font-weight:600}
+.gp-looks{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.gp-look{display:flex;align-items:center;gap:8px;cursor:pointer;text-align:left;
+  padding:9px 9px;border-radius:11px;border:1px solid var(--w06);
+  background:var(--w035);color:var(--body);font-size:10.5px;
+  transition:background .18s,transform .18s,border-color .18s}
+.gp-look:hover{background:var(--w12);border-color:var(--w12);transform:translateY(-1px);color:var(--txt)}
+.gp-look .gp-sw{display:flex;flex:0 0 auto;gap:2px}
+.gp-look .gp-sw i{width:8px;height:20px;border-radius:3px;display:block}
+.gp-look b{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gp-tip,.zp-tip{font-size:10px;line-height:1.65;color:var(--sub);margin:9px 0 0}
+
+/* ---------- 区域工作台：统计 ---------- */
+.zp-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 12px}
+.zp-stat{min-width:0}
+.zp-stat .zp-sl{display:flex;justify-content:space-between;gap:6px;
+  font-size:10px;color:var(--sub);margin-bottom:4px}
+.zp-stat .zp-sl b{color:var(--txt);font-variant-numeric:tabular-nums}
+.zp-track{height:5px;border-radius:5px;background:rgba(127,127,140,.16);overflow:hidden}
+.zp-track i{display:block;height:100%;border-radius:5px;transition:width .3s ease}
+
+/* ---------- 区域工作台：预览 ---------- */
+.zp-prev{position:relative;border-radius:13px;overflow:hidden;
+  border:1px solid var(--w08);background:#11131a;line-height:0}
+.zp-prev img{display:block;width:100%;height:auto;max-height:300px;object-fit:contain}
+.zp-prev canvas.zp-paint{position:absolute;inset:0;width:100%;height:100%;
+  cursor:crosshair;touch-action:none;line-height:0}
+.zp-chips{display:flex;gap:5px;overflow-x:auto;padding:2px 0 4px;
+  scrollbar-width:thin;scrollbar-color:var(--w12) transparent}
+.zp-chip{flex:0 0 auto;cursor:pointer;border-radius:999px;padding:6px 11px;
+  border:1px solid var(--w08);background:var(--w045);color:var(--sub);
+  font-size:10px;white-space:nowrap;transition:all .18s}
+.zp-chip:hover{color:var(--txt);background:var(--w12)}
+.zp-chip.on{background:rgba(var(--accent-rgb),.18);
+  border-color:rgba(var(--accent-rgb),.6);color:var(--txt);font-weight:600}
+.zp-op{display:grid;grid-template-columns:56px minmax(0,1fr) 40px;
+  align-items:center;gap:8px;margin-top:9px;font-size:10px;color:var(--sub)}
+.zp-op input[type=range]{width:100%;accent-color:var(--accent)}
+.zp-op b{text-align:right;color:var(--accent);font-variant-numeric:tabular-nums}
+
+/* ---------- 区域工作台：四区卡片 ---------- */
+.zp-zones{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.zp-zone{border:1px solid var(--w08);border-radius:13px;padding:10px 10px 11px;
+  background:var(--w035);min-width:0}
+.zp-zone .zp-zh{display:flex;align-items:center;gap:6px;margin-bottom:9px;
+  font-size:10.5px;color:var(--txt);font-weight:600}
+.zp-zone .zp-zh i{width:10px;height:10px;border-radius:4px;flex:0 0 auto;
+  box-shadow:0 0 9px currentColor}
+.zp-zone .zp-zh small{margin-left:auto;font-size:9px;font-weight:400;color:var(--sub)}
+.zp-zone .gp-sl{grid-template-columns:34px minmax(0,1fr) 34px;gap:5px;font-size:9.5px}
+.zp-zone .gp-sl>b{font-size:9.5px}
+
+/* ---------- 窄侧栏 ---------- */
+[data-fit="slim"] .gp-looks{grid-template-columns:1fr}
+[data-fit="slim"] .zp-zones{grid-template-columns:1fr}
+[data-fit="slim"] .gp-wheel{width:min(170px,66%)}
+[data-fit="slim"] .gp-tab small{display:none}
+@media(max-width:520px){
+  .gp-wheel{width:min(190px,68%)}
+  .zp-prev img{max-height:230px}
+}
 </style>
 <script>
 /* 外观偏好在样式解析完、DOM 构建前就应用，避免切主题时首屏闪一下 */
@@ -2958,18 +3237,95 @@ html[data-theme="liquid"] .subpage{
     r.dataset.ui=s.ui||'classic';
     r.dataset.radius=s.radius||'standard';
     r.dataset.glass=s.glass===false?'off':'on';
+    try{ r.dataset.bar=localStorage.getItem('iris_bar')==='edge'?'edge':'float'; }
+    catch(e2){ r.dataset.bar='float'; }
     var ga=parseFloat(s.glassAlpha);
     r.style.setProperty('--glass-alpha',String((isFinite(ga)&&ga>=.2&&ga<=.9)?ga:.55));
     if(s.motion===false) r.dataset.motion='off';
   }catch(e){
     var r=document.documentElement;
     r.dataset.theme='aurum'; r.dataset.ui='classic'; r.dataset.radius='standard';
-    r.dataset.glass='on'; r.style.setProperty('--glass-alpha','.55');
+    r.dataset.glass='on'; r.dataset.bar='float';
+    r.style.setProperty('--glass-alpha','.55');
   }
 })();
 </script>
 </head>
 <body>
+<!-- 启动加载页：每次进入都显示，最多 3 秒；纯视觉层，不拦截交互 -->
+<div id="irisSplash" role="status" aria-label="Iris 调色盘正在启动">
+  <div class="sp-aura"></div>
+  <div class="sp-emblem">
+    <div class="sp-halo"></div><div class="sp-ring"></div>
+    <div class="sp-cross"></div><div class="sp-dot"></div>
+  </div>
+  <div class="sp-brand"><b>Iris</b><span>调色盘</span></div>
+  <div class="sp-tag">Semantic Color · Two Axes</div>
+  <div class="sp-bar"><i></i></div>
+  <div class="sp-note">本地渲染 · 照片不出设备</div>
+  <div class="sp-ver"></div>
+</div>
+<script>
+/* 启动页生命周期：独立于主程序，任何后续脚本出错也不会让它卡住。
+   硬性上限 3000ms（含淡出），正常约 2.8s 结束。 */
+(function(){
+  var TPL=null,FADE=400;
+  function ver(){
+    var m=document.querySelector('meta[name="iris-version"]');
+    return 'v'+(m?m.content:'1.0')+'  ·  RELEASE CANDIDATE';
+  }
+  function quiet(){
+    var rm=false,off=false;
+    try{ rm=matchMedia('(prefers-reduced-motion:reduce)').matches;
+         off=JSON.parse(localStorage.getItem('iris_skin')||'{}').motion===false; }catch(e){}
+    return rm||off;
+  }
+  function run(el,q){
+    var t0=performance.now(),done=false;
+    var ve=el.querySelector('.sp-ver'); if(ve)ve.textContent=ver();
+    if(q)el.classList.add('quiet');
+    var FADE_MS=q?200:FADE,
+        MIN=q?480:1000,           /* 最短展示，保证动画看得完整 */
+        HIDE=q?700:2080,          /* 开始淡出 */
+        HARD=3000-FADE_MS-40;     /* 硬上限：淡出+移除仍落在 3s 内 */
+    function finish(){
+      if(done)return; done=true;
+      el.classList.add('gone');
+      setTimeout(function(){
+        if(el.parentNode)el.parentNode.removeChild(el);
+        document.dispatchEvent(new CustomEvent('iris-splash-done',
+          {detail:{ms:Math.round(performance.now()-t0)}}));
+      },FADE_MS+40);
+    }
+    /* 兜底 1：无论 DOMContentLoaded 多晚，HARD 时刻一定开始淡出 */
+    setTimeout(function(){ if(!done)finish(); },Math.max(0,HARD));
+    /* 兜底 2：切到后台就没必要继续占屏 */
+    document.addEventListener('visibilitychange',function(){
+      if(document.hidden)finish();
+    },{once:true});
+    /* 正常路径：首帧就绪后，凑够最短展示时间再淡出 */
+    function schedule(){
+      var e=performance.now()-t0;
+      setTimeout(finish,Math.max(0,Math.min(HIDE,HARD)-e));
+    }
+    if(document.readyState==='loading')
+      document.addEventListener('DOMContentLoaded',schedule,{once:true});
+    else schedule();
+  }
+  var first=document.getElementById('irisSplash');
+  if(!first)return;
+  TPL=first.outerHTML;
+  run(first,quiet());
+  /* bfcache / 从其它页面返回时重新进入，也补一次短版启动页 */
+  window.addEventListener('pageshow',function(ev){
+    if(!ev.persisted)return;
+    if(document.getElementById('irisSplash'))return;
+    document.body.insertAdjacentHTML('afterbegin',TPL);
+    var el=document.getElementById('irisSplash');
+    if(el)run(el,true);
+  });
+})();
+</script>
 <div id="app">
   <div class="topbar">
     <div class="tb-glass" aria-hidden="true"></div>
@@ -3366,7 +3722,7 @@ function defaultState(){
       color:0, tone:0, intensity:1,
       lock:1, skyW:1.28, bgW:1.0,
       presetId:'standard',
-      engine:'heuristic-matte-v3', quality:'standard',
+      engine:'heuristic-matte-v4', quality:'standard',
       matteVersion:0, matteHash:'', matteSize:'', matteStats:null
     },
     /* 区域工作台：把语义 matte 从「幕后肤色锁」变成可直接出片的工具。
@@ -5376,8 +5732,10 @@ for(let i=0;i<4;i++){
    再做边缘感知平滑（近似引导滤波），GPU 用 LINEAR 上采样对齐主图。
    只在换照片 / 手动重算时推理一次并缓存，拖动 pad 不重算。
    ============================================================ */
-const SEM_VERSION=3, SEM_MAX=128;
-/* v3：自适应肤色聚类 + 天空行一致性 + 区域一致性 + 互斥归一化 + 多尺度精度档 */
+const SEM_VERSION=4, SEM_MAX=128;
+/* v4：在 v3 基础上新增「植被 / 水体 / 主体显著性 / 边缘」四张 CPU 侧软图，
+   并用边缘梯度引导收缩皮肤与天空概率，减少跨边缘溢色；
+   主体显著性保留最大连通块，抑制零散误判。GPU 纹理仍是原来的 RGBA 四通道。 */
 function semBoxBlur(src,W,H,r){
   const a=new Float32Array(src.length), out=new Float32Array(src.length);
   const cx=i=>i<0?0:(i>=W?W-1:i), cy=i=>i<0?0:(i>=H?H-1:i);
@@ -5411,7 +5769,8 @@ const ZONE_META=[
   {id:'hi',  name:'亮部 / 高光',color:'#ffd86b',desc:'高亮与暗发混合，用来单独提亮或压暗'}
 ];
 /* 纯 UI 状态：不写入 state、不进 JSON、不随导出生效 */
-const zoneUI={preview:0,opacity:.58,channel:'all'};
+const zoneUI={preview:0,opacity:.58,channel:'all',
+  strokes:[],strokeMode:'add',strokeSize:.075,action:'person'};
 /* 一键风格只写 (tone, color, intensity) + preset_id，底风格不动、原图不动 */
 const SEM_PRESETS=[
   {id:'standard',name:'标准',color:0,tone:0,intensity:1},
@@ -5746,6 +6105,81 @@ function analyzeSemantic(source,force){
     }
     S=semSmooth(S,W,H,lum); Y2=semSmooth(Y2,W,H,lum);
     R=semSmooth(R,W,H,lum); I=semSmooth(I,W,H,lum);
+    /* ============================================================
+       v4 附加语义通道（CPU 侧）
+       edge   : 亮度梯度，用来引导收缩与单独可视化
+       veg    : 绿色优势 + 中饱和 + 中低亮度
+       water  : 蓝青优势 + 中下部 + 低纹理，且与天空互斥
+       subject: 中心先验 × 局部对比 + 皮肤加成 − 天空抑制，保留最大连通块
+       ============================================================ */
+    const edge=new Float32Array(n), veg0=new Float32Array(n),
+          water0=new Float32Array(n), subj0=new Float32Array(n);
+    for(let j=0;j<H;j++)for(let i2=0;i2<W;i2++){
+      const k=j*W+i2;
+      const r=rA[k],g=gA[k],b=bA[k],Y=lum[k],sat=satA[k];
+      const lx=k>0?lum[k-1]:Y, rx=k+1<n?lum[k+1]:Y,
+            uy=j>0?lum[k-W]:Y, dy=j<H-1?lum[k+W]:Y;
+      const gx=Math.abs(rx-lx), gy=Math.abs(dy-uy);
+      const e=clamp((gx+gy)*2.35,0,1);
+      edge[k]=e;
+      /* 植被：绿占优、中等饱和、避开极亮高光与强边缘 */
+      let v=0;
+      if(g>r*1.035&&g>b*1.015&&sat>.045&&sat<.54&&Y>.10&&Y<.80){
+        v=sstep(.015,.13,g-r)*sstep(.015,.11,g-b)*sstep(.10,.30,Y)*(1-sstep(.72,.92,Y));
+        v*=1-.42*e;
+      }
+      veg0[k]=clamp(v,0,1);
+      /* 水体：蓝青、中下部、低纹理；与天空互斥，避免把蓝天算成水面 */
+      let wt=0;
+      if(b>r*1.035&&b>=g*.96&&Y>.16&&Y<.82&&j>H*.24){
+        wt=sstep(.015,.16,b-r)*sstep(.16,.38,Y)*(1-sstep(.30,.56,sat));
+        /* 青蓝水面 b 与 g 接近；b 远大于 g 的紫蓝通常是天空或暮色，压掉 */
+        wt*=(1-sstep(.16,.38,b-g))*(1-.52*e)*(1-.70*Y2[k]);
+      }
+      water0[k]=clamp(wt,0,1);
+      /* 显著性主体：中心高斯 × 局部对比，叠加皮肤、减去天空 */
+      const u=(i2+.5)/W, vv=(j+.5)/H;
+      const du=(u-.5)/.40, dv=(vv-.52)/.48;
+      const core=Math.exp(-(du*du+dv*dv)*1.05);
+      const contrast=clamp(e*2.3+.20,0,1);
+      subj0[k]=clamp(core*(.32+.68*contrast)+S[k]*.58+R[k]*.10-Y2[k]*.62,0,1);
+    }
+    /* 边缘引导精修：强边缘处适度收缩皮肤 / 天空概率，减少跨物体溢色 */
+    for(let q3=0;q3<n;q3++){
+      S[q3]*=1-.20*edge[q3];
+      Y2[q3]*=1-.16*edge[q3];
+    }
+    let V=semSmooth(veg0,W,H,lum), Wt=semSmooth(water0,W,H,lum),
+        Sub=semSmooth(subj0,W,H,lum);
+    const regV=semBoxBlur(V,W,H,Math.max(2,Math.round(rad*.7))),
+          regW=semBoxBlur(Wt,W,H,Math.max(2,Math.round(rad*.7)));
+    for(let q3=0;q3<n;q3++){
+      V[q3]=clamp(V[q3]*.70+regV[q3]*.30,0,1);
+      Wt[q3]=clamp(Wt[q3]*.68+regW[q3]*.32,0,1);
+    }
+    V=semSmooth(V,W,H,lum); Wt=semSmooth(Wt,W,H,lum);
+    /* 主体只保留最大连通块，零散小斑块衰减为弱权重 */
+    const comp=semLargestComponent(Sub,W,H,.40);
+    let subMax=1e-4;
+    for(let q3=0;q3<n;q3++){
+      Sub[q3]*=.28+.72*comp[q3];
+      if(Sub[q3]>subMax) subMax=Sub[q3];
+    }
+    for(let q3=0;q3<n;q3++) Sub[q3]=clamp(Sub[q3]/subMax,0,1);
+    SEM.aux={edge,veg:V,water:Wt,subject:Sub};
+    /* 水体行一致性：零散蓝点不该算水面，整行都有低纹理蓝青才成立 */
+    for(let j=0;j<H;j++){
+      let row=0;for(let i2=0;i2<W;i2++)row+=Wt[j*W+i2];
+      row/=W;
+      const boost=sstep(.03,.20,row);
+      for(let i2=0;i2<W;i2++)Wt[j*W+i2]*=.32+.68*boost;
+    }
+    /* 皮肤同样保留最大连通块，抑制孤立色斑（对人像更干净） */
+    const skinComp=semLargestComponent(S,W,H,.36);
+    for(let q3=0;q3<n;q3++)S[q3]*=.62+.38*skinComp[q3];
+    let sv=0,sw=0,su=0,se=0;
+    for(let q3=0;q3<n;q3++){ sv+=V[q3];sw+=Wt[q3];su+=Sub[q3];se+=edge[q3]; }
+
     /* 互斥归一化：同一像素不该既是最远的天空又是最近的皮肤 */
     const buf=new Uint8Array(n*4);
     let ss=0,ys=0,hs=0,ls=0;
@@ -5776,7 +6210,8 @@ function analyzeSemantic(source,force){
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,false);
     gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,W,H,0,gl.RGBA,gl.UNSIGNED_BYTE,buf);
     SEM.W=W; SEM.H=H; SEM.ready=true; SEM.hash=hash; SEM.canvas=cv;
-    SEM.stats={skin:ss/n,sky:ys/n,hair:hs/n,lum:ls/n,cr:crC,cb:cbC,quality:q};
+    SEM.stats={skin:ss/n,sky:ys/n,hair:hs/n,lum:ls/n,cr:crC,cb:cbC,quality:q,
+      veg:sv/n,water:sw/n,subject:su/n,edge:se/n,channels:ZONE_CH_IDS.length};
     if(state){
       state.sem.matteVersion=SEM_VERSION;
       state.sem.matteHash=hash;
@@ -5792,7 +6227,32 @@ function analyzeSemantic(source,force){
    person = 皮肤 + 暗发（人像主体）；sky / bg / hi 为单通道；
    全部支持任意输出分辨率的最近邻重采样，供局部蒙版与背景虚化共用。
    ============================================================ */
-const ZONE_CH_IDS=['person','skin','sky','bg','hi'];
+const ZONE_CH_IDS=['person','skin','sky','bg','hi','veg','water','subject','dark','edge'];
+const ZONE_CH_NAMES={person:'人物',skin:'皮肤',sky:'天空',bg:'背景',hi:'亮部',
+  veg:'植被',water:'水体',subject:'主体',dark:'暗部',edge:'边缘'};
+/* v4 附加通道：CPU 侧软图，不占 GPU 纹理单元 */
+const ZONE_AUX_IDS=['veg','water','subject','dark','edge'];
+/* 4 邻域最大连通块：显著性主体常会散成几块，保留最大的一块更贴近真实主体 */
+function semLargestComponent(mask,W,H,thr){
+  const seen=new Uint8Array(W*H), out=new Float32Array(W*H);
+  const stack=[]; let best=null,bestN=0;
+  for(let s0=0;s0<W*H;s0++){
+    if(seen[s0]||mask[s0]<thr) continue;
+    let head=0;const comp=[];
+    stack.length=0;stack.push(s0);seen[s0]=1;
+    while(head<stack.length){
+      const k=stack[head++];comp.push(k);
+      const x=k%W,y=(k/W)|0;
+      if(x>0&&!seen[k-1]&&mask[k-1]>=thr){seen[k-1]=1;stack.push(k-1);}
+      if(x<W-1&&!seen[k+1]&&mask[k+1]>=thr){seen[k+1]=1;stack.push(k+1);}
+      if(y>0&&!seen[k-W]&&mask[k-W]>=thr){seen[k-W]=1;stack.push(k-W);}
+      if(y<H-1&&!seen[k+W]&&mask[k+W]>=thr){seen[k+W]=1;stack.push(k+W);}
+    }
+    if(comp.length>bestN){bestN=comp.length;best=comp;}
+  }
+  if(best)for(let z=0;z<best.length;z++)out[best[z]]=1;
+  return out;
+}
 function semChannelValue(buf,k,ch){
   const r=buf[k*4]/255, g=buf[k*4+1]/255, b=buf[k*4+2]/255, a=buf[k*4+3]/255;
   if(ch==='skin')   return r*(1-g*.75);
@@ -5803,8 +6263,27 @@ function semChannelValue(buf,k,ch){
   return 0;
 }
 function semChannelMask(ch,W,H){
-  if(!SEM.ready||!SEM.buf||W<2||H<2) return null;
+  if(!SEM.ready||W<2||H<2) return null;
   const out=new Uint8Array(W*H), sw=SEM.W, sh=SEM.H;
+  /* v4 附加通道：CPU 侧软图，最近邻重采样到目标分辨率 */
+  if(ZONE_AUX_IDS.includes(ch)){
+    let src=null;
+    if(ch==='dark'){
+      if(!SEM.buf) return null;
+      src=new Float32Array(sw*sh);
+      for(let k=0;k<sw*sh;k++) src[k]=SEM.buf[k*4+2]/255;
+    } else src=SEM.aux?SEM.aux[ch]:null;
+    if(!src) return null;
+    for(let j=0;j<H;j++){
+      const sj=Math.min(sh-1,Math.floor(j*sh/H));
+      for(let i=0;i<W;i++){
+        const si=Math.min(sw-1,Math.floor(i*sw/W));
+        out[j*W+i]=Math.round(clamp(src[sj*sw+si],0,1)*255);
+      }
+    }
+    return out;
+  }
+  if(!SEM.buf) return null;
   for(let j=0;j<H;j++){
     const sj=Math.min(sh-1,Math.floor(j*sh/H));
     for(let i=0;i<W;i++){
@@ -5868,7 +6347,13 @@ const ZONE_LOOKS=[
       bg:{temp:.14,lum:.04,sat:.06},hi:{temp:.16,lum:.16,sat:0}}},
   {id:'air',name:'柔和空气感',desc:'低饱和、亮部提亮、背景淡开',
    v:{skin:{sat:-.16,lum:.14,temp:0},sky:{sat:-.12,lum:.18,temp:-.08},
-      bg:{sat:-.14,lum:.12,temp:0},hi:{lum:.20,sat:-.08,temp:0}}}
+      bg:{sat:-.14,lum:.12,temp:0},hi:{lum:.20,sat:-.08,temp:0}}},
+  {id:'forest',name:'森系绿调',desc:'背景压暗带冷、亮部柔亮、皮肤轻暖',
+   v:{skin:{temp:.10,lum:.12,sat:-.04},sky:{temp:-.16,sat:.06,lum:-.06},
+      bg:{temp:-.14,sat:.16,lum:-.18},hi:{lum:.12,sat:-.06,temp:.04}}},
+  {id:'night',name:'夜色霓虹',desc:'暗部压冷、亮部留暖、整体浓郁',
+   v:{skin:{temp:.06,lum:-.04,sat:.10},sky:{temp:-.36,sat:.20,lum:-.22},
+      bg:{temp:-.28,sat:.14,lum:-.26},hi:{lum:.14,sat:.08,temp:.22}}}
 ];
 function applyZoneLook(id){
   const lk=ZONE_LOOKS.find(x=>x.id===id); if(!lk) return;
@@ -10596,7 +11081,7 @@ function renderVideoPage(body){
    4) 断网、限流、404、旧版页面格式都有明确降级与提示，
       检查失败不影响任何编辑与导出功能。
    ============================================================ */
-const IRIS_VERSION='1.0.9';
+const IRIS_VERSION='1.0.12';
 const IRIS_BUILD='2026-11-12';
 const IRIS_CHANNEL='rc';                 /* rc = 近乎最终版 */
 const IRIS_SOURCE_TAG='v1.0.3';          /* 本版基于仓库的哪个已发布版本 */
@@ -11199,6 +11684,20 @@ function renderAppearancePage(body){
     });
     w.append(tpb);
 
+    /* 顶栏留白：搜索 / ⋯ / 换照片 / 导出那一整条 */
+    const hbs=spEl('div','sk-sec','顶栏留白 <em>搜索 / ⋯ 更多 / 换照片 / 导出那一整条</em>'); w.append(hbs);
+    const bslead=spEl('p','sk-lead','<b>悬浮留白</b>（默认）让顶栏四边离屏幕边缘留出空隙，变成一张悬浮卡片，'
+      +'不再贴着上边和左右边；<b>贴边</b>回到最早的全宽顶栏。只改位置与边框，按钮和菜单功能完全一致，偏好存本机。'
+      +'Nova 界面本身就是悬浮胶囊，这一项只作用于原版界面。');
+    w.append(bslead);
+    const bsb=spEl('div','sk-bar');
+    [['float','▢ 悬浮留白（默认）'],['edge','▔ 贴边（原样）']].forEach(([v,label])=>{
+      const x=spEl('button','sk-pill'+(irisBar===v?' on':''),label);
+      x.onclick=()=>{ setBar(v); draw(); };
+      bsb.append(x);
+    });
+    w.append(bsb);
+
     /* 配色主题 */
     const h2=spEl('div','sk-sec','配色主题 <em>点一张就换，含两套浅色</em>'); w.append(h2);
     const tg=spEl('div','sk-grid');
@@ -11278,7 +11777,8 @@ function renderAppearancePage(body){
     const acts=spEl('div','sk-acts');
     const reset=spEl('button','pri','↺ 恢复默认外观');
     reset.onclick=()=>{ setIrisSkin({theme:'aurum',ui:'classic',radius:'standard',motion:true,glass:true,glassAlpha:.55});
-      applyToolPos('dock'); draw(); toast('已恢复：琥珀金 · 原版界面 · 工具在底部'); };
+      applyToolPos('dock'); applyBar('float'); draw();
+      toast('已恢复：琥珀金 · 原版界面 · 工具在底部 · 顶栏悬浮'); };
     const hub=spEl('button','','◫ 页面中心');
     hub.onclick=()=>openSubPage('pages');
     acts.append(reset,hub); w.append(acts);
@@ -11417,6 +11917,19 @@ function applyToolPos(pos){
   if(typeof renderMoreMenu==='function') renderMoreMenu();
 }
 function setToolPos(pos){ applyToolPos(pos); toast(irisToolPos==='dock'?'工具已回到编辑区底部':'工具已移到顶栏'); }
+
+/* ---------- 顶栏留白（v1.0.10） ----------
+   float = 顶栏四边离视口边缘留出空隙（默认），edge = 最初的全宽贴边条。
+   只切一个 data 属性，不重建 DOM、不动事件；偏好单独存本机。 */
+let irisBar=(()=>{ try{ return localStorage.getItem('iris_bar')==='edge'?'edge':'float'; }
+  catch(e){ return 'float'; } })();
+function applyBar(v){
+  if(v) irisBar=(v==='edge'?'edge':'float');
+  document.documentElement.setAttribute('data-bar',irisBar);
+  try{ localStorage.setItem('iris_bar',irisBar); }catch(e){}
+}
+function setBar(v){ applyBar(v); toast(irisBar==='float'?'顶栏已悬浮留白':'顶栏已恢复贴边'); }
+applyBar();
 applyToolPos();
 function buildTools(){
   const t=$('#tools'); t.innerHTML='';
@@ -11959,7 +12472,7 @@ function buildPlate(p){
     if(!src){ toast('请先导入照片'); return; }
     analyzeSemantic(src,true); buildPanel(true);
   }));
-  md.append(hint('v3 引擎：自适应肤色聚类（按本张照片估计 Cr/Cb 肤色中心）+ 天空行一致性 + 区域一致性平滑 + 互斥归一化 + 边缘感知上采样。'
+  md.append(hint('v4 引擎：自适应肤色聚类（按本张照片估计 Cr/Cb 肤色中心）+ 天空行一致性 + 边缘引导精修 + 显著性最大连通块 + 区域一致性平滑 + 互斥归一化；CPU 侧另有植被 / 水体 / 主体 / 边缘四张软图，共 10 个可用通道。'
     +'仍是纯前端启发式软分割，不是设备端 ML，也没有 CoreImage / Metal；复杂人像、逆光、多光源下会有误差。'
     +'matte 缺失时着色器内还有一层像素级肤色软概率兜底，所以冷调也不会把脸染蓝。'));
   se.append(md);
@@ -12736,7 +13249,7 @@ function buildLocal(p){
     card.append(src);
     if(isMatte){
       card.append(hint('<b>选区来自语义 matte</b>：由画面分析自动生成，换照片会跟着重算，无需手动涂抹。'));
-      card.append(chipRow(ZONE_CH_IDS.map(id=>({id,name:({person:'人物',skin:'皮肤',sky:'天空',bg:'背景',hi:'亮部'})[id]})),
+      card.append(chipRow(ZONE_CH_IDS.map(id=>({id,name:ZONE_CH_NAMES[id]})),
         m.matteChannel||'person',id=>mutate(()=>{ m.matteChannel=id;
           maskPaintKey=''; rebuildMaskPaint(true); buildPanel(); render(); })));
     }
@@ -12860,13 +13373,224 @@ function wheelCard(key,label){
   lum.title='该区域的亮度';card.append(lum);
   card.append(val);drawWheel(cv,arr);return card;
 }
+/* ============================================================
+   v1.0.12 · 分级 Pro
+   结构完全沿用 state.grade[k] = [r,g,b,lum]，只是把交互重做：
+   一个大色轮 + 三档切换 + 色相 / 浓度 / 亮度精调 + 三档色卡 +
+   一键风格 + 档位联动（拖一档时其余两档轻微跟随）。
+   ============================================================ */
+const GRADE_META=[
+  {k:'s',name:'阴影',en:'SHADOWS',   col:'#7fa6e8'},
+  {k:'m',name:'中间调',en:'MIDS',    col:'#d3aa6c'},
+  {k:'h',name:'高光',en:'HIGHLIGHTS',col:'#f4c877'}
+];
+const GRADE_LOOKS=[
+  {id:'neutral',name:'中性清零',v:{s:[0,0,0,0],m:[0,0,0,0],h:[0,0,0,0]}},
+  {id:'teal',name:'青橙电影',v:{s:[-.34,.04,.44,.02],m:[.06,.01,-.05,0],h:[.38,.16,-.30,.03]}},
+  {id:'gold',name:'暖金日落',v:{s:[.16,.02,-.20,-.03],m:[.30,.11,-.24,.02],h:[.42,.24,-.30,.06]}},
+  {id:'silver',name:'冷银褪色',v:{s:[-.22,-.02,.26,-.04],m:[-.08,.02,.10,-.02],h:[.10,.06,.02,.03]}},
+  {id:'fuji',name:'日系透明',v:{s:[-.14,.06,.16,.06],m:[.04,.03,-.06,.03],h:[.12,.08,-.04,.05]}},
+  {id:'neon',name:'霓虹夜色',v:{s:[-.28,-.16,.42,-.06],m:[.10,-.10,.14,0],h:[.34,-.12,.22,.02]}},
+  {id:'sepia',name:'棕褐复古',v:{s:[.30,.13,-.26,-.04],m:[.34,.18,-.30,0],h:[.28,.18,-.20,.04]}},
+  {id:'mint',name:'薄荷冷调',v:{s:[-.26,.10,.12,.02],m:[-.10,.06,.06,0],h:[-.14,.10,.06,.03]}}
+];
+let gradeTab='m', gradeLink=false;
+/* arr 是「相对中性灰的 RGB 偏移」；色相只由分量差决定，幅度由最大绝对值决定。
+   与 gradeSetHS 的 (rgb-.5)*2*rad 严格互逆。 */
+function gradeHue(arr){
+  const r=arr[0],g=arr[1],b=arr[2],mx=Math.max(r,g,b),mn=Math.min(r,g,b),d=mx-mn;
+  if(d<1e-6) return 0;
+  let H;
+  if(mx===r) H=((g-b)/d+6)%6; else if(mx===g) H=(b-r)/d+2; else H=(r-g)/d+4;
+  return H/6;
+}
+function gradeAmt(arr){ return Math.max(Math.abs(arr[0]),Math.abs(arr[1]),Math.abs(arr[2])); }
+function gradeSetHS(arr,h,rad){
+  const rgb=hsv2rgbJS(h,1,1);
+  arr[0]=+((rgb[0]-.5)*2*rad).toFixed(3);
+  arr[1]=+((rgb[1]-.5)*2*rad).toFixed(3);
+  arr[2]=+((rgb[2]-.5)*2*rad).toFixed(3);
+}
+function gradeSwatch(arr){
+  const a=Math.max(.001,gradeAmt(arr));
+  const f=i=>Math.round(clamp(.5+arr[i]/(2*a)*.80,0,1)*255);
+  return `rgb(${f(0)},${f(1)},${f(2)})`;
+}
+function drawGradeWheel(cv,arr){
+  const x=cv.getContext('2d'),W=cv.width,R=W/2;
+  x.clearRect(0,0,W,W);
+  x.save();x.beginPath();x.arc(R,R,R-.5,0,7);x.clip();
+  for(let a=0;a<360;a+=1){
+    x.beginPath();x.moveTo(R,R);x.arc(R,R,R,(a-.7)*Math.PI/180,(a+.7)*Math.PI/180);
+    x.closePath();x.fillStyle=`hsl(${a},92%,52%)`;x.fill();
+  }
+  const g=x.createRadialGradient(R,R,0,R,R,R);
+  g.addColorStop(0,'rgba(255,255,255,.94)');
+  g.addColorStop(.38,'rgba(255,255,255,.34)');
+  g.addColorStop(.78,'rgba(255,255,255,0)');
+  g.addColorStop(1,'rgba(0,0,0,.30)');
+  x.fillStyle=g;x.fillRect(0,0,W,W);
+  /* 外圈 12 段刻度，呼应品牌 12 色调 */
+  x.strokeStyle='rgba(0,0,0,.24)';x.lineWidth=1;
+  for(let k=0;k<12;k++){
+    const a=k*Math.PI/6;
+    x.beginPath();x.moveTo(R+Math.cos(a)*R*.88,R+Math.sin(a)*R*.88);
+    x.lineTo(R+Math.cos(a)*R*.98,R+Math.sin(a)*R*.98);x.stroke();
+  }
+  /* 中心十字 */
+  x.strokeStyle='rgba(255,255,255,.28)';
+  x.beginPath();x.moveTo(R-7,R);x.lineTo(R+7,R);x.moveTo(R,R-7);x.lineTo(R,R+7);x.stroke();
+  x.restore();
+  /* 当前点 */
+  const h=gradeHue(arr),a=clamp(gradeAmt(arr),0,1);
+  const px=R+Math.cos(h*Math.PI*2)*R*.82*a, py=R+Math.sin(h*Math.PI*2)*R*.82*a;
+  x.beginPath();x.arc(px,py,13,0,7);
+  x.fillStyle='rgba(0,0,0,.26)';x.fill();
+  x.beginPath();x.arc(px,py,6.5,0,7);
+  x.fillStyle='#fff';x.fill();
+  x.lineWidth=2;x.strokeStyle='rgba(20,20,24,.75)';x.stroke();
+  x.beginPath();x.arc(px,py,9.5,0,7);
+  x.strokeStyle='rgba(255,255,255,.45)';x.lineWidth=1;x.stroke();
+}
 function buildGrade(p){
-  const s=section('三色轮 · 阴影 / 中间调 / 高光分别着色');
-  s.append(hint('拖动色轮选择色相与浓度，下方细滑杆调该区域的亮度；双击色轮归零。'));
-  const w=document.createElement('div');w.className='wheels';
-  ['s','m','h'].forEach((k,i)=>w.append(wheelCard(k,['阴影','中间调','高光'][i])));
-  s.append(w);p.append(s);
+  const sec=section('三色轮 · 阴影 / 中间调 / 高光分别着色');
+  const wrap=document.createElement('div');wrap.className='gp-wrap';
+
+  /* ① 主卡：档位 + 大色轮 + 精调 + 色卡 */
+  const card=document.createElement('div');card.className='gp-card';
+  const tabs=document.createElement('div');tabs.className='gp-tabs';
+  const tabBtns={};
+  GRADE_META.forEach(m=>{
+    const b=document.createElement('button');b.className='gp-tab';
+    b.innerHTML='<i class="gp-tdot" style="background:'+m.col+'"></i><b>'+m.name+'</b><small></small>';
+    b.onclick=()=>{ gradeTab=m.k; refresh(); };
+    tabBtns[m.k]=b;tabs.append(b);
+  });
+  card.append(tabs);
+
+  const wb=document.createElement('div');wb.className='gp-wheelbox';
+  const cv=document.createElement('canvas');cv.width=cv.height=240;cv.className='gp-wheel';
+  cv.title='拖动选色 · 双击归零本档';
+  const hue=document.createElement('div');hue.className='gp-hue';
+  const rH=document.createElement('div');rH.className='gp-read';
+  const rHb=document.createElement('b'),rHs=document.createElement('small');rHs.textContent='HUE';
+  rH.append(rHb,rHs);
+  const rA=document.createElement('div');rA.className='gp-read';
+  const rAb=document.createElement('b'),rAs=document.createElement('small');rAs.textContent='AMOUNT';
+  rA.append(rAb,rAs);
+  hue.append(rH,rA);wb.append(cv,hue);card.append(wb);
+
+  const sliders=document.createElement('div');sliders.className='gp-sliders';
+  function mkSl(label,min,max,step,unit,get,set){
+    const row=document.createElement('div');row.className='gp-sl';
+    const l=document.createElement('span');l.textContent=label;
+    const i=document.createElement('input');i.type='range';i.min=min;i.max=max;i.step=step;
+    const b=document.createElement('b');
+    let bf=null;
+    i.addEventListener('pointerdown',()=>bf=JSON.stringify(state));
+    i.addEventListener('input',()=>{ set(parseFloat(i.value)); refresh(); requestRender(); });
+    i.addEventListener('change',()=>{ if(bf){commit(bf);bf=null;} });
+    row.append(l,i,b);sliders.append(row);
+    return {i,b,get,unit};
+  }
+  const sHue=mkSl('色相',0,360,1,'°',null,v=>{
+    const arr=state.grade[gradeTab];gradeSetHS(arr,v/360,gradeAmt(arr));
+    if(gradeLink) GRADE_META.forEach(m=>{ if(m.k!==gradeTab)
+      gradeSetHS(state.grade[m.k],v/360,gradeAmt(state.grade[m.k])*.5+.04); });
+  });
+  const sAmt=mkSl('浓度',0,100,1,'%',null,v=>{
+    const arr=state.grade[gradeTab];gradeSetHS(arr,gradeHue(arr),v/100);
+    if(gradeLink) GRADE_META.forEach(m=>{ if(m.k!==gradeTab){
+      const q=state.grade[m.k];gradeSetHS(q,gradeHue(arr),v/100*.34); } });
+  });
+  const sLum=mkSl('亮度',-100,100,1,'%',null,v=>{ state.grade[gradeTab][3]=v/100; });
+  card.append(sliders);
+
+  const bars=document.createElement('div');bars.className='gp-bars';
+  const barEls={};
+  GRADE_META.forEach(m=>{
+    const b=document.createElement('div');b.className='gp-bar';
+    const i=document.createElement('i'),n=document.createElement('span');n.textContent=m.name;
+    b.append(i,n);b.onclick=()=>{gradeTab=m.k;refresh();};bars.append(b);
+    barEls[m.k]={i,b};
+  });
+  card.append(bars);
+  const tip=document.createElement('div');tip.className='gp-tip';
+  tip.innerHTML='拖动大色轮选色相与浓度，离中心越远染色越浓；下面三根滑杆可精调，双击色轮归零本档。三档色卡可直接点选切换。';
+  card.append(tip);wrap.append(card);
+
+  /* ② 联动与复位 */
+  const card2=document.createElement('div');card2.className='gp-card';
+  const row=document.createElement('div');row.className='gp-row';
+  const link=document.createElement('button');link.className='gp-btn'+(gradeLink?' on':'');
+  link.textContent=gradeLink?'⇄ 档位联动：开':'⇄ 档位联动：关';
+  link.onclick=()=>{gradeLink=!gradeLink;link.classList.toggle('on',gradeLink);
+    link.textContent=gradeLink?'⇄ 档位联动：开':'⇄ 档位联动：关';};
+  const zeroOne=document.createElement('button');zeroOne.className='gp-btn';zeroOne.textContent='↺ 归零本档';
+  zeroOne.onclick=()=>mutate(()=>{state.grade[gradeTab]=[0,0,0,0];refresh();requestRender();});
+  const zeroAll=document.createElement('button');zeroAll.className='gp-btn';zeroAll.textContent='↺ 全部归零';
+  zeroAll.onclick=()=>mutate(()=>{state.grade=gradeZero();refresh();requestRender();});
+  row.append(link,zeroOne,zeroAll);card2.append(row);
+  const tip2=document.createElement('div');tip2.className='gp-tip';
+  tip2.textContent='开启联动后，拖一档时另外两档会以约三分之一浓度跟随同一色相，快速做出统一的片色调。';
+  card2.append(tip2);wrap.append(card2);
+
+  /* ③ 一键风格 */
+  const card3=document.createElement('div');card3.className='gp-card';
+  const looks=document.createElement('div');looks.className='gp-looks';
+  GRADE_LOOKS.forEach(lk=>{
+    const b=document.createElement('button');b.className='gp-look';b.title=lk.name;
+    const sw=document.createElement('span');sw.className='gp-sw';
+    GRADE_META.forEach(m=>{const i=document.createElement('i');
+      i.style.background=gradeSwatch(lk.v[m.k]);sw.append(i);});
+    const nm=document.createElement('b');nm.textContent=lk.name;
+    b.append(sw,nm);
+    b.onclick=()=>mutate(()=>{ GRADE_META.forEach(m=>{state.grade[m.k]=[...lk.v[m.k]];});
+      refresh();requestRender(); });
+    looks.append(b);
+  });
+  card3.append(looks);
+  const tip3=document.createElement('div');tip3.className='gp-tip';
+  tip3.textContent='八套片色调，点一下写入三档；仍可在色轮上继续微调，也可随时归零。';
+  card3.append(tip3);wrap.append(card3);
+
+  function refresh(){
+    const arr=state.grade[gradeTab];
+    GRADE_META.forEach(m=>{
+      const q=state.grade[m.k],a=gradeAmt(q);
+      tabBtns[m.k].classList.toggle('on',m.k===gradeTab);
+      tabBtns[m.k].querySelector('small').textContent=Math.round(a*100)+'%';
+      barEls[m.k].i.style.background=gradeSwatch(q);
+      barEls[m.k].b.classList.toggle('on',m.k===gradeTab);
+    });
+    drawGradeWheel(cv,arr);
+    rHb.textContent=Math.round(gradeHue(arr)*360)+'°';
+    rAb.textContent=Math.round(gradeAmt(arr)*100)+'%';
+    sHue.i.value=Math.round(gradeHue(arr)*360);sHue.b.textContent=Math.round(gradeHue(arr)*360)+'°';
+    sAmt.i.value=Math.round(gradeAmt(arr)*100);sAmt.b.textContent=Math.round(gradeAmt(arr)*100)+'%';
+    sLum.i.value=Math.round(arr[3]*100);sLum.b.textContent=(arr[3]>0?'+':'')+Math.round(arr[3]*100)+'%';
+  }
+
+  let bf=null;
+  function setFromWheel(e){
+    const r=cv.getBoundingClientRect();
+    let dx=(e.clientX-r.left)/r.width*2-1, dy=(e.clientY-r.top)/r.height*2-1;
+    const rad=clamp(Math.hypot(dx,dy),0,1);
+    let h=Math.atan2(dy,dx)/(Math.PI*2);if(h<0)h+=1;
+    gradeSetHS(state.grade[gradeTab],h,rad);
+    if(gradeLink) GRADE_META.forEach(m=>{ if(m.k!==gradeTab)
+      gradeSetHS(state.grade[m.k],h,rad*.34); });
+    refresh();requestRender();
+  }
+  cv.addEventListener('pointerdown',e=>{capturePointer(cv,e);bf=JSON.stringify(state);setFromWheel(e);});
+  cv.addEventListener('pointermove',e=>{if(bf)setFromWheel(e);});
+  ['pointerup','pointercancel'].forEach(t=>cv.addEventListener(t,()=>{if(bf){commit(bf);bf=null;}}));
+  cv.addEventListener('dblclick',()=>mutate(()=>{state.grade[gradeTab]=[0,0,0,0];refresh();}));
+
+  sec.append(wrap);p.append(sec);
+  refresh();
   const s2=section('分级强度');
+
   s2.append(slider('base.gradeStrength','整体分级强度（0＝标准）',-1,1,.01,'%',0));
   p.append(s2);
   const s3=section('通道混合器');
@@ -13839,14 +14563,17 @@ const GUIDE_CHAPTERS=[
    +'<b>各自记忆</b>白点与强度，互不串扰。手机上点色调 chip 会弹出浮层，选完自动收起。'
    +'<br>「取色」从照片里抓一点自动切到对应色相；「复制到全部」在语义盘下按较低强度复制，避免双重染色。'},
  {id:'matte',t:'04 · 分割 matte 与精度',k:'matte 分割 精度 快速 标准 精细 重新分析 肤色 皮肤 天空',
-  b:'语义页「更多选项 · 语义引擎」里可看 matte 伪彩（皮肤橙 / 天空青 / 头发紫）、四通道统计与开关。'
-   +'<br><b>区域工作台</b>让 matte 真正可以直接用：顶栏「⋯ → 页面中心 → 区域工作台」打开独立页，'
-   +'或搜「区域」。它能<b>看见</b>分割结果（大伪彩图 / 单通道黑白 / 叠在照片上）、'
-   +'<b>调得动</b>（皮肤 / 天空 / 背景 / 亮部各有色温、亮度、饱和度，即使主盘回中也能独立出片）、'
-   +'<b>用得上</b>（一键把人物 / 天空 / 背景变成局部蒙版选区或背景虚化主体，换照片自动重算）。'
-   +'四套一键风格：人像通透、青橙电影、暖阳人像、柔和空气感。伪彩预览只存在于屏幕，导出时自动关闭。'
-   +'<br>v3 引擎用<b>自适应肤色聚类</b>估计本张照片的 Cr/Cb 肤色中心，配合天空行一致性、区域一致性平滑与互斥归一化，'
-   +'比固定阈值更贴合不同人种与暖光人像。分割精度可选快速 / 标准 / 精细（精细为 2× 分辨率 matte）。'
+  b:'语义页「更多选项 · 语义引擎」里可看 matte 伪彩（皮肤橙 / 天空青 / 头发紫）与统计。'
+   +'<br><b>区域工作台</b>让 matte 真正可以直接用：顶栏「⋯ → 页面中心 → 区域工作台」打开独立页，或搜「区域」。'
+   +'它能<b>看见</b>：6 条统计进度条、'+'10 个通道的伪彩 / 灰度大预览、画面内叠加开关与伪彩浓度；'
+   +'<b>调得动</b>：皮肤 / 天空 / 背景 / 亮部四张卡片里直接放 12 根滑杆，不用再跳去调色盘页，即使主盘回中也能出片；'
+   +'<b>精修得到</b>：在预览图上用金色刷主体、蓝色刷虚化 / 排除区，一键写入背景虚化主体或局部蒙版，写进的笔迹随自动保存保留且可继续涂；'
+   +'<b>用得上</b>：先选通道再点动作，人物 / 皮肤 / 天空 / 背景 / 亮部 / 植被 / 水体 / 主体 / 暗部 / 边缘都能生成蒙版或虚化主体。'
+   +'六套一键风格：人像通透、青橙电影、暖阳人像、柔和空气感、森系绿调、夜色霓虹。'
+   +'<br><b>v4 引擎</b>：GPU 纹理仍是皮肤 / 天空 / 暗发 / 亮部四通道，CPU 侧另算植被、水体、主体显著性与边缘四张软图；'
+   +'自适应肤色聚类 + 天空行一致性 + 边缘引导精修（强边缘处收缩概率，减少溢色）'
+   +'+ 显著性最大连通块（抑制零散误判）+ 区域一致性平滑 + 互斥归一化。'
+   +'分割精度可选快速 / 标准 / 精细（精细为 2× 分辨率 matte），页内直接切换并重算。'
    +'<br>换照片会自动重算；点「重新分析画面」或全局搜索「重算 matte」可手动刷新。仍属前端启发式分割，不是设备端 ML。'},
  {id:'filters',t:'05 · 滤镜库与分类',k:'滤镜 分类 目录 搜索 收藏 最近使用 随机 存为滤镜 433',
   b:'徕卡 / 哈苏 / 索尼已合并为一个「相机厂商」分区，每款都自带独立调色盘预设。<br>打开「滤镜」先看到<b>分类目录</b>：分类卡用该组 3 款缩略图拼成预览，点一张进入该分类；'
@@ -13888,7 +14615,10 @@ const GUIDE_CHAPTERS=[
    +'所以任何系统里 8 款都不会长得一样。测量与绘制走同一个入口，选中框会跟着字体变；导出与预览完全一致。'
    +'<br>导出的成品会把这些元素一起合成进去。'},
  {id:'advanced',t:'11 · 高级调色工具',k:'三色轮 分级 曲线 RGB HSL 分色 LUT cube 通道混合 光效 去雾 光晕 漏光 透视',
-  b:'「分级」：阴影 / 中间调 / 高光三色轮分别着色，另有通道混合与 .cube 3D LUT 导入。'
+  b:'「分级」重做成<b>一个大色轮 + 三档切换</b>：顶部三档 tab（阴影 / 中间调 / 高光）点一下就换，'
+   +'大色轮拖色相与浓度、下方三根滑杆精调色相 / 浓度 / 亮度，三档色卡可直接点选切换，双击色轮归零本档。'
+   +'另有<b>档位联动</b>（拖一档时另外两档以约三分之一浓度跟随同一色相）、8 套一键片色调（青橙电影 / 暖金日落 / 冷银褪色 / 日系透明 / 霓虹夜色 / 棕褐复古 / 薄荷冷调 / 中性清零）、'
+   +'归零本档与全部归零。下方保留通道混合与 .cube 3D LUT 导入。'
    +'<br>「曲线」：RGB 与单通道曲线 + 色调分离；「分色」：8 个色相独立调色相 / 饱和 / 明度。'
    +'<br>「光效」：去雾、柔光、胶片红光晕、漏光、高级暗角与透视矫正。'
    +'<br>「调整」按光效 / 颜色 / 细节 / 效果 / 影调分类，含自动色阶、自动白平衡、白平衡吸管与「一键智能增强」。'},
@@ -13973,8 +14703,8 @@ const GUIDE_CHAPTERS=[
    +'<br>关于作者、开发方式、版本状态、完整隐私说明与联系方式，见独立的「关于 Iris 与作者」页（顶栏「⋯」或全局搜索「关于」）。'
    +'<br>想了解这些功能具体是怎么实现的（渲染管线、着色器生成、坐标系统、语义 matte、涂抹遮罩、色彩迁移与导出），'
    +'请打开独立页面「<b>技术实现</b>」，共 18 章，带目录与搜索；本篇只讲怎么用。'},
- {id:'appearance',t:'21 · 外观、主题与双界面',k:'主题 外观 皮肤 配色 Nova 原版界面 圆角 动效 浅色 深色 切换 工具栏位置 底部 顶栏',
-  b:'顶栏「⋯ → 外观与主题」或全局搜索「主题」打开独立设置页，里面有<b>五件事</b>：'
+ {id:'appearance',t:'21 · 外观、主题与双界面',k:'主题 外观 皮肤 配色 Nova 原版界面 圆角 动效 浅色 深色 切换 工具栏位置 底部 顶栏 顶栏留白 悬浮 贴边 启动页 加载页 splash',
+  b:'顶栏「⋯ → 外观与主题」或全局搜索「主题」打开独立设置页，里面有<b>六件事</b>：'
    +'<br><b>① 9 套配色主题</b>：琥珀金（默认）、曜石黑、石墨蓝、青瓷、樱粉、熔金六套深色，'
    +'晨雾白、纸白暖两套浅色，外加一套<b>液态玻璃</b>（高斯模糊玻璃 + 折射高光 + 冷蓝虹彩）。'
    +'主题只覆盖 CSS 变量（底色 / 面板 / 文字 / 强调色 / 玻璃层），'
@@ -13983,11 +14713,13 @@ const GUIDE_CHAPTERS=[
    +'<b>Nova</b> 是全新重做的视觉语言 —— 悬浮玻璃顶栏、浮起的大圆角工作卡、卡片化分组、药丸控件、柔和光影与更宽的留白。'
    +'两套共用同一套 DOM、事件、坐标与着色器，所有滑杆、拖拽、裁剪手柄、涂抹、导出在任意一套下逐项一致，随时可切回。'
    +'<br><b>②b 工具栏位置</b>：5 个工具切换（调色盘 / 滤镜 / 调整 / 元素 / 更多）默认在<b>编辑区底部</b>，这是从第一版沿用至今的布局；切到「顶栏」时宽屏与品牌、导出按钮同排，窄屏自动变成顶栏第二行。两种位置功能完全一致，偏好存本机、刷新后保留，点「↺ 恢复默认外观」也会一并回到底部。'
+   +'<br><b>②c 顶栏留白</b>：搜索 / ⋯ 更多 / 换照片 / 导出那一整条，默认<b>悬浮留白</b> —— 四边离屏幕边缘留出空隙、变成一张圆角卡片，不再贴着上边与左右边；切「贴边」可回到最早的全宽顶栏。顶栏是浮在画面上的独立层，与底部 5 个工具的位置互不影响，偏好存本机、刷新保留。Nova 界面本身就是悬浮胶囊，这一项只作用于原版界面。'
    +'<br><b>③ 三档圆角、玻璃模糊与动效开关</b>：圆角只作用于 Nova（柔和 16px / 标准 26px / 超大 38px）；'
    +'<b>高斯模糊开关对所有 9 套主题都生效</b>：开则顶栏、菜单、提示条与欢迎卡统一走 backdrop-filter，关则包括 Nova 自带 blur 在内全部置 none，移动端明显更轻；'
    +'动效可一键全关，系统开启「减少动画」时也会自动关闭。'
    +'<br><b>④ 文字元素</b>提供 20 款分组字体与字重 / 字距 / 行高 / 投影 / 描边 / 透明度等完整排版参数，'
    +'折叠收纳、实时预览，导出与预览一致。'
+   +'<br><b>启动加载页</b>：<b>每次</b>打开、刷新或从后台返回都会先看到一张启动页 —— 12 段虹彩环、中心白点、品牌名、英文 tagline 与细进度条，底部写着「本地渲染 · 照片不出设备」。它<b>最多显示 3 秒</b>（通常约 2.6 秒），不拦截任何点击与拖拽，后面界面照常可用；跟随当前主题配色，在「减少动画」或关闭界面动效时会自动变成更短的静态版本。'
    +'<br>偏好写在本机 localStorage，刷新不闪回默认；清除站点数据即恢复。'
    +'<b>切换外观不影响照片、任何编辑参数、自动保存快照与导出结果。</b>'},
  {id:'update',t:'22 · 检查更新与版本',k:'检查更新 版本 GitHub Release 最新 tag 自动检查 联网 限流 版本比对 发布',
@@ -13999,7 +14731,7 @@ const GUIDE_CHAPTERS=[
    +'<br><b>④ 三种结论</b>：线上更新 → 「发现新版本」；一致 → 「已是最新版本」；本地更超前 → 「本地版本更新」'
    +'（通常说明你手上这份还没上传 / 还没打 tag）。查不到版本号时如实列出原因，不会假装成功。'
    +'<br><b>⑤ 自动检查</b>默认关闭；开启后每次启动延迟 2 秒发一次快速检查，只有确实发现新版本才提示一次，其余完全静默。'
-   +'<br><b>⑥ 发布新版本</b>：把这版 HTML 传到仓库（web/index.html 等几处同源副本），再打一个形如 <code>v1.0.9</code> 的 Release tag，'
+   +'<br><b>⑥ 发布新版本</b>：把这版 HTML 传到仓库（web/index.html 等几处同源副本），再打一个形如 <code>v1.0.12</code> 的 Release tag，'
    +'页面里的版本 meta 与 tag 就会一起生效。想让限流时也能比对，可在根目录放一个 <code>version.json</code>。'
    +'<br><b>隐私</b>：请求不带 Cookie / Referrer / 自定义头，不发送照片、编辑参数或本机存档；远端文本只用于显示，'
    +'绝不插入页面或执行；外链只放行 https 的 GitHub 域名。检查更新不会自动下载或替换文件。'
@@ -14077,8 +14809,8 @@ const SP_ENTRIES=[
   {id:'changelog',name:'版本演进',sub:'12 个版本 · 从调色盘到四端',icon:'▤',sv:'book'},
   {id:'gestures',name:'手势与操作地图',sub:'触控 / 鼠标 / 键盘 · 可直达工具',icon:'✆',sv:'draw'},
   {id:'colorbook',name:'色彩术语表',sub:'28 个词条 · 可搜 · 直达实现章节',icon:'◈',sv:'aperture'},
-  {id:'appearance',name:'外观与主题',sub:'9 套配色（含液态玻璃）/ 原版 · Nova 双界面 / 工具栏位置 / 圆角 / 动效',icon:'◐',sv:'aperture'},
-  {id:'zones',name:'区域工作台',sub:'语义 matte 看得见 · 四区独立调色 · 一键生成蒙版与虚化',icon:'◈',sv:'aperture'},
+  {id:'appearance',name:'外观与主题',sub:'9 套配色（含液态玻璃）/ 原版 · Nova 双界面 / 顶栏留白 / 工具栏位置 / 圆角 / 动效',icon:'◐',sv:'aperture'},
+  {id:'zones',name:'区域工作台',sub:'v4 · 10 通道预览 · 四区直调 · 涂抹精修 · 一键生成蒙版与虚化',icon:'◈',sv:'aperture'},
   {id:'update',name:'检查更新',sub:'对比本机版本与 GitHub 最新 Release · 默认不联网',icon:'⟳',sv:'aperture'},
   {id:'video',name:'视频工作台',sub:'多片段时间线 · 关键帧调色 · 转场运镜 · 帧精确导出',icon:'▷',sv:'video'}
 ];
@@ -14346,105 +15078,300 @@ function exportParamsJSON(){
 function renderZonesPage(body){
   const w=spWrap(body);
   asHero(w,'IRIS · ZONES','区域工作台',
-    '一张照片被分成皮肤 / 天空 / 背景 / 亮部四张软蒙版。这里能看见它认出了什么，也能直接用它调色、做局部蒙版、做背景虚化。',
-    'matte 只在导入照片时推理一次并缓存；拖动滑杆只改 uniform。纯前端启发式软分割，不是设备端 ML。');
+    '语义引擎把照片拆成 <b>10 张软蒙版</b>：人物 / 皮肤 / 天空 / 背景 / 亮部 / 植被 / 水体 / 主体 / 暗部 / 边缘。这里能看见它认出了什么，也能直接调色、涂抹精修、一键生成蒙版与背景虚化。',
+    '引擎 v4 · matte 只在导入照片或手动重算时推理一次并缓存；拖动滑杆只改 uniform。纯前端启发式软分割，不是设备端 ML。');
 
-  /* ① 状态 */
-  const st=SEM.stats;
-  const stat=spEl('div','sp-card');
-  stat.append(spEl('div','sp-note',SEM.ready
-    ? 'matte <b>'+SEM.W+'×'+SEM.H+'</b> · 引擎 <b>v'+SEM_VERSION+'</b> · 已对齐当前照片 · 四通道软分割（边缘羽化、互斥归一化、GPU 线性上采样）'
-    : '尚未生成 matte · 先导入一张自己的照片，分析会自动完成。'));
-  if(st){
-    const box=spEl('div','sp-list');
-    [['皮肤 / 人物',(st.skin*100).toFixed(1)+'%'],['天空',(st.sky*100).toFixed(1)+'%'],
-     ['暗发 / 暗部',(st.hair*100).toFixed(1)+'%'],['平均亮度',(st.lum*100).toFixed(1)+'%']]
-      .forEach(([k,v])=>{ const l=spEl('div','sp-line'); l.append(spEl('span','',k),spEl('b','',v)); box.append(l); });
-    stat.append(box);
+  const wrap=document.createElement('div');wrap.className='zp-wrap';
+
+  /* ---------- ① 状态与统计 ---------- */
+  const st=SEM.stats||{};
+  const c1=document.createElement('div');c1.className='zp-card';
+  const head=document.createElement('div');head.className='sp-note';
+  head.innerHTML=SEM.ready
+    ? 'matte <b>'+SEM.W+'×'+SEM.H+'</b> · 引擎 <b>v'+SEM_VERSION+'</b> · '+ZONE_CH_IDS.length+' 通道 · 精度 <b>'+
+      ({fast:'快速',standard:'标准',fine:'精细'}[state.sem.quality]||state.sem.quality)+'</b> · 已对齐当前照片'
+    : '尚未生成 matte · 先导入一张自己的照片，分析会自动完成。';
+  c1.append(head);
+  if(SEM.ready){
+    const grid=document.createElement('div');grid.className='zp-stats';
+    [['皮肤 / 人物',st.skin||0,'#f08a3c'],['天空',st.sky||0,'#3aa6d8'],
+     ['主体显著性',st.subject||0,'#e3b65c'],['植被',st.veg||0,'#4edb72'],
+     ['水体',st.water||0,'#6fa8e8'],['边缘密度',st.edge||0,'#b58cb5']]
+      .forEach(([n,v,col])=>{
+        const z=document.createElement('div');z.className='zp-stat';
+        const l=document.createElement('div');l.className='zp-sl';
+        const nm=document.createElement('span');nm.textContent=n;
+        const bv=document.createElement('b');bv.textContent=(v*100).toFixed(1)+'%';
+        l.append(nm,bv);
+        const tr=document.createElement('div');tr.className='zp-track';
+        const bar=document.createElement('i');
+        bar.style.width=Math.min(100,Math.max(2,v*100*2.2)).toFixed(1)+'%';
+        bar.style.background=col;
+        tr.append(bar);z.append(l,tr);grid.append(z);
+      });
+    c1.append(grid);
+    const tip=document.createElement('div');tip.className='zp-tip';
+    tip.innerHTML='自适应肤色中心 Cr <b>'+(st.cr||0).toFixed(3)+'</b> / Cb <b>'+(st.cb||0).toFixed(3)+
+      '</b> · 平均亮度 <b>'+((st.lum||0)*100).toFixed(1)+'%</b>。每条进度条是该通道的平均软权重。';
+    c1.append(tip);
   }
-  w.append(stat);
-
-  /* ② 大预览 + 通道切换 */
-  spSection(w,'① 看看 matte 到底认出了什么');
-  const chRow=spEl('div','zone-chips');
-  const img=spEl('img','zone-mini'); img.alt='语义分割预览';
-  const setCh=id=>{
-    zoneUI.channel=id;
-    let c;
-    if(id==='all') c=semPreviewCanvas();
-    else c=semChannelCanvas(id);
-    if(c) img.src=c.toDataURL('image/png');
-    [...chRow.querySelectorAll('.chip')].forEach(x=>x.classList.toggle('active',x.dataset.zch===id));
-  };
-  [{id:'all',name:'全部彩色'},{id:'person',name:'人物'},{id:'skin',name:'皮肤'},
-   {id:'sky',name:'天空'},{id:'bg',name:'背景'},{id:'hi',name:'亮部'}].forEach(o=>{
-    const b=spEl('button','chip',o.name); b.dataset.zch=o.id;
-    b.onclick=()=>setCh(o.id); chRow.append(b);
+  /* 精度档 + 重算 */
+  const qrow=document.createElement('div');qrow.className='zp-row';
+  qrow.style.marginTop='10px';
+  [['fast','快速'],['standard','标准'],['fine','精细']].forEach(([q,n])=>{
+    const b=document.createElement('button');
+    b.className='zp-btn'+(state.sem.quality===q?' on':'');b.textContent=n;
+    b.onclick=()=>{
+      if(state.sem.quality===q)return;
+      mutate(()=>{state.sem.quality=q;});
+      if(LIVE.still) analyzeSemantic(LIVE.still,true);
+      renderZonesPageRefresh(body);
+    };
+    qrow.append(b);
   });
-  w.append(chRow);
-  if(SEM.ready){ setCh('all'); w.append(img); }
-  else w.append(spEl('div','sp-note','导入照片后这里会显示分割伪彩图：橙＝皮肤、青＝天空、紫＝暗发、绿＝背景、金＝亮部。'));
-  w.append(spEl('div','sp-note','点「◐ 打开伪彩预览」可以把这张图<b>直接叠在照片上</b>，边调边看，导出时自动关闭。'));
-  const pv=spEl('button','btn accent',zoneUI.preview?'◐ 关闭画面内伪彩':'◐ 打开画面内伪彩');
-  pv.onclick=()=>{ setZonePreview(!zoneUI.preview); pv.textContent=zoneUI.preview?'◐ 关闭画面内伪彩':'◐ 打开画面内伪彩'; };
-  w.append(pv);
+  const re=document.createElement('button');re.className='zp-btn pri';re.textContent='↻ 重新分析画面';
+  re.onclick=()=>{
+    if(!LIVE.still){toast('请先导入照片');return;}
+    analyzeSemantic(LIVE.still,true);renderZonesPageRefresh(body);
+  };
+  qrow.append(re);c1.append(qrow);
+  wrap.append(c1);
 
-  /* ③ 四区参数 */
-  spSection(w,'② 四个区域，各自独立的色温 / 亮度 / 饱和度');
-  w.append(spEl('div','sp-note','与主调色盘不同：<b>即使主盘完全回中，这里照样能出片</b>。每个像素按自己属于哪一块拿到对应参数，软边过渡，零位逐像素等于原图。'));
-  const grid=spEl('div','sp-card');
+  /* ---------- ② 大预览 ---------- */
+  const c2=document.createElement('div');c2.className='zp-card';
+  const chRow=document.createElement('div');chRow.className='zp-chips';
+  const prev=document.createElement('div');prev.className='zp-prev';
+  const img=document.createElement('img');img.className='zone-mini';img.alt='语义分割预览';
+  const paint=document.createElement('canvas');paint.className='zp-paint';
+  prev.append(img,paint);
+  const chans=[{id:'all',name:'全部彩色'},{id:'person',name:'人物'},{id:'skin',name:'皮肤'},
+    {id:'sky',name:'天空'},{id:'bg',name:'背景'},{id:'hi',name:'亮部'},
+    {id:'veg',name:'植被'},{id:'water',name:'水体'},{id:'subject',name:'主体'},
+    {id:'dark',name:'暗部'},{id:'edge',name:'边缘'}];
+  function setCh(id){
+    zoneUI.channel=id;
+    let c=(id==='all')?semPreviewCanvas():semChannelCanvas(id);
+    if(c)img.src=c.toDataURL('image/png');
+    [...chRow.querySelectorAll('.zp-chip')].forEach(x=>x.classList.toggle('on',x.dataset.zch===id));
+  }
+  chans.forEach(o=>{
+    const b=document.createElement('button');b.className='zp-chip';b.textContent=o.name;b.dataset.zch=o.id;
+    b.onclick=()=>setCh(o.id);chRow.append(b);
+  });
+  c2.append(chRow,prev);
+
+  /* 涂抹层：把预览图当画板，笔迹最终写进已有的蒙版 / 虚化笔迹结构 */
+  function drawPaint(){
+    const r=paint.getBoundingClientRect();
+    if(!r.width||!r.height)return;
+    const dpr=Math.min(2,window.devicePixelRatio||1);
+    const W=Math.round(r.width*dpr),H=Math.round(r.height*dpr);
+    if(paint.width!==W||paint.height!==H){paint.width=W;paint.height=H;}
+    const x=paint.getContext('2d');x.clearRect(0,0,W,H);
+    zoneUI.strokes.forEach(st=>{
+      x.strokeStyle=st.mode==='add'?'rgba(240,190,100,.85)':'rgba(96,190,230,.85)';
+      x.lineWidth=Math.max(4,st.size*r.width*dpr*2);
+      x.lineCap='round';x.lineJoin='round';
+      x.beginPath();
+      st.pts.forEach((q,i)=>{const px=q[0]*W,py=q[1]*H;i?x.lineTo(px,py):x.moveTo(px,py);});
+      x.stroke();
+    });
+  }
+  let drawing=false;
+  function pt(e){
+    const r=paint.getBoundingClientRect();
+    return [clamp((e.clientX-r.left)/r.width,0,1),clamp((e.clientY-r.top)/r.height,0,1)];
+  }
+  paint.addEventListener('pointerdown',e=>{
+    capturePointer(paint,e);drawing=true;
+    zoneUI.strokes.push({mode:zoneUI.strokeMode,size:zoneUI.strokeSize,pts:[pt(e)]});
+    drawPaint();
+  });
+  paint.addEventListener('pointermove',e=>{
+    if(!drawing)return;
+    const st=zoneUI.strokes[zoneUI.strokes.length-1];
+    if(st){st.pts.push(pt(e));drawPaint();}
+  });
+  ['pointerup','pointercancel'].forEach(t=>paint.addEventListener(t,()=>{drawing=false;}));
+  img.onload=drawPaint;
+  setTimeout(drawPaint,60);
+
+  /* 伪彩不透明度 */
+  const op=document.createElement('div');op.className='zp-op';
+  const opl=document.createElement('span');opl.textContent='伪彩浓度';
+  const opi=document.createElement('input');opi.type='range';opi.min=0;opi.max=100;opi.step=1;
+  opi.value=Math.round(zoneUI.opacity*100);
+  const opb=document.createElement('b');opb.textContent=Math.round(zoneUI.opacity*100)+'%';
+  opi.oninput=()=>{zoneUI.opacity=+opi.value/100;opb.textContent=opi.value+'%';render();};
+  op.append(opl,opi,opb);c2.append(op);
+
+  const pvRow=document.createElement('div');pvRow.className='zp-row';pvRow.style.marginTop='9px';
+  const pv=document.createElement('button');pv.className='zp-btn'+(zoneUI.preview?' on':'');
+  pv.textContent=zoneUI.preview?'◐ 关闭画面内伪彩':'◐ 打开画面内伪彩';
+  pv.onclick=()=>{setZonePreview(!zoneUI.preview);renderZonesPageRefresh(body);};
+  const clr=document.createElement('button');clr.className='zp-btn';clr.textContent='✕ 清除涂抹';
+  clr.onclick=()=>{zoneUI.strokes=[];drawPaint();toast('涂抹已清除');};
+  pvRow.append(pv,clr);c2.append(pvRow);
+
+  /* 涂抹模式 + 笔刷 + 应用 */
+  const sm=document.createElement('div');sm.className='zp-row';sm.style.marginTop='7px';
+  [['add','＋ 涂主体（保清晰）'],['sub','－ 涂虚化区']].forEach(([v,n])=>{
+    const b=document.createElement('button');b.className='zp-btn'+(zoneUI.strokeMode===v?' on':'');b.textContent=n;
+    b.onclick=()=>{zoneUI.strokeMode=v;renderZonesPageRefresh(body);};sm.append(b);
+  });
+  c2.append(sm);
+  const br=document.createElement('div');br.className='zp-op';
+  const brl=document.createElement('span');brl.textContent='笔刷';
+  const bri=document.createElement('input');bri.type='range';bri.min=2;bri.max=22;bri.step=1;
+  bri.value=Math.round(zoneUI.strokeSize*100);
+  const brb=document.createElement('b');brb.textContent=Math.round(zoneUI.strokeSize*100);
+  bri.oninput=()=>{zoneUI.strokeSize=+bri.value/100;brb.textContent=bri.value;};
+  br.append(brl,bri,brb);c2.append(br);
+  const applyRow=document.createElement('div');applyRow.className='zp-row';applyRow.style.marginTop='7px';
+  const a1=document.createElement('button');a1.className='zp-btn pri';a1.textContent='✓ 涂抹 → 背景虚化';
+  a1.onclick=()=>{
+    if(!zoneUI.strokes.length){toast('先在预览图上涂几笔');return;}
+    mutate(()=>{
+      state.bokeh.on=true;state.bokeh.src='auto';
+      state.bokeh.paintStrokes=zoneUI.strokes.map(st=>({
+        mode:st.mode==='add'?'sharp':'blur',size:st.size,pts:st.pts
+      }));
+      state.bokeh.paintBase='auto';
+      if(!BOK.low)bokSampleLow();
+      rebuildSubject(true);buildPanel(true);render();
+    });
+    toast('涂抹已应用到背景虚化主体');
+  };
+  const a2=document.createElement('button');a2.className='zp-btn pri';a2.textContent='✓ 涂抹 → 局部蒙版 1';
+  a2.onclick=()=>{
+    if(!zoneUI.strokes.length){toast('先在预览图上涂几笔');return;}
+    mutate(()=>{
+      const m=state.masks[0];
+      m.on=true;m.src='paint';
+      m.paintStrokes=zoneUI.strokes.map(st=>({
+        mode:st.mode==='add'?'add':'erase',size:st.size,
+        feather:.36,pts:st.pts
+      }));
+      m.paintSize=zoneUI.strokeSize;
+      maskPaintKey='';rebuildMaskPaint(true);buildPanel(true);render();
+    });
+    toast('涂抹已写入局部蒙版 1 · 可继续用涂抹微调');
+  };
+  applyRow.append(a1,a2);c2.append(applyRow);
+  const c2tip=document.createElement('div');c2tip.className='zp-tip';
+  c2tip.innerHTML='在预览图上直接刷：金色＝主体、蓝色＝要虚化 / 排除的区域。点「应用」后写进已有的蒙版 / 虚化笔迹结构，<b>随自动保存一起保留</b>，并能在对应工具里继续涂抹微调。';
+  c2.append(c2tip);
+  if(SEM.ready)setCh(zoneUI.channel||'all');
+  wrap.append(c2);
+
+  /* ---------- ③ 四区直接调色 ---------- */
+  const c3=document.createElement('div');c3.className='zp-card';
+  const h3=document.createElement('div');h3.className='sp-note';
+  h3.innerHTML='<b>四个区域，各自独立的色温 / 亮度 / 饱和度</b>';
+  c3.append(h3);
+  const zgrid=document.createElement('div');zgrid.className='zp-zones';
+  zgrid.style.marginTop='10px';
   ZONE_META.forEach(m=>{
     const q=state.zones[m.id]||{temp:0,lum:0,sat:0};
-    const l=spEl('div','sp-line');
-    l.append(spEl('span','','<i style="display:inline-block;width:9px;height:9px;border-radius:3px;background:'
-      +m.color+';margin-right:6px"></i>'+m.name),
-      spEl('b','',[['色温',q.temp],['亮度',q.lum],['饱和',q.sat]]
-        .map(([n,v])=>n+' '+(v>0?'+':'')+Math.round(v*100)).join(' · ')));
-    grid.append(l);
+    const z=document.createElement('div');z.className='zp-zone';
+    const zh=document.createElement('div');zh.className='zp-zh';
+    const dot=document.createElement('i');dot.style.background=m.color;dot.style.color=m.color;
+    zh.append(dot,document.createTextNode(m.name));
+    const tag=document.createElement('small');tag.textContent=m.desc.split('，')[0];
+    zh.append(tag);z.append(zh);
+    [['temp','色温'],['lum','亮度'],['sat','饱和']].forEach(([f,n])=>{
+      const row=document.createElement('div');row.className='gp-sl';
+      const l=document.createElement('span');l.textContent=n;
+      const i=document.createElement('input');i.type='range';i.min=-100;i.max=100;i.step=1;
+      i.value=Math.round((q[f]||0)*100);
+      const b=document.createElement('b');b.textContent=((q[f]||0)>0?'+':'')+Math.round((q[f]||0)*100);
+      let bf=null;
+      i.addEventListener('pointerdown',()=>bf=JSON.stringify(state));
+      i.addEventListener('input',()=>{
+        const v=+i.value/100;
+        mutate(()=>{state.zones.on=true;state.zones[m.id][f]=v;});
+        b.textContent=(v>0?'+':'')+Math.round(v*100);
+        requestRender();
+      });
+      i.addEventListener('change',()=>{if(bf){commit(bf);bf=null;}});
+      row.append(l,i,b);z.append(row);
+    });
+    zgrid.append(z);
   });
-  w.append(grid);
-  const looks=spEl('div','zone-preset-grid');
+  c3.append(zgrid);
+  const looks=document.createElement('div');looks.className='gp-looks';looks.style.marginTop='10px';
   ZONE_LOOKS.forEach(lk=>{
-    const b=spEl('button','btn',lk.name); b.title=lk.desc;
-    b.onclick=()=>{ applyZoneLook(lk.id); renderZonesPageRefresh(body); };
+    const b=document.createElement('button');b.className='gp-look';b.title=lk.desc;
+    const sw=document.createElement('span');sw.className='gp-sw';
+    ['#f08a3c','#3aa6d8','#4edb72','#ffd86b'].forEach(c=>{
+      const i=document.createElement('i');i.style.background=c;sw.append(i);
+    });
+    const nm=document.createElement('b');nm.textContent=lk.name;
+    b.append(sw,nm);
+    b.onclick=()=>{applyZoneLook(lk.id);renderZonesPageRefresh(body);};
     looks.append(b);
   });
-  w.append(looks);
-  const go=spEl('button','btn','◈ 去调色盘里逐区微调（12 根滑杆按区折叠）');
-  go.onclick=()=>{ closeSubPage(); gotoTool('plate'); toast('在「语义引擎 → 区域工作台」里调四区参数'); };
-  w.append(go);
+  c3.append(looks);
+  const rs=document.createElement('button');rs.className='zp-btn';rs.style.marginTop='8px';
+  rs.textContent='↺ 四区参数全部回零';
+  rs.onclick=()=>{resetZones();renderZonesPageRefresh(body);};
+  c3.append(rs);
+  const c3tip=document.createElement('div');c3tip.className='zp-tip';
+  c3tip.innerHTML='与主调色盘不同：<b>即使主盘完全回中，这里照样能出片</b>。每个像素按自己属于哪一块拿到对应参数，软边过渡，零位逐像素等于原图。';
+  c3.append(c3tip);wrap.append(c3);
 
-  /* ④ 把 matte 交给其它功能 */
-  spSection(w,'③ 把 matte 变成可继续编辑的选区');
-  w.append(spEl('div','sp-note','分割结果不再只服务于肤色锁：它可以一键成为局部蒙版的选区、背景虚化的主体，换照片会自动跟着重算。'));
-  const acts=spEl('div','sp-card');
-  [['人物 → 局部蒙版 1',()=>matteToMask(0,'person')],
-   ['天空 → 局部蒙版 2',()=>matteToMask(1,'sky')],
-   ['背景 → 局部蒙版 3',()=>matteToMask(2,'bg')],
-   ['人物 → 背景虚化主体',()=>matteToBokeh('person')],
-   ['天空 → 背景虚化主体',()=>matteToBokeh('sky')]]
+  /* ---------- ④ 组合式一键动作 ---------- */
+  const c4=document.createElement('div');c4.className='zp-card';
+  const h4=document.createElement('div');h4.className='sp-note';
+  h4.innerHTML='<b>把任意通道变成可继续编辑的选区</b>';c4.append(h4);
+  const tgt=document.createElement('div');tgt.className='zp-chips';tgt.style.marginTop='9px';
+  ZONE_CH_IDS.forEach(id=>{
+    const b=document.createElement('button');b.className='zp-chip'+(zoneUI.action===id?' on':'');
+    b.textContent=ZONE_CH_NAMES[id];
+    b.onclick=()=>{zoneUI.action=id;
+      [...tgt.children].forEach(x=>x.classList.toggle('on',x===b));};
+    tgt.append(b);
+  });
+  c4.append(tgt);
+  const acts=document.createElement('div');acts.className='gp-looks';acts.style.marginTop='9px';
+  [['→ 局部蒙版 1',()=>matteToMask(0,zoneUI.action)],
+   ['→ 局部蒙版 2',()=>matteToMask(1,zoneUI.action)],
+   ['→ 局部蒙版 3',()=>matteToMask(2,zoneUI.action)],
+   ['→ 背景虚化主体',()=>matteToBokeh(zoneUI.action)],
+   ['◐ 在画面里预览',()=>zoneShow(zoneUI.action)]]
     .forEach(([t,fn])=>{
-      const b=spEl('button','btn',t);
-      b.onclick=()=>{ fn(); renderZonesPageRefresh(body); };
-      acts.append(b);
+      const b=document.createElement('button');b.className='gp-look';
+      const nm=document.createElement('b');nm.textContent=t;b.append(nm);
+      b.onclick=()=>{fn();renderZonesPageRefresh(body);};acts.append(b);
     });
-  w.append(acts);
-  const rs=spEl('button','btn','↺ 四区参数全部回零');
-  rs.onclick=()=>{ resetZones(); renderZonesPageRefresh(body); };
-  w.append(rs);
+  c4.append(acts);
+  const c4tip=document.createElement('div');c4tip.className='zp-tip';
+  c4tip.innerHTML='先选一个通道，再点动作。<b>植被 / 水体 / 主体 / 暗部 / 边缘</b>是 v4 新增通道：主体走显著性 + 最大连通块，边缘可直接当高反差选区。换照片会跟着重算。';
+  c4.append(c4tip);wrap.append(c4);
 
-  /* ⑤ matte 的四条链路 */
-  spSection(w,'④ 这张 matte 一共用在哪');
-  const uses=spEl('div','sp-list');
+  /* ---------- ⑤ 链路与如实说明 ---------- */
+  const c5=document.createElement('div');c5.className='zp-card';
+  const uses=document.createElement('div');uses.className='sp-list';
   [['主调色盘肤色锁','冷调时皮肤少吃 Color/Tone，天空与背景吃满；主盘零位时整层跳过保证恒等'],
-   ['区域工作台','本页的四区独立调色 + 画面内伪彩预览，不依赖主盘是否偏离'],
+   ['区域工作台','本页四区独立调色 + 画面内伪彩预览，不依赖主盘是否偏离'],
    ['光场计算','天空最远、皮肤最近、暗部居中，用它构造 2.5D 深度代理做重聚焦与视差'],
-   ['局部蒙版 / 背景虚化','作为选区或主体 matte，一键生成后仍可继续用涂抹微调']]
-    .forEach(([k,v])=>{ const l=spEl('div','sp-line'); l.append(spEl('b','',k),spEl('span','',v)); uses.append(l); });
-  w.append(uses);
-  w.append(spEl('div','sp-note','<b>如实说明</b>：这是纯前端启发式软分割（自适应肤色聚类 + 天空行一致性 + 区域一致性平滑 + 互斥归一化），'
+   ['局部蒙版 / 背景虚化','10 个通道都能作为选区或主体 matte，一键生成后仍可继续用涂抹微调']]
+    .forEach(([k,v])=>{const l=document.createElement('div');l.className='sp-line';
+      l.append(Object.assign(document.createElement('b'),{textContent:k}),
+               Object.assign(document.createElement('span'),{textContent:v}));uses.append(l);});
+  c5.append(uses);
+  const note=document.createElement('div');note.className='zp-tip';
+  note.innerHTML='<b>如实说明</b>：这是纯前端启发式软分割（自适应肤色聚类 + 天空行一致性 + 边缘引导精修 + 显著性连通块 + 互斥归一化），'
     +'不是设备端 ML，也没有 CoreImage / Metal；复杂遮挡、逆光、多光源人像会有误差。'
-    +'matte 缺失时着色器里还有一层像素级肤色软概率兜底，所以冷调不会把脸染蓝。'));
+    +'matte 缺失时着色器里还有一层像素级肤色软概率兜底，所以冷调不会把脸染蓝。';
+  c5.append(note);wrap.append(c5);
+
+  w.append(wrap);
+  if(!SEM.ready){
+    const empty=document.createElement('div');empty.className='zp-tip';
+    empty.textContent='导入照片后，这里会显示 10 个通道的灰度 / 伪彩预览与统计。';
+    c2.append(empty);
+  }
 }
 /* 页面内动作后局部刷新：保留滚动位置，不重开整个页面 */
 function renderZonesPageRefresh(body){
@@ -14463,7 +15390,7 @@ function renderInfoPage(body){
     ['裁剪后导出',ew+' × '+eh+' px'],['实况照片',LIVE.pair?'是（'+(LIVE.video?.duration?.toFixed(2)||'?')+'s）':'否'],
     ['滤镜层数',state.layers?.length||0],['当前滤镜',state.editLayerName||'原图'],
     ['独立色调',TARGETS.length],['一键模板',QUICK.length+' 套'],
-    ['语义 matte','v3 · '+(state.matteQuality||'标准')],
+     ['语义 matte','v4 · 10 通道 · '+(state.matteQuality||'标准')],
     ['局部效果区域',(state.fxRegions?.length||0)+' 个'],['涂抹笔数',(state.brushStrokes?.length||0)+' 笔'],
     ['叠加元素',(state.elements?.length||0)+' 个'],
     ['背景虚化',(state.bokeh?.on?'开启 · '+(state.bokeh.detected?(state.bokeh.detected.mode==='person'?'人物':'物品'):'未检测'):'关闭')]
@@ -14510,7 +15437,7 @@ const AB_CHAPTERS=[
 <p>这是按「语义感知的二维渲染控制器」思路做的<b>工程对标</b>，分四层：</p>
 <div class="ab-grid">
  <div class="ab-item"><b>① 前端 2D pad</b><small>x = Color（白平衡偏置 + chroma 增益），y = Tone（暗部深度 + 对比斜率），配一条强度滑杆；底风格只改偏移量。12 种作用范围各自记忆参数，互不串扰。</small></div>
- <div class="ab-item"><b>② 端侧轻量分割</b><small>1/8 分辨率生成皮肤 / 天空 / 头发 / 亮部软 matte，边缘感知平滑后由 GPU 线性上采样对齐；v3 按每张照片自适应估计肤色，深浅肤色与暖光人像更稳。</small></div>
+ <div class="ab-item"><b>② 端侧轻量分割</b><small>1/8 分辨率生成皮肤 / 天空 / 头发 / 亮部软 matte，边缘感知平滑后由 GPU 线性上采样对齐；v4 按每张照片自适应估计肤色、加边缘引导精修与显著性主体，并在 CPU 侧扩展到 10 个可用通道。</small></div>
  <div class="ab-item"><b>③ 渲染层</b><small>不同区域不等权映射：非皮肤区吃满用户值，皮肤区乘 skin_mask 压回肤色流形并 clamp 偏移；matte 缺失时着色器内还有像素级肤色软概率兜底，保证冷调不毁脸。</small></div>
  <div class="ab-item"><b>④ 非破坏存储</b><small>只存 preset_id +（tone, color, intensity）+ matte 版本 / 指纹，原图像素从不改写，可重算回滚。色调迁移另走 Lab 三档均值 / 方差匹配生成 16³ 3D LUT，与用户导入的 .cube 完全独立。</small></div>
 </div>
@@ -14550,7 +15477,7 @@ const AB_CHAPTERS=[
  <div class="ab-step"><b>工程化与收敛</b>色彩迁移、23 章说明书、18 章技术实现、22 个二级页面与「页面中心」分组浏览、自动保存与恢复、界面精简与移动端重排。</div>
  <div class="ab-step"><b>现在 · 近乎最终</b>作者与关于页、细节修复、稳定性优先。</div>
 </div>
- <p style="margin-top:14px">当前内嵌版本 <b>1.0.9</b>（构建 2026-11-12，Release Candidate）。页面头部写有版本 meta，可在独立「检查更新」页与 GitHub 上发布的最新 Release 对比；<b>默认不联网</b>，只有主动点击才会读取公开版本信息。</p>
+ <p style="margin-top:14px">当前内嵌版本 <b>1.0.12</b>（构建 2026-11-12，Release Candidate）。页面头部写有版本 meta，可在独立「检查更新」页与 GitHub 上发布的最新 Release 对比；每次打开都会先看到一张最多 3 秒的启动页，随后才进入编辑界面；<b>默认不联网</b>，只有主动点击才会读取公开版本信息。</p>
  <div class="sp-row"><button data-goupdate="1">⟳ 检查更新</button></div>`},
 {id:'limits',n:'07',eyebrow:'BOUNDARIES',t:'已知边界 · 如实说明',html:`
 <div class="ab-grid">
@@ -14738,7 +15665,7 @@ gl.linkProgram(prog);</pre>
  <div><b>0</b><span>原始照片</span></div>
  <div><b>1</b><span>用户导入的 .cube 3D LUT / 色彩迁移 LUT</span></div>
  <div><b>2–5</b><span>四种涂抹笔刷遮罩（马赛克 / 柔焦 / 动态 / 径向），各一张单通道 LUMINANCE 纹理</span></div>
- <div><b>6</b><span>语义 matte（皮肤 / 天空 / 头发 / 亮部四通道软分割）</span></div>
+  <div><b>6</b><span>语义 matte v4（GPU 四通道 + CPU 附加四图 · 10 个可用通道）</span></div>
  <div><b>7</b><span>背景虚化的主体 matte</span></div>
  <div><b>8</b><span>Tone 曲线 LUT</span></div>
  <div><b>9</b><span>局部蒙版涂抹选区：一张 RGB 纹理，R/G/B 分别装 3 个蒙版槽</span></div>
@@ -14818,14 +15745,14 @@ function mutate(fn){
 <div class="tech-flow">
  <span>导入照片</span><span>缩到约 128×N</span><span>四通道软概率</span><span>边缘感知平滑</span><span>上传为纹理 6</span><span>GPU 线性上采样</span><span>着色器按区域加权</span>
 </div>
-<p>四个通道：皮肤（肤色色度带 + 中心先验）、天空（蓝青 + 上部位置先验）、头发（暗部低饱和）、亮部。v3 之后改成<b>按每张照片自适应估计肤色</b>，深浅肤色与暖光人像更稳，顺手修掉过暗肤色预览整片发黑的问题。matte 只在导入 / 换照片时推理一次并缓存，拖盘不重算。</p>
+<p>四个通道：皮肤（肤色色度带 + 中心先验）、天空（蓝青 + 上部位置先验）、头发（暗部低饱和）、亮部。v3 改成<b>按每张照片自适应估计肤色</b>，深浅肤色与暖光人像更稳。<b>v4</b> 在不改 GPU 纹理格式的前提下，于 CPU 侧新增植被 / 水体 / 主体显著性 / 边缘四张软图，并用边缘梯度引导收缩皮肤与天空概率、用最大连通块抑制孤立色斑，可用通道从 5 个扩到 10 个。matte 只在导入 / 换照片或手动重算时推理一次并缓存，拖盘不重算。</p>
 <p>渲染层的不等权映射是核心：</p>
 <pre class="tech-code">// 概念示意：非皮肤区吃满用户值，皮肤区压回肤色流形
 float w = mix(1.0, skinLock, skinMask);
 vec3  shifted = colorShift(c, u_plateColor * w, u_plateTone);
 c = mix(shifted, clampToSkin(shifted, src), skinMask * u_semLock);</pre>
 <p>再加一层<b>像素级肤色软概率兜底</b>：即使 matte 缺失或判断失误，着色器也能靠当前像素的色度位置收敛，保证「拖冷调不会把脸染蓝」。</p>
-<p><b>区域工作台</b>把这同一张 matte 从幕后搬到台前。着色器里 <code>zoneWeights(srcUV)</code> 把四通道做互斥与归一化，得到每个像素的软权重 <code>w</code>（总权重恒为 1）；<code>applyZones()</code> 用 <code>dot(w, u_zoneTemp / u_zoneLum / u_zoneSat)</code> 把四套独立参数按权重混合成当前像素的参数，色温走轻推白平衡、亮度走加性、饱和走色度增益，零位严格逐像素恒等。因为权重归一化，主盘是否偏离零位都不影响它 —— 这正好补上了「三滑块必须先把主盘推开才看得见」的体验缺口。<code>zonePseudo()</code> 再按同一组权重叠加伪彩，由 <code>u_zonePrev</code> 控制，导出 / 缩略图 / 录制时强制关闭（<code>thumb</code> 或 <code>LIVE.recording</code>）。CPU 侧 <code>semChannelMask()</code> 把任意通道重采样成灰度 mask，<code>matteToMask()</code> 与 <code>matteToBokeh()</code> 分别写进局部蒙版纹理与主体 matte，signature 里带上 <code>SEM.hash</code> 保证换照片重算。整条链路只多 3 个 <code>vec4</code> + 4 个标量 uniform，没有新增纹理或着色器程序。</p>
+ <p><b>区域工作台</b>把这同一张 matte 从幕后搬到台前：除了四区独立调色与伪彩预览，v4 起还能在预览上涂抹精修、切换 10 个通道、直接调精度并重算，一键把任意通道交给局部蒙版或背景虚化。着色器里 <code>zoneWeights(srcUV)</code> 把四通道做互斥与归一化，得到每个像素的软权重 <code>w</code>（总权重恒为 1）；<code>applyZones()</code> 用 <code>dot(w, u_zoneTemp / u_zoneLum / u_zoneSat)</code> 把四套独立参数按权重混合成当前像素的参数，色温走轻推白平衡、亮度走加性、饱和走色度增益，零位严格逐像素恒等。因为权重归一化，主盘是否偏离零位都不影响它 —— 这正好补上了「三滑块必须先把主盘推开才看得见」的体验缺口。<code>zonePseudo()</code> 再按同一组权重叠加伪彩，由 <code>u_zonePrev</code> 控制，导出 / 缩略图 / 录制时强制关闭（<code>thumb</code> 或 <code>LIVE.recording</code>）。CPU 侧 <code>semChannelMask()</code> 把任意通道重采样成灰度 mask，<code>matteToMask()</code> 与 <code>matteToBokeh()</code> 分别写进局部蒙版纹理与主体 matte，signature 里带上 <code>SEM.hash</code> 保证换照片重算。整条链路只多 3 个 <code>vec4</code> + 4 个标量 uniform，没有新增纹理或着色器程序。</p>
 <p>三个语义增益滑杆曾出现过「调了没效果」的 bug：根因是主盘零位时语义层整体短路（为了严格恒等原图），且天空区在无 matte 时恒为 0。修法是让三滑块同时作用于 Color 与 Tone、补像素级天空先验、加一个只改对比与亮度不推色相的显式项；面板里也加了「◐ 试调主盘」把白点推开，方便对比。<b>零位恒等</b>这条原则仍然保留：所有参数为 0 时，输出必须逐像素等于原图。</p>
 <div class="tech-note">如实说明：这是启发式软分割，不是设备端机器学习；复杂人像、逆光、多光源、透明物体会有误差。兜底策略的目标不是「分得准」，而是「分错也不毁脸」。关于页里也写明了这一点。</div>`},
 
@@ -16159,7 +17086,10 @@ const AS_CHANGELOG=[
  {v:'v1.0.5',t:'视频工作台',d:'多片段时间线、关键帧调色、四种转场与六种运镜、五套成片模板；导出改为手工推帧 + 画面签名跳过重绘，静止段几乎零 CPU，预览与缩略图分批让帧；四端同源。'},
  {v:'v1.0.6',t:'视频风格库',d:'视频工作台接入完整色彩引擎：433 款滤镜、78 套模板、20 种盘模式可作为片段风格 A/B；新增可拖二维盘与盘动画、11 项关键帧参数、风格帧预生成导出；四端同源。'},
  {v:'v1.0.7',t:'一键滤镜',d:'预览正下方新增常驻滤镜速贴条：分类 + 搜索 + 缩略图横排，点一下就整段套用，也可拖到时间线片段；修复改滤镜后预览不重绘、只换终点导致半段渐显两个真 bug；签名改用轻量标签避免每帧序列化整份编辑状态；四端同源。'},
- {v:'v1.0.9',t:'工具栏位置回到底部 · 当前版本',d:'纠正上一版把 5 个工具切换搬进顶栏的误读：默认恢复为「编辑区底部」的最初布局，顶栏重新变回一行；外观与主题页新增「工具栏位置」开关，喜欢顶栏布局的可随时切回，偏好存本机、刷新保留；顺手修正「更多」弹出菜单在两种位置下的定位基准。视频工作台、时间线拖拽、片段调色盘与滤镜叠加全部保留；四端同源。'},
+ {v:'v1.0.12',t:'分级 Pro · matte v4 · 区域工作台 Pro · 当前版本',d:'三件事一起做：① 分级页从 3 个挤在一起的小色轮换成一个 240px 大色轮 + 阴影 / 中间调 / 高光三档切换 + 色相 / 浓度 / 亮度精调 + 三档色卡 + 8 套一键片色调 + 档位联动；② 语义引擎升到 v4，GPU 仍是 RGBA 四通道，CPU 侧新增植被 / 水体 / 主体显著性 / 边缘四张软图，加边缘引导精修与最大连通块，可用通道从 5 个扩到 10 个；③ 区域工作台整页重做：统计进度条、10 通道预览、四区直接调色、在预览图上涂抹精修后一键写入蒙版 / 虚化、精度档与重算、组合式一键动作。两个界面全部换成圆角卡片与柔和光影，9 套主题与 Nova 一致；四端同源。'},
+ {v:'v1.0.11',t:'启动加载页',d:'每次打开 / 刷新 / 从后台返回都先显示一张启动页：12 段低饱和虹彩环缓慢旋转、中心白点脉冲、品牌与英文 tagline 依次淡入、细进度条走完，底部写明「本地渲染 · 照片不出设备」与自动读取的版本号。跟随 9 套主题配色，浅色主题自动翻成浅底深字；纯视觉覆盖层不拦截任何点击与拖拽，动效关闭或系统「减少动画」时自动切成短版。生命周期独立于主程序，硬性上限 3 秒（实测约 2.6~2.7 秒消失），切到后台立即收起；四端同源。'},
+ {v:'v1.0.10',t:'顶栏悬浮留白',d:'澄清用户的「顶部 tab 贴边」指的是顶栏那一整条（搜索 / ⋯ 更多 / 换照片 / 导出），不是底部 5 个工具。原版界面此前是 top:0;left:0;right:0 的全宽贴边条，按钮离视口上边缘仅 7~9px；现在四边留出空隙、变成悬浮卡片，按钮离边缘约 20px，⋯ 菜单改为浮在卡片下方。外观页新增「顶栏留白」开关（悬浮 / 贴边），默认悬浮、偏好存本机；Nova 本来就是悬浮胶囊不受影响。浅色与玻璃主题、工具在顶栏模式、手机安全区一并验证；四端同源。'},
+ {v:'v1.0.9',t:'工具栏位置回到底部',d:'纠正上一版把 5 个工具切换搬进顶栏的误读：默认恢复为「编辑区底部」的最初布局，顶栏重新变回一行；外观与主题页新增「工具栏位置」开关，喜欢顶栏布局的可随时切回，偏好存本机、刷新保留；顺手修正「更多」弹出菜单在两种位置下的定位基准。视频工作台、时间线拖拽、片段调色盘与滤镜叠加全部保留；四端同源。'},
  {v:'v1.0.8',t:'全面直观化',d:'主界面 5 个工具 tab 提到顶栏；视频工作台重写首屏：紧凑标题 + 片段调色盘（一个圆盘 + 强度条，拖一下就变）+ 一键滤镜条，滤镜与盘可叠加且界面不再出现 A/B；时间线拖拽修复（按索引排序、解绑旧监听、触屏支持、播放头可拖）；检查器 11 根滑杆与高级风格收进折叠；四端同源。'}
 ];
 function renderChangelogPage(body){
