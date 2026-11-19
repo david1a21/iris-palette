@@ -27,20 +27,22 @@ enum LivePhotoExport {
         // 照片：JPEG / HEIC 直接用；PNG、WebP 转成 JPEG（Live Photo 的静态资源只认这两种）
         let base = (image.name as NSString).deletingPathExtension
         var photoURL: URL
+        var photoName = base + "." + image.ext
         if image.ext == "jpg" || image.ext == "jpeg" || image.ext == "heic" || image.ext == "heif" {
-            photoURL = tempURL(base + "." + image.ext)
+            photoURL = tempURL(photoName)
             try? image.data.write(to: photoURL)
         } else {
             guard let ui = UIImage(data: image.data),
                   let jpg = ui.jpegData(compressionQuality: 0.95) else { return false }
-            photoURL = tempURL(base + ".jpg")
+            photoName = base + ".jpg"          // PNG / WebP 转码后扩展名跟着变，避免相册里名字与实际格式不符
+            photoURL = tempURL(photoName)
             try? jpg.write(to: photoURL)
         }
 
         let videoURL = tempURL(base + "." + video.ext)
         try? video.data.write(to: videoURL)
 
-        save(photo: photoURL, video: videoURL, photoName: base + "." + image.ext,
+        save(photo: photoURL, video: videoURL, photoName: photoName,
              videoName: base + "." + video.ext, completion: completion)
         return true
     }
