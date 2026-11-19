@@ -147,6 +147,8 @@ final class ShellViewController: UIViewController, WKScriptMessageHandler, WKNav
             liveExporter.end(body)
         case "liveFail":
             alert("实况导出失败", (body["msg"] as? String) ?? "未知错误")
+        case "liveNote":
+            alert("导出提示", (body["msg"] as? String) ?? "")
         default:
             break
         }

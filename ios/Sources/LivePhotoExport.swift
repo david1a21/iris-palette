@@ -66,8 +66,10 @@ enum LivePhotoExport {
     }
 
     static func saveFiles(photo: URL, video: URL, photoName: String, videoName: String,
+                          videoIsRecorded: Bool = false,
                           completion: ((Bool) -> Void)?) {
-        save(photo: photo, video: video, photoName: photoName, videoName: videoName, completion: completion)
+        save(photo: photo, video: video, photoName: photoName, videoName: videoName,
+             videoIsRecorded: videoIsRecorded, completion: completion)
     }
 
     static func saveStillForFallback(_ url: URL) {
@@ -89,6 +91,7 @@ enum LivePhotoExport {
     }
 
     private static func save(photo: URL, video: URL, photoName: String, videoName: String,
+                             videoIsRecorded: Bool = false,
                              completion: ((Bool) -> Void)?) {
         PHPhotoLibrary.requestAuthorization(for: .addOnly) { status in
             guard status == .authorized || status == .limited else {
@@ -96,29 +99,57 @@ enum LivePhotoExport {
                 DispatchQueue.main.async { completion?(false) }
                 return
             }
+
+            let originalId = assetIdentifier(for: video)
+            let identifier: String
+            if videoIsRecorded {
+                identifier = LivePhotoMovie.makeIdentifier()
+                lastContext = "动态为逐帧录制，已生成新标识"
+            } else if let oid = originalId, !oid.isEmpty {
+                identifier = oid
+                lastContext = "已沿用原片实况标识"
+            } else {
+                identifier = LivePhotoMovie.makeIdentifier()
+                lastContext = "原片未携带实况标识，已补新标识"
+            }
+
             // iOS 26 起，实况配对里的静态帧如果是 JPEG，会被 PhotoKit 判成 InvalidResource（3302）。
-            // 统一转成 HEIC 再写；转不出来才退回原来的 JPEG。
-            let assetId = assetIdentifier(for: video)
-            lastContext = assetId == nil ? "原片未携带实况标识" : "已沿用原片实况标识"
-            let (photoToUse, photoNameToUse) = preparePhoto(photo, originalName: photoName, identifier: assetId)
-            // 相册对「配对视频」只认 QuickTime 容器，MediaRecorder 出来的 mp4 先转一层。
-            ensureMov(video: video, originalName: videoName) { mov, movName, err in
-                guard let mov = mov else {
-                    lastError = err ?? "视频转容器失败"
-                    DispatchQueue.main.async { completion?(false) }
-                    return
-                }
+            // 统一转成 HEIC，并写入与视频一致的 asset identifier。
+            let (photoToUse, photoNameToUse) = preparePhoto(photo, originalName: photoName, identifier: identifier)
+
+            func addToLibrary(_ videoURL: URL, _ vName: String) {
                 PHPhotoLibrary.shared().performChanges({
                     let req = PHAssetCreationRequest.forAsset()
                     let po = PHAssetResourceCreationOptions()
                     po.originalFilename = photoNameToUse
                     req.addResource(with: .photo, fileURL: photoToUse, options: po)
                     let vo = PHAssetResourceCreationOptions()
-                    vo.originalFilename = movName
-                    req.addResource(with: .pairedVideo, fileURL: mov, options: vo)
+                    vo.originalFilename = vName
+                    req.addResource(with: .pairedVideo, fileURL: videoURL, options: vo)
                 }) { ok, error in
                     if !ok { lastError = error?.localizedDescription ?? "相册拒绝了这条资源" }
                     DispatchQueue.main.async { completion?(ok) }
+                }
+            }
+
+            if videoIsRecorded {
+                // 录制出来的片子没有 still-image-time 轨道，必须用 AVFoundation 重新封装。
+                LivePhotoMovie.wrap(video: video, identifier: identifier) { out in
+                    guard let out = out else {
+                        lastError = "动态片段重新封装失败（缺视频轨道或写入器出错）"
+                        DispatchQueue.main.async { completion?(false) }
+                        return
+                    }
+                    addToLibrary(out, (videoName as NSString).deletingPathExtension + ".mov")
+                }
+            } else {
+                ensureMov(video: video, originalName: videoName) { mov, movName, err in
+                    guard let mov = mov else {
+                        lastError = err ?? "视频转容器失败"
+                        DispatchQueue.main.async { completion?(false) }
+                        return
+                    }
+                    addToLibrary(mov, movName)
                 }
             }
         }

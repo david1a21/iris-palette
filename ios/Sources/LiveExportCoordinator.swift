@@ -11,6 +11,7 @@ final class LiveExportCoordinator {
     var onSaved: ((Bool) -> Void)?
 
     private var handles: [String: FileHandle] = [:]
+    private var sources: [String: String] = [:]
     private var urls: [String: URL] = [:]
     private var names: [String: String] = [:]
 
@@ -26,13 +27,30 @@ final class LiveExportCoordinator {
             var vf = LIVE.vidFile;
             if(!vf) throw new Error('没有找到导入的实况动态片段');
             var cover = await canvasToBlob(renderExportCanvas(), 'image/jpeg', 0.95);
+
+            // 逐帧录制会把当前调色结果烘进动态片段；先要 mp4（AVFoundation 才读得动），失败再退回原片。
+            async function rec(m){
+              try{ var c = m ? await recordLiveClip(m) : await recordLiveClip(); if(c && c.size > 2048) return c; }catch(e){}
+              return null;
+            }
+            var clip = await rec('video/mp4;codecs=avc1.42E01E') || await rec('video/mp4') || await rec();
+            var recorded = !!clip && !/webm/i.test(clip.type || '');
+            if(!recorded){
+              clip = vf;
+              try{ window.webkit.messageHandlers.iris.postMessage({op:'liveNote', msg:'动态片段录制失败，已使用原片动态（不含滤镜）'}); }catch(e){}
+            }
             var base = 'LivePhoto';
             try{ base = LIVE.baseName || (LIVE.imgName ? liveBase(LIVE.imgName) : '') || liveBase(vf.name) || 'LivePhoto'; }catch(e){}
-            var vm = /\.([a-z0-9]+)$/i.exec(vf.name || '');
-            var vext = vm ? ('.' + vm[1].toLowerCase()) : '.mov';
-            async function push(kind, name, mtype, blob){
+            var vext = '.mov';
+            if(recorded){
+              vext = /mp4/i.test(clip.type || '') ? '.mp4' : ((clip.type||'').indexOf('quicktime') >= 0 ? '.mov' : '.mp4');
+            } else {
+              var vm = /\.([a-z0-9]+)$/i.exec(vf.name || '');
+              vext = vm ? ('.' + vm[1].toLowerCase()) : '.mov';
+            }
+            async function push(kind, name, mtype, blob, src){
               var H = window.webkit.messageHandlers.iris;
-              H.postMessage({op:'liveBegin', kind:kind, name:name, mime:mtype, bytes:blob.size});
+              H.postMessage({op:'liveBegin', kind:kind, name:name, mime:mtype, bytes:blob.size, source:src});
               var STEP = 131072, pos = 0;
               while(pos < blob.size){
                 var end = Math.min(pos + STEP, blob.size);
@@ -47,8 +65,8 @@ final class LiveExportCoordinator {
               }
               H.postMessage({op:'liveEnd', kind:kind});
             }
-            await push('photo', base + '.jpg', 'image/jpeg', cover);
-            await push('video', base + vext, vf.type || 'video/quicktime', vf);
+            await push('photo', base + '.jpg', 'image/jpeg', cover, 'image');
+            await push('video', base + vext, recorded ? (clip.type || 'video/mp4') : (vf.type || 'video/quicktime'), clip || vf, recorded ? 'recorded' : 'original');
           }catch(e){
             try{ window.webkit.messageHandlers.iris.postMessage({op:'liveFail', msg:String(e && e.message || e)}); }catch(_){}
           }
@@ -66,6 +84,7 @@ final class LiveExportCoordinator {
         handles[kind] = fh
         urls[kind] = url
         names[kind] = name
+        sources[kind] = (body["source"] as? String) ?? "original"
     }
 
     func append(_ body: [String: Any]) {
@@ -85,8 +104,10 @@ final class LiveExportCoordinator {
               let photoName = names["photo"], let videoName = names["video"] else { return }
 
         let p = photo, v = video, pn = photoName, vn = videoName
-        urls.removeAll(); names.removeAll()
-        LivePhotoExport.saveFiles(photo: p, video: v, photoName: pn, videoName: vn) { [weak self] ok in
+        let recorded = (sources["video"] == "recorded")
+        urls.removeAll(); names.removeAll(); sources.removeAll()
+        LivePhotoExport.saveFiles(photo: p, video: v, photoName: pn, videoName: vn,
+                                  videoIsRecorded: recorded) { [weak self] ok in
             self?.onSaved?(ok)
             if !ok {
                 LivePhotoExport.saveStillForFallback(p)
