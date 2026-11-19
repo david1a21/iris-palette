@@ -102,8 +102,7 @@ enum LivePhotoMovie {
     private static func addMetadata(video: URL, identifier: String,
                                     completion: @escaping (URL?) -> Void) {
         let asset = AVURLAsset(url: video)
-        guard let vTrack = asset.tracks(withMediaType: .video).first,
-              let stillFD = stillTimeFormatDescription() else {
+        guard let vTrack = asset.tracks(withMediaType: .video).first else {
             completion(nil); return
         }
 
@@ -126,15 +125,21 @@ enum LivePhotoMovie {
         guard writer.canAdd(vIn) else { completion(nil); return }
         writer.add(vIn)
 
-        let mIn = AVAssetWriterInput(mediaType: .metadata, outputSettings: nil, sourceFormatHint: stillFD)
-        mIn.expectsMediaDataInRealTime = false
-        guard writer.canAdd(mIn) else { completion(nil); return }
-        writer.add(mIn)
+        // 用 AVAssetWriterInputMetadataAdaptor 生成 still-image-time 轨道，
+        // 让 AVFoundation 自己写轨道结构，而不是手搓 CMSampleBuffer。
+        guard let stillFD = stillTimeFormatDescription() else { completion(nil); return }
+        let mInput = AVAssetWriterInput(mediaType: .metadata, outputSettings: nil, sourceFormatHint: stillFD)
+        mInput.expectsMediaDataInRealTime = false
+        guard writer.canAdd(mInput) else { completion(nil); return }
+        writer.add(mInput)
+        let mAdaptor = AVAssetWriterInputMetadataAdaptor(assetWriterInput: mInput)
 
+        // 标识按 mdta key/keySpace 写，和真实实况 MOV 一致。
         let idItem = AVMutableMetadataItem()
-        idItem.identifier = .quickTimeMetadataContentIdentifier
-        idItem.dataType = kCMMetadataBaseDataType_UTF8 as String
+        idItem.key = "com.apple.quicktime.content.identifier" as NSString
+        idItem.keySpace = AVMutableMetadataItem.KeySpace("mdta")
         idItem.value = identifier as NSString
+        idItem.dataType = kCMMetadataBaseDataType_UTF8 as String
         writer.metadata = [idItem]
 
         guard writer.startWriting() else { completion(nil); return }
@@ -164,14 +169,22 @@ enum LivePhotoMovie {
             }
         }
 
+        // still-image-time：值 0，时间放在片子中点。
         let mid = CMTimeMultiplyByFloat64(asset.duration, multiplier: 0.5)
-        if let sample = stillTimeSample(stillFD, at: mid) {
-            mIn.append(sample)
-        }
-        mIn.markAsFinished()
+        let stillItem = AVMutableMetadataItem()
+        stillItem.key = "com.apple.quicktime.still-image-time" as NSString
+        stillItem.keySpace = AVMutableMetadataItem.KeySpace("mdta")
+        stillItem.value = NSNumber(value: 0)
+        stillItem.dataType = kCMMetadataBaseDataType_SInt8 as String
+        let group = AVTimedMetadataGroup(
+            items: [stillItem],
+            timeRange: CMTimeRange(start: mid, duration: CMTime(value: 1, timescale: 30))
+        )
+        mAdaptor.append(group)
+        mInput.markAsFinished()
 
         func finishIfReady() {
-            _ = (reader, writer)
+            _ = (reader, writer, mAdaptor)
             if failed || writer.status == .failed {
                 writer.cancelWriting()
                 DispatchQueue.main.async { completion(nil) }

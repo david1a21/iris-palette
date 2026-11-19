@@ -184,6 +184,16 @@ enum LivePhotoExport {
 
     /// 动态只按静态帧的长宽比重绘，长边封顶 1440 —— 和 iPhone 自己拍的实况一致
     /// （静帧 4032×3024、动态 1440×1080）。按原图尺寸全量重编码会把内存顶爆。
+    /// 让系统自己判断这条「图 + 动态」能不能组成实况，比我们自己猜准得多。
+    private static func validatePair(photo: URL, video: URL, completion: @escaping (Bool) -> Void) {
+        PHLivePhoto.request(withResourceFileURLs: [photo, video],
+                            placeholderImage: nil,
+                            targetSize: .zero,
+                            contentMode: .aspectFit) { live, _ in
+            DispatchQueue.main.async { completion(live != nil) }
+        }
+    }
+
     private static func rawPixelSize(_ url: URL) -> CGSize {
         guard let src = CGImageSourceCreateWithURL(url as CFURL, nil),
               let props = CGImageSourceCopyPropertiesAtIndex(src, 0, nil) as? [String: Any],
