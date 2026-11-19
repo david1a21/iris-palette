@@ -6,7 +6,7 @@
 <title>Iris 调色盘 · 语义感知的在线照片编辑器</title>
 <meta name="theme-color" content="#0b0b0d">
 <!-- 版本元数据：检查更新时远端只需读取文件头部即可比对，不必下载整份页面 -->
-<meta name="iris-version" content="1.0.18">
+<meta name="iris-version" content="1.0.20">
 <meta name="iris-build" content="2026-11-19">
 <meta name="iris-repo" content="david1a21/iris-palette">
 <meta name="description" content="Iris 调色盘：语义感知的二维色彩控制器。Tone × Color 两轴、端侧区域分割与肤色锁，433 款滤镜、78 套模板，支持照片 / 视频 / GIF 导出，纯前端不上传。">
@@ -334,7 +334,7 @@ button{cursor:pointer;border:0;background:none}
   border:1px solid var(--w11);background:var(--w028);
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .chip-line .chips .chip{font-size:11.5px}
-/* 20 种盘模式：默认整体折叠成一行，展开才按 5 组显示，收起时连 DOM 都不建 */
+/* 30 种盘模式：默认整体折叠成一行，展开才按 7 组显示，收起时连 DOM 都不建 */
 .pm-fold{margin:0 0 7px;border:1px solid var(--w11);border-radius:10px;
   background:var(--w022);overflow:hidden}
 .pm-fold>summary{list-style:none;display:flex;align-items:center;gap:7px;
@@ -471,7 +471,7 @@ input[type=range]::-moz-range-thumb{width:19px;height:19px;border:0;border-radiu
 .panel[data-fit="slim"] .pad-row{flex-direction:column;align-items:stretch;gap:10px}
 .panel[data-fit="slim"] .pad-col{width:100%;flex:1 1 100%}
 .panel[data-fit="slim"] .padwrap{justify-content:center}
-.panel[data-fit="slim"] .pad{width:min(190px,100%)}
+.panel[data-fit="slim"] .pad{width:min(198px,100%)}
 .panel[data-fit="slim"] .pad-side{width:100%;flex:1 1 100%;gap:8px}
 .panel[data-fit="slim"] .pad-side .readout{justify-content:center}
 .panel[data-fit="slim"] .btn-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:4px}
@@ -505,7 +505,7 @@ input[type=range]::-moz-range-thumb{width:19px;height:19px;border:0;border-radiu
 .panel[data-fit="slim"] .pm-sum-n{display:none}
 .panel[data-fit="slim"] .padwrap{width:100%}
 .padwrap{display:flex;justify-content:center;margin:2px 0 8px}
-.pad{position:relative;width:min(190px,42vw);aspect-ratio:1;border-radius:16px;touch-action:none;
+.pad{position:relative;width:min(198px,42vw);aspect-ratio:1;border-radius:16px;touch-action:none;
   overflow:hidden;border:1px solid var(--w18);
   background:
     linear-gradient(to bottom,var(--w30),rgba(255,255,255,0) 45%,rgba(0,0,0,.42)),
@@ -567,7 +567,7 @@ input[type=color]{-webkit-appearance:none;appearance:none;width:44px;height:30px
 }
 @media(max-width:520px){
   .dock{flex:0 0 36dvh}
-  .pad{width:min(140px,38vw)}
+  .pad{width:min(146px,38vw)}
   .pad-side{gap:6px}
   .chip-line .chip{padding:4px 8px;font-size:10.5px}
   .hint{font-size:10.5px;line-height:1.4}
@@ -750,7 +750,7 @@ input[type=range]::-webkit-slider-thumb{width:16px;height:16px;margin-top:-6.5px
 .pad-side .readout span{white-space:nowrap}
 .pad-side .readout b{font-weight:650}
 @media(min-width:900px){
-  .pad{width:min(168px,42vw)}
+  .pad{width:min(175px,42vw)}
   .pad-side{gap:8px}
 }
 @media(max-width:520px){
@@ -764,7 +764,7 @@ input[type=range]::-webkit-slider-thumb{width:16px;height:16px;margin-top:-6.5px
   .sec{margin-bottom:9px}
   .chip-line{margin-bottom:3px}
   .chip-line .chip{padding:4px 8px;font-size:10.5px}
-  .pad{width:min(122px,32vw)}
+  .pad{width:min(128px,32vw)}
   .pad-side{gap:5px}
   .btn-grid .btn{padding:5px 2px;font-size:10.5px}
   .fold{padding:7px 10px;margin-bottom:7px}
@@ -881,7 +881,7 @@ input[type=range]::-webkit-slider-thumb{width:16px;height:16px;margin-top:-6.5px
   .chip-line .chips{gap:5px}
   .chip-line .chip{padding:4px 8px;font-size:10.5px;border-radius:9px}
   .padwrap{margin:0}
-  .pad{width:min(118px,32vw);border-radius:15px}
+  .pad{width:min(124px,32vw);border-radius:15px}
   .pad .plabel{font-size:8px}
   .pad-row{gap:9px}
   .pad-side{gap:5px}
@@ -940,7 +940,7 @@ input[type=range]::-webkit-slider-thumb{width:16px;height:16px;margin-top:-6.5px
   .tool i{font-size:14px}
   .panel{padding:6px 12px 12px}
   .panel-head{margin:0 0 5px}
-  .pad{width:min(104px,30vw)}
+  .pad{width:min(109px,30vw)}
   .pad-side .readout{font-size:9px}
 }
 
@@ -1151,6 +1151,12 @@ input[type=range]::-webkit-slider-thumb{width:16px;height:16px;margin-top:-6.5px
 .em-item>em{flex:0 0 auto;font-style:normal;font-size:9.5px;color:var(--sub);
   border:1px solid var(--line);border-radius:5px;padding:2px 5px}
 .em-item.disabled{opacity:.4;pointer-events:none}
+.em-item[hidden]{display:none!important}
+/* 导出设置里的「导出视频」分区：保留可见但整体禁用，明确告知状态 */
+.sec-off{opacity:.42;pointer-events:none;user-select:none;filter:grayscale(.55)}
+.sec-off::after{content:"";position:absolute;inset:0;border-radius:inherit}
+.sec{position:relative}
+.sp-tile.off{opacity:.4;pointer-events:none;filter:grayscale(.6)}
 
 /* ---------- 全局搜索（命令面板） ---------- */
 .cmd-mask{position:fixed;inset:0;z-index:60;display:none;background:rgba(0,0,0,.55);
@@ -2339,6 +2345,31 @@ html[data-ui="nova"] .sp-stat>div{border-radius:calc(var(--nova-r)*.6)!important
 .upd-priv-list{display:grid;gap:7px;margin-top:8px}
 .upd-priv-i{font-size:11px;line-height:1.75;color:var(--sub);padding-left:14px;position:relative}
 .upd-priv-i::before{content:'·';position:absolute;left:3px;color:var(--accent);font-weight:700}
+/* 更新策略说明卡：Release 冻结 / HTML 热更新 */
+.upd-policy{border-color:rgba(var(--accent-rgb),.34);
+  background:linear-gradient(145deg,rgba(var(--accent-rgb),.085),var(--w025) 62%)}
+.pol-lead{font-size:11.5px;line-height:1.85;color:var(--txt);margin:2px 0 12px}
+.pol-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-bottom:12px}
+.pol-ch{border:1px solid var(--line);border-radius:13px;background:var(--w025);padding:11px 12px}
+.pol-ch b{display:block;font-size:11.5px;color:var(--txt);margin-bottom:3px}
+.pol-ch .pol-v{font-size:15px;font-weight:700;color:var(--accent);letter-spacing:.3px}
+.pol-ch .pol-tag{display:inline-block;font-size:9.5px;padding:3px 8px;border-radius:999px;
+  border:1px solid var(--line);color:var(--sub);margin:6px 0 7px}
+.pol-ch.frozen .pol-v{color:var(--sub)}
+.pol-ch p{font-size:10.5px;line-height:1.75;color:var(--sub);margin:0}
+.pol-h{font-size:11px;font-weight:700;color:var(--txt);margin:13px 0 7px;
+  display:flex;align-items:center;gap:7px}
+.pol-h::before{content:'';width:3px;height:12px;border-radius:2px;background:var(--accent)}
+.pol-steps{display:grid;gap:6px}
+.pol-step{display:flex;gap:9px;align-items:flex-start;font-size:10.8px;
+  line-height:1.72;color:var(--sub)}
+.pol-step i{flex:0 0 19px;height:19px;border-radius:7px;display:grid;place-items:center;
+  background:rgba(var(--accent-rgb),.15);color:var(--accent);font-style:normal;font-size:10px;font-weight:700}
+.pol-step b{color:var(--txt);font-weight:600}
+.pol-note{font-size:10.5px;line-height:1.75;color:var(--sub);margin-top:11px;
+  padding:9px 11px;border-radius:11px;background:var(--w025);border:1px solid var(--line)}
+.pol-note b{color:var(--txt)}
+@media(max-width:560px){.pol-grid{grid-template-columns:1fr}}
 /* ---------------- 视频工作台 ---------------- */
 .vst-stage{position:relative;width:100%;height:clamp(220px,34vh,380px);background:#000;
   border-radius:14px;overflow:hidden;border:1px solid var(--line);margin:0 0 10px}
@@ -3501,11 +3532,11 @@ html[data-theme="mist"] .gp-read,html[data-theme="paper"] .gp-read{
       <div class="em-title">导出成品</div>
       <button class="em-item" data-act="photo"><i></i><span><b>导出照片</b><small id="emPhotoHint">PNG / JPG / WebP</small></span><em>Ctrl S</em></button>
       <button class="em-item" data-act="gif"><i></i><span><b>导出 GIF 动图</b><small id="emGifHint">256 色 · 可循环</small></span><em>GIF</em></button>
-      <button class="em-item" data-act="video"><i></i><span><b>快速导出视频</b><small id="emVideoHint">单段 · 不限时长</small></span><em>MP4 / WebM</em></button>
-  <button class="em-item" data-act="studio"><i></i><span><b>视频工作台</b><small>多片段 · 关键帧 · 转场 · 运镜</small></span><em>▷</em></button>
+      <button class="em-item disabled" data-act="video" aria-disabled="true"><i></i><span><b>快速导出视频</b><small id="emVideoHint">暂未开放 · 打磨中</small></span><em>—</em></button>
+  <button class="em-item" data-act="studio" hidden><i></i><span><b>视频工作台</b><small>多片段 · 关键帧 · 转场 · 运镜</small></span><em>▷</em></button>
       <button class="em-item" data-act="pair"><i></i><span><b>导出实况配对素材</b><small>封面 + 视频 ZIP</small></span><em>LIVE</em></button>
       <button class="em-item" data-act="bundle"><i></i><span><b>打包全格式</b><small>PNG + JPG + WebP</small></span><em>ZIP</em></button>
-      <button class="em-item" data-act="settings"><i></i><span><b>导出设置</b><small>尺寸 · 格式 · 视频 · GIF · 画框</small></span><em>→</em></button>
+      <button class="em-item" data-act="settings"><i></i><span><b>导出设置</b><small>尺寸 · 格式 · GIF · 画框</small></span><em>→</em></button>
 </div>
 
   <div class="stage" id="stage">
@@ -3582,6 +3613,12 @@ html[data-theme="mist"] .gp-read,html[data-theme="paper"] .gp-read{
    调色盘 · 单文件在线照片编辑器
    - WebGL 实时渲染，纯前端，无需服务器 / 默认不联网
    ========================================================= */
+/* v1.0.18 视频功能收敛
+   视频工作台与视频导出尚未打磨成熟，先隐藏工作台入口、把导出项置灰。
+   代码、设置、存档与函数全部原样保留 —— 日后把下面两个值改回 true，
+   再把静态 HTML 里 video 按钮的 disabled / studio 按钮的 hidden 去掉，
+   即可完整恢复，不需要重写任何逻辑。 */
+var VIDEO_STUDIO_ON=false, VIDEO_EXPORT_ON=false;
 const $ = s => document.querySelector(s);
 const cropEd = $('#cropEd');
 const isMobile = () => window.matchMedia('(max-width:520px)').matches;
@@ -3595,7 +3632,7 @@ function toast(t){ toastEl.textContent=t; toastEl.classList.add('show'); clearTi
   toastTimer=setTimeout(()=>toastEl.classList.remove('show'),1600); }
 
 /* ============================================================
-   主调色盘 20 种模式 · 5 组 × 4 款
+   主调色盘 30 种模式 · 7 组（5×4 + 2×5）
    同一个二维 pad（x = 横向 / y = 纵向）+ 强度条，但两轴被解释成
    完全不同的渲染语义。全部复用已有 uniform，不新增纹理 / 着色器分支，
    所以切换与拖动都不掉帧；零位严格等于原图。
@@ -3604,14 +3641,16 @@ function toast(t){ toastEl.textContent=t; toastEl.classList.add('show'); clearTi
    amt = min(1, hypot(x,y))·强度，用于「离开中心才逐渐生效」的效果
    （如黑白、棕褐、红外）。零位 x=y=0 时 amt=0、所有增量恒为 0。
    表在启动时预编译成扁平数组，逐帧只做一次定长循环，无 Object.keys、
-   无临时对象、无 20 路分支。数组字段写作 'shadowTint[2]' 这类路径。
+   无临时对象、无 30 路分支。数组字段写作 'shadowTint[2]' 这类路径。
    ============================================================ */
 const PAD_GROUPS=[
   {id:'intuition',name:'直觉',grad:'linear-gradient(to right,#6e6e72 0%,#8a8a8e 18%,#c98f64 40%,#e06a52 62%,#f1b03c 82%,#ffd60a 100%)'},
   {id:'tone',name:'影调',grad:'linear-gradient(to right,#2b5f72 0%,#3a7f8c 22%,#7d8d84 45%,#c39466 68%,#e0a85c 86%,#f0bf72 100%)'},
   {id:'color',name:'色彩',grad:'linear-gradient(to right,#3f6d84 0%,#578a86 22%,#8f9a7a 45%,#c79a6a 68%,#df9a58 86%,#e8b268 100%)'},
   {id:'style',name:'风格',grad:'linear-gradient(to right,#6b5a78 0%,#8d6f8c 22%,#b58a86 45%,#d4a487 68%,#e2bb92 86%,#e9cda4 100%)'},
-  {id:'pro',name:'专项',grad:'linear-gradient(to right,#4f6b62 0%,#668274 22%,#8a9a84 45%,#b1ae90 68%,#ccbb96 86%,#dbc9a6 100%)'}
+  {id:'pro',name:'专项',grad:'linear-gradient(to right,#4f6b62 0%,#668274 22%,#8a9a84 45%,#b1ae90 68%,#ccbb96 86%,#dbc9a6 100%)'},
+  {id:'vibrant',name:'鲜活',grad:'linear-gradient(to right,#2f7f8a 0%,#4fa2a0 20%,#8ec06a 42%,#e2b34e 66%,#ef7a4a 84%,#e8486a 100%)'},
+  {id:'craft',name:'工艺',grad:'linear-gradient(to right,#4a4a52 0%,#6b6570 22%,#8e8078 45%,#b19a80 68%,#c9ad8c 86%,#d9c2a2 100%)'}
 ];
 const PAD_MODES=[
   /* ① 直觉 */
@@ -3738,6 +3777,71 @@ const PAD_MODES=[
    axis:'<span>← 淡彩　INFRARED　浓彩 →</span><span>↑ 高亮　影调　暗沉 ↓</span>',
    map:{'shadowTint[1]':[.18,0,0],'highTint[1]':[.16,0,0],saturation:[-.10,0,0],
         brilliance:[0,.12,0],glow:[.10,0,0],bw:[0,0,.12]}}
+,
+  /* ⑥ 鲜活 · v1.0.20 新增：三款鲜艳家族 + 两款邻近但非浓艳的配套。
+     三款鲜艳分别走「清透 / 暖金 / 冷蓝」三个方向，名字与已有「鲜艳」互不重复，
+     彼此也不重复；都带高光保护或肤色锁，不会把画面推成一片死艳。 */
+  {id:'vividair',grp:'vibrant',name:'鲜亮通透',short:'鲜亮',vivid:true,
+   desc:'鲜艳家族 · 清透向：饱和与鲜明一起推，同时去雾提亮、压住高光，越通透越不糊',
+   corners:[['lt','清透 · 亮'],['rt','鲜亮 · 亮'],['lb','清透 · 沉'],['rb','鲜亮 · 沉']],
+   axis:'<span>← 清透　AIRY　浓鲜 →</span><span>↑ 明快　影调　沉稳 ↓</span>',
+   map:{saturation:[.26,0,0],vibrance:[.30,0,0],dehaze:[.14,0,0],
+        brilliance:[0,.14,0],highlights:[0,-.06,0],clarity:[0,.06,0]}},
+  {id:'vividgold',grp:'vibrant',name:'浓金溢彩',short:'溢彩',vivid:true,
+   desc:'鲜艳家族 · 暖金向：浓艳叠一层金色高光，横向越往右越溢彩，纵向松开对比不压死暗部',
+   corners:[['lt','薄金 · 亮'],['rt','溢彩 · 亮'],['lb','薄金 · 沉'],['rb','溢彩 · 沉']],
+   axis:'<span>← 薄金　GLOW　溢彩 →</span><span>↑ 通透　影调　浓郁 ↓</span>',
+   map:{saturation:[.28,0,0],vibrance:[.26,0,0],temp:[.16,0,0],
+        'highTint[0]':[.16,0,0],highlights:[.08,0,0],contrast:[0,-.08,0]}},
+  {id:'vividcool',grp:'vibrant',name:'冷艳蓝调',short:'冷艳',vivid:true,
+   desc:'鲜艳家族 · 冷蓝向：高饱和但压色温，蓝青阴影更干净；带肤色锁，人不会被染成蓝脸',
+   corners:[['lt','微凉 · 亮'],['rt','冷艳 · 亮'],['lb','微凉 · 沉'],['rb','冷艳 · 沉']],
+   axis:'<span>← 微凉　COOL　冷艳 →</span><span>↑ 清亮　影调　深稳 ↓</span>',
+   map:{saturation:[.24,0,0],vibrance:[.30,0,0],temp:[-.14,0,0],
+        'shadowTint[2]':[.14,0,0],skinProtect:[.16,0,0],clarity:[0,.06,0]}},
+  {id:'lucid',grp:'vibrant',name:'清朗鲜明',short:'清朗',
+   desc:'不是浓艳：只把鲜明度、清晰度与影调整理干净，横向微调、纵向控明暗，日常照片最不出错',
+   corners:[['lt','素净 · 亮'],['rt','清朗 · 亮'],['lb','素净 · 沉'],['rb','清朗 · 沉']],
+   axis:'<span>← 素净　LUCID　清朗 →</span><span>↑ 明亮　影调　沉静 ↓</span>',
+   map:{vibrance:[.12,0,0],clarity:[.10,0,0],contrast:[0,-.10,0],
+        brilliance:[0,.10,0],dehaze:[.08,0,0]}},
+  {id:'bloom',grp:'vibrant',name:'柔光绽放',short:'绽放',
+   desc:'不是浓艳：柔光晕开 + 轻微鲜明度，高光收一点、黑场抬一点，逆光与花景最柔',
+   corners:[['lt','轻晕 · 亮'],['rt','绽放 · 亮'],['lb','轻晕 · 柔'],['rb','绽放 · 柔']],
+   axis:'<span>← 轻晕　BLOOM　绽放 →</span><span>↑ 明快　影调　柔雾 ↓</span>',
+   map:{glow:[.16,0,0],vibrance:[.08,0,0],highlights:[0,-.08,0],
+        fade:[.06,0,0],temp:[.06,0,0]}},
+  /* ⑦ 工艺 · v1.0.20 新增：印相与冲扫方向的五款，均与已有 20 款不重名、不撞方向 */
+  {id:'portra',grp:'craft',name:'胶片人像',short:'胶片',
+   desc:'负片人像的温润：微暖肤色锁 + 轻褪色 + 细颗粒，和「人像柔润」不同在于这层带胶片底味',
+   corners:[['lt','素净 · 亮'],['rt','温润 · 亮'],['lb','素净 · 柔'],['rb','温润 · 柔']],
+   axis:'<span>← 素净　PORTRA　温润 →</span><span>↑ 明亮　影调　柔和 ↓</span>',
+   map:{temp:[.10,0,0],skinProtect:[.22,0,0],fade:[.10,0,0],
+        grain:[.10,0,0],saturation:[-.08,0,0],glow:[.06,0,0]}},
+  {id:'platinum',grp:'craft',name:'铂金影调',short:'铂金',
+   desc:'铂钯印相感：不去色，只低饱和、抬黑、放平对比并补一点冷银颗粒，与「银盐黑白」不是一回事',
+   corners:[['lt','冷银 · 亮'],['rt','暖银 · 亮'],['lb','冷银 · 柔'],['rb','暖银 · 柔']],
+   axis:'<span>← 冷银　PLATINUM　暖银 →</span><span>↑ 高调　影调　柔和 ↓</span>',
+   map:{saturation:[-.16,0,0],brilliance:[0,.14,0],contrast:[0,-.12,0],
+        black:[0,.10,0],grain:[.08,0,0],temp:[-.06,0,0]}},
+  {id:'cross',grp:'craft',name:'交叉冲印',short:'冲印',
+   desc:'C41 用 E6 药水的错位：高对比 + 青阴影 / 金高光交错染色，比「负片冲扫」更硬更野',
+   corners:[['lt','轻错 · 亮'],['rt','浓错 · 亮'],['lb','轻错 · 浓'],['rb','浓错 · 浓']],
+   axis:'<span>← 轻错　CROSS　浓错 →</span><span>↑ 通透　影调　硬冲 ↓</span>',
+   map:{contrast:[0,-.24,0],saturation:[.18,0,0],'shadowTint[2]':[.14,0,0],
+        'highTint[0]':[.14,0,0],splitBalance:[.24,0,0],fade:[.06,0,0]}},
+  {id:'matte',grp:'craft',name:'哑光质地',short:'哑光',
+   desc:'压高光、抬黑场、收清晰度再铺细颗粒；不降饱和，做的是「不反光」的哑光质感',
+   corners:[['lt','轻哑 · 亮'],['rt','重哑 · 亮'],['lb','轻哑 · 沉'],['rb','重哑 · 沉']],
+   axis:'<span>← 轻哑　MATTE　重哑 →</span><span>↑ 明亮　影调　沉静 ↓</span>',
+   map:{highlights:[0,-.14,0],lift:[.10,0,0],contrast:[0,-.08,0],
+        grain:[.12,0,0],clarity:[-.06,0,0]}},
+  {id:'duotone',grp:'craft',name:'双色调印',short:'双色',
+   desc:'只染阴影与高光两端、中间调原样保留；和「电影双色」「青橙分离」的区别是中点完全不动',
+   corners:[['lt','淡印 · 亮'],['rt','浓印 · 亮'],['lb','淡印 · 沉'],['rb','浓印 · 沉']],
+   axis:'<span>← 淡印　DUOTONE　浓印 →</span><span>↑ 清亮　影调　深稳 ↓</span>',
+   map:{splitBalance:[.32,0,0],'shadowTint[1]':[.12,0,0],'highTint[2]':[.12,0,0],
+        saturation:[-.06,0,0],contrast:[0,-.10,0]}}
 ];
 /* 启动时一次性预编译：把对象表拍平成 [kind, key, idx, ax, ay, aa] 数组。
    kind 0 = 标量、1 = 数组元素（key[idx]）、2 = 只对 max(0,x) 生效。
@@ -3851,7 +3955,7 @@ function defaultState(){
     editLayer:0, editLayerName:'原图',
     globalPlates:platesZero(),
     plateScope:'global',
-    /* 主调色盘 20 种模式：每种独立记住自己的 (x, y, 强度)，切回来数值还在。
+    /* 主调色盘 30 种模式：每种独立记住自己的 (x, y, 强度)，切回来数值还在。
        只有当前模式参与渲染，零位严格等于原图；不新增着色器通道。 */
     padMode:'semantic',
     padVals:padValsZero(),
@@ -4883,11 +4987,11 @@ function toggleFav(name){
 }
 
 /* ============================================================
-   主调色盘的20 种模式
+   主调色盘的 30 种模式
    同一个二维 pad（x = 横向 / y = 纵向）+ 强度条，但两轴被解释成
    完全不同的渲染语义。全部复用现有 uniform，不新增纹理、不新增
    着色器分支，所以切换与拖动都不掉帧；零位严格等于原图。
-   semantic 仍走原本的语义着色器（肤色锁 / matte），其余 19 种把
+   semantic 仍走原本的语义着色器（肤色锁 / matte），其余 29 种把
    (x,y,s) 展开成已有参数的增量。
    ============================================================ */
 /* ---------- 有效参数：基础调整 + 所有滤镜层叠加 ----------
@@ -7296,7 +7400,7 @@ const FONT_GROUPS=[
 ];
 /* 20 款字体：每款都有「真实候选字体 + 明确不同的通用族兜底 + 字重/斜体/字距」
    三层差异，任何平台上切换都看得出变化，不会出现两款长得一样。
-   grp 用于面板里折叠分组，避免 20 个 chip 一次平铺把首屏挤满。 */
+   grp 用于面板里折叠分组，避免 30 个 chip 一次平铺把首屏挤满。 */
 const FONTS=[
   /* 中文正文 */
   {id:'sans',    name:'黑体',      grp:'cn', generic:'sans-serif', weight:0,    italic:false, trackPx:0,
@@ -8036,7 +8140,7 @@ function hslCss(h,s,l){
 }
 function padGradient(t){
   const m=(typeof state!=='undefined'&&state&&padModeMeta)?padModeMeta():PAD_MODES[0];
-  /* 盘面只改观感，不参与任何像素运算。20 款按 5 组各用一套低饱和渐变，
+  /* 盘面只改观感，不参与任何像素运算。30 款按 7 组各用一套低饱和渐变，
      语义盘仍可跟着照片主色走，经典盘固定 iPhone 原生黄橙。 */
   if(m.id==='classic') return null;
   if(m.id!=='semantic'){
@@ -9192,16 +9296,39 @@ stage.addEventListener('pointermove',e=>{
   endBokehPaint();
   endMaskPaint();
   elPointerUp();
-  pointers.delete(e.pointerId); if(pointers.size<2) pinchStart=null; if(!pointers.size) dragStart=null;
+  /* v1.0.20 · 修「双指缩放时一根手指先松开，画面突然飘走」
+     旧逻辑只是把 pinchStart 清空，却留着 dragStart —— 那是第一根手指
+     最初按下时的坐标与 pan。捏合过程中手指已经移开一大截、pan 也被
+     pinch 改过，剩下那根手指下一次 pointermove 就会拿当前 clientX 减去
+     一个很旧的 dragStart.x，位移里混进整个捏合过程，于是画面瞬间跳飞。
+     正确做法是「指针数一变就重新播种基准」：用剩余指针的当前坐标 +
+     当前 state.pan / state.zoom，让后续拖动从这一刻平滑接续。
+     顺带修 3→2 指：原来的 pinchStart 对应的是另外两根手指，也必须重建。 */
+  pointers.delete(e.pointerId);
+  const left=[...pointers.values()];
+  if(left.length>=2){
+    const a=left.slice(0,2);
+    pinchStart={dist:Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y),zoom:state.zoom,
+      mid:[(a[0].x+a[1].x)/2,(a[0].y+a[1].y)/2],pan:[...state.pan]};
+    dragStart=null;
+  }else if(left.length===1){
+    pinchStart=null;
+    const q=left[0];
+    dragStart={x:q.x,y:q.y,pan:[...state.pan],zoom:state.zoom};
+  }else{
+    pinchStart=null; dragStart=null;
+  }
 }));
 stage.addEventListener('wheel',e=>{
   e.preventDefault();
-  /* 按 deltaMode 归一化后做指数映射：鼠标一格约 8%，触控板小位移更细，
-     单步最多 1.10，避免以前固定 1.12 在桌面端「一滚就跳一大截」。 */
+  /* 按 deltaMode 归一化后做指数映射（v1.0.20 重新标定）：
+     旧系数 0.00085 一格只有约 8%，桌面端普遍反映「滚半天才放大一点」；
+     提到 0.0013 后鼠标一格约 14%，触控板小位移每次约 0.6~1%，
+     单步上限同步放宽到 1.18，既不钝也不至于一滚就跳一大截。 */
   const unit=e.deltaMode===1?16:(e.deltaMode===2?100:1);
   const d=clamp(e.deltaY*unit,-100,100);
-  const f=Math.exp(-d*0.00085);
-  setZoom(state.zoom*clamp(f,1/1.10,1.10),{x:e.clientX,y:e.clientY});
+  const f=Math.exp(-d*0.0013);
+  setZoom(state.zoom*clamp(f,1/1.18,1.18),{x:e.clientX,y:e.clientY});
 },{passive:false});
 stage.addEventListener('dblclick',e=>{
   /* 双击画面上的元素：直接打开编辑框（文字自动聚焦输入） */
@@ -10793,7 +10920,7 @@ function vstBuildInspector(body){
 /* ============================================================
    风格库：片段可以绑定「任意一套色彩方案」。
    不是另写一套简化调色，而是把主画面的完整渲染管线（433 款滤镜 /
-   78 套模板 / 20 种盘模式 / 当前编辑 / 原图）预渲染成基准帧，
+   78 套模板 / 30 种盘模式 / 当前编辑 / 原图）预渲染成基准帧，
    导出时只在两张基准帧之间做 2D 合成 —— 效果与主编辑器逐像素一致。
    ============================================================ */
 const VST_LIB_TABS=[
@@ -10910,7 +11037,7 @@ function vstRenderLibBody(body){
       {k:'template',id:t.name,a:1})));
     body.append(grid);
   }
-  /* ---------- 调色盘：20 种模式 + 可拖二维盘 ---------- */
+  /* ---------- 调色盘：30 种模式 + 可拖二维盘 ---------- */
   else if(VST.libTab==='pad'){
     const wrap=spEl('div','vst-pad-wrap');
     const info=spEl('div','vst-pad-info');
@@ -11323,7 +11450,7 @@ function vstQBuild(){
   acts.append(all);
   const clr=spEl('button','vst-q-btn','↺ 清除'); clr.onclick=vstClearFilterQuick; acts.append(clr);
   const more=spEl('button','vst-q-btn','模板 / 调色盘 ›');
-  more.title='78 套模板、20 种盘模式、A-B 高级设置';
+  more.title='78 套模板、30 种盘模式、A-B 高级设置';
   more.onclick=()=>vstOpenStyleLibrary('B'); acts.append(more);
   head.append(acts); box.append(head);
   const bar=spEl('div','vst-q-bar');
@@ -11540,10 +11667,12 @@ function renderVideoPage(body){
    4) 断网、限流、404、旧版页面格式都有明确降级与提示，
       检查失败不影响任何编辑与导出功能。
    ============================================================ */
-const IRIS_VERSION='1.0.18';
+const IRIS_VERSION='1.0.20';             /* 页面版本：走 HTML 热更新，持续递增 */
 const IRIS_BUILD='2026-11-19';
-const IRIS_CHANNEL='rc';                 /* rc = 近乎最终版 */
-const IRIS_SOURCE_TAG='v1.0.3';          /* 本版基于仓库的哪个已发布版本 */
+const IRIS_CHANNEL='hot';                /* hot = HTML 热更新通道 */
+const IRIS_APP_BASELINE='1.0.1.8';       /* 最终安装包 / Release 版本，已冻结 */
+const IRIS_SOURCE_TAG='v1.0.1.8';        /* 最后一个 Release tag，此后不再发 tag */
+const IRIS_UPDATE_MODE='html-hot';       /* Release 冻结，之后只替换 HTML */
 const IRIS_REPO_DEFAULT={
   owner:'david1a21',repo:'iris-palette',branch:'main',path:'web/index.html'
 };
@@ -11587,14 +11716,18 @@ function irisOpenExternal(url){
 
 /* 宽松 semver：v1.0.3 / 1.0.4 / 1.2.0-rc.1 都能比 */
 function irisSemver(v){
-  const m=String(v||'').trim().replace(/^v/i,'').match(/^(\d+)\.(\d+)\.(\d+)(?:[-.]([0-9A-Za-z.-]+))?/);
+  /* 支持 3 段（1.0.19）与 4 段（1.0.1.8）版本号：安装包基线是四段式，
+     不能把它尾段误当成预发布标签。 */
+  const m=String(v||'').trim().replace(/^v/i,'').match(/^(\d+(?:\.\d+){1,4})(?:[-.]([0-9A-Za-z.-]+))?/);
   if(!m) return null;
-  return {n:[+m[1],+m[2],+m[3]],pre:m[4]?String(m[4]).toLowerCase().split(/[.-]/).filter(Boolean):[]};
+  return {n:m[1].split('.').map(Number),pre:m[2]?String(m[2]).toLowerCase().split(/[.-]/).filter(Boolean):[]};
 }
 function irisSemverCmp(a,b){
   const A=irisSemver(a),B=irisSemver(b);
   if(!A||!B) return null;
-  for(let i=0;i<3;i++){ if(A.n[i]!==B.n[i]) return A.n[i]<B.n[i]?-1:1; }
+  const len=Math.max(A.n.length,B.n.length);
+  for(let i=0;i<len;i++){ const x=A.n[i]||0,y=B.n[i]||0;
+    if(x!==y) return x<y?-1:1; }
   if(!A.pre.length&&!B.pre.length) return 0;
   if(!A.pre.length) return 1;          /* 正式版 > 预发布 */
   if(!B.pre.length) return -1;
@@ -11659,6 +11792,7 @@ function irisRepoUrls(cfg){
     version:'https://raw.githubusercontent.com/'+o+'/'+r+'/'+b+'/version.json',
     page:'https://raw.githubusercontent.com/'+o+'/'+r+'/'+b+'/'+path,
     repo:'https://github.com/'+o+'/'+r,
+    pageView:'https://github.com/'+o+'/'+r+'/blob/'+b+'/'+path,
     releases:'https://github.com/'+o+'/'+r+'/releases'
   };
 }
@@ -11717,54 +11851,75 @@ async function irisGetPageMeta(U){
   }catch(e){ return {error:irisErrMsg(e),source:U.page}; }
 }
 
-/* 主流程：快速检查只发 1 个请求；深度比对再并行读两个 raw 文件。
-   任一通道失败都自动降级，不会把「没查到」谎报成「已是最新」。 */
+/* 主流程 · v1.0.19 起「Release 冻结 / HTML 热更新」
+   ------------------------------------------------------------
+   安装包（apk / ipa / exe / dmg）的最终版本是 1.0.1.8，之后不再发 Release、
+   不再重跑构建。所有后续改动只替换一个 HTML 文件，所以版本判据必须换成
+   「线上那份 HTML 自己写了什么版本」，而不是 Release tag。
+
+   快速检查：只发 1 个请求，流式读取线上 web/index.html 的头部 16KB，
+             读到 <meta name="iris-version"> 就立刻断开；这是唯一的判据。
+   深度比对：再加 version.json（发布者显式声明）、页面最近提交，以及
+             Releases API —— 后者只用来展示已冻结的安装包基线，不参与判定。
+   version.json 与页面 meta 不一致时取较新者，并如实列为附注。 */
 async function irisCheckUpdate(opt){
   opt=opt||{};
   if(IRIS_UPD_BUSY) return IRIS_UPD_LAST;
   IRIS_UPD_BUSY=true;
   const cfg=IRIS_UPD_CFG,U=irisRepoUrls(cfg),deep=!!opt.deep;
-  const out={checkedAt:new Date().toISOString(),deep,
-    local:{version:IRIS_VERSION,build:IRIS_BUILD,channel:IRIS_CHANNEL,sourceTag:IRIS_SOURCE_TAG},
+  const out={checkedAt:new Date().toISOString(),deep,mode:IRIS_UPDATE_MODE,
+    local:{version:IRIS_VERSION,build:IRIS_BUILD,channel:IRIS_CHANNEL,
+           appBaseline:IRIS_APP_BASELINE,sourceTag:IRIS_SOURCE_TAG},
+    appBaseline:IRIS_APP_BASELINE,
     repo:cfg.owner+'/'+cfg.repo,urls:U,sources:[],errors:[],status:'unknown'};
   try{
-    const rel=await irisGetRelease(U);
-    out.release=rel;
-    if(rel.kind==='ok') out.sources.push('Releases API · '+rel.tag);
-    else if(rel.kind==='none') out.errors.push(rel.note);
-    else out.errors.push(rel.note||('Release 接口 '+rel.code));
+    /* ① 主通道：线上 HTML 头部（1 个请求） */
+    const pm=await irisGetPageMeta(U);
+    out.pageMeta=pm;
+    if(pm&&pm.version) out.sources.push('线上 HTML meta · '+pm.version);
+    else if(pm&&pm.legacy) out.sources.push('线上 HTML · 旧版格式（无版本 meta）');
+    if(pm&&pm.error) out.errors.push('线上 HTML 头部未读到：'+pm.error);
 
-    let vj=null,pm=null,cm=null;
-    /* Release 不可用（限流 / 404 / 断网）或用户要深度比对时，走附加通道。
-       三个都设短超时并行执行，最坏 4 秒；慢网络下主结论仍由 Release 给出。 */
-    const needRaw=(rel.kind!=='ok')||deep;
-    if(needRaw){
-      const [a,b,c]=await Promise.allSettled([
-        irisGetVersionJson(U),irisGetPageMeta(U),irisGetLastCommit(U,cfg)]);
+    /* ② 页面没有版本标记时，给 version.json 一次兜底机会；
+          深度比对再并行读最近提交，并取回冻结的 Release 基线。 */
+    let vj=null,cm=null,rel=null;
+    const needExtra=deep||(pm&&!pm.version)||(pm&&pm.error);
+    if(needExtra){
+      const [a,c]=await Promise.allSettled([
+        irisGetVersionJson(U),irisGetLastCommit(U,cfg)]);
       vj=a.status==='fulfilled'?a.value:null;
-      pm=b.status==='fulfilled'?b.value:null;
       cm=c.status==='fulfilled'?c.value:null;
-      out.versionJson=vj; out.pageMeta=pm; out.lastCommit=cm;
+      out.versionJson=vj; out.lastCommit=cm;
       if(vj&&vj.version) out.sources.push('version.json · '+vj.version);
-      if(pm&&pm.version) out.sources.push('线上页面 meta · '+pm.version);
-      else if(pm&&pm.legacy) out.sources.push('线上页面 · 旧版格式（无版本 meta）');
-      if(cm&&cm.sha) out.sources.push('页面最近提交 · '+cm.sha);
-      if(pm&&pm.error) out.errors.push('线上页面头部未读到（版本结论仍以 Release 为准）：'+pm.error);
+      if(cm&&cm.sha) out.sources.push('线上 HTML 最近提交 · '+cm.sha);
+      if(cm&&cm.error) out.errors.push('最近提交未读到（不影响版本结论）：'+cm.error);
     }
-    let base='';
-    if(rel.kind==='ok'&&rel.tag) base=rel.tag;
-    else if(vj&&vj.version) base=vj.version;
-    else if(pm&&pm.version) base=pm.version;
-    out.remote=base;
-    const cmp=base?irisSemverCmp(IRIS_VERSION,base):null;
+    if(deep){
+      rel=await irisGetRelease(U);
+      out.release=rel;
+      if(rel.kind==='ok') out.sources.push('Releases API · '+rel.tag+'（安装包基线 · 已冻结 · 不参与判定）');
+      else if(rel.kind==='none') out.errors.push('仓库还没有发布 Release（不影响 HTML 版本结论）');
+      else out.errors.push('Release 接口未读到（不影响 HTML 版本结论）：'+(rel.note||rel.code));
+      out.rate=rel.rate;
+    }
+
+    /* ③ 主判据：线上 HTML meta 与 version.json 取较新者 */
+    const cand=[];
+    if(pm&&pm.version) cand.push({v:pm.version,from:'线上 HTML'});
+    if(vj&&vj.version) cand.push({v:vj.version,from:'version.json'});
+    let best=null;
+    cand.forEach(c=>{ if(!best||irisSemverCmp(best.v,c.v)<0) best=c; });
+    if(cand.length>1&&irisSemverCmp(cand[0].v,cand[1].v)!==0)
+      out.errors.push('version.json 与线上 HTML 的版本标记不一致，已取较新者（以线上 HTML 为准）');
+    out.remote=best?best.v:'';
+    out.remoteSource=best?best.from:'';
+    const cmp=out.remote?irisSemverCmp(IRIS_VERSION,out.remote):null;
     if(cmp===null){
-      const allFailed=(rel.kind==='error')&&(!pm||pm.error)&&!vj;
+      const allFailed=(!pm||pm.error)&&!vj&&(!rel||rel.kind==='error');
       out.status=allFailed?'error':'unknown';
-    }else{
-      out.status=cmp<0?'new':cmp===0?'same':'ahead';
-    }
-    if(out.status==='unknown'&&!out.errors.length) out.errors.push('没有可用的版本号来源，无法判定');
-    out.rate=rel.rate;
+    }else out.status=cmp<0?'new':cmp===0?'same':'ahead';
+    if(out.status==='unknown'&&!out.errors.length)
+      out.errors.push('线上 HTML 没有可用的版本号，无法判定');
     out.hadError=out.errors.length>0;
     /* 有明确版本结论时，通道告警只是附注，不算失败 */
     if(['new','same','ahead'].includes(out.status)) out.hadError=false;
@@ -11778,7 +11933,7 @@ async function irisCheckUpdate(opt){
   return out;
 }
 function irisUpdateStateLabel(st){
-  return ({new:'发现新版本',same:'已是最新版本',ahead:'本地版本更新',
+  return ({new:'线上 HTML 已更新',same:'已是最新版本',ahead:'本机页面版本更新',
     unknown:'无法判定版本',error:'检查失败'})[st]||'未检查';
 }
 function irisFmtSize(n){
@@ -11793,25 +11948,108 @@ function irisFmtTime(t){
 }
 
 /* ---------------- 独立页面：检查更新 ---------------- */
+/* v1.0.19：把更新策略写透 —— 安装包冻结在 1.0.1.8，之后只替换 HTML。
+   所有文字都是本地常量，不经远端注入。 */
+function irisPolicyCard(){
+  const c=spEl('div','upd-card upd-policy');
+  c.id='updPolicy';
+  c.append(spEl('div','sk-sec','更新策略 <em>Release 已冻结 · HTML 热更新</em>'));
+  const lead=spEl('div','pol-lead','');
+  lead.textContent='Iris 已经装进 Android / iOS / Windows / Linux / macOS 的应用壳里。'
+    +'外壳只负责加载一个 HTML 文件，调色、滤镜、界面、说明书与全部功能逻辑都在这个文件里。'
+    +'所以从最终安装包 1.0.1.8 起，不再重新构建安装包、也不再发布新的 Release —— '
+    +'以后每一次改动，只要把新的 web/index.html 传上去即可，手机和电脑里的 App 不用重装。';
+  c.append(lead);
+
+  const g=spEl('div','pol-grid');
+  [['安装包 / Release 通道',IRIS_APP_BASELINE,'已冻结 · 不再更新',
+    'apk / ipa / exe / dmg / AppImage 等安装包，以及 GitHub Releases 页面。'
+    +'只有系统级适配（签名、权限、原生菜单）需要变化时才可能重新打包。',true],
+   ['页面 / HTML 热更新通道',IRIS_VERSION,'持续更新 · 自动可查',
+    '唯一一份 index.html：433 款滤镜、30 种盘模式、界面主题、说明书、渲染管线都在里面。'
+    +'替换即生效，不用重新签名、不用重跑构建、不用重新上架。',false]
+  ].forEach(([t,v,tag,d,frozen])=>{
+    const d1=spEl('div','pol-ch'+(frozen?' frozen':''));
+    d1.append(spEl('b','',t),spEl('div','pol-v',v),spEl('div','pol-tag',tag));
+    const pp=spEl('p',''); pp.textContent=d; d1.append(pp); g.append(d1);
+  });
+  c.append(g);
+
+  c.append(spEl('div','pol-h','版本是怎么检测的'));
+  const steps=spEl('div','pol-steps');
+  [['默认完全不联网','不点检查、不开自动检查时，页面零外部请求，断网可完整使用。'],
+   ['只读线上 HTML 的头部','点「检查更新」只发 1 个请求，流式读 web/index.html 前 16KB，'
+      +'读到 <meta name="iris-version"> 就立刻断开，不下载整份文件。'],
+   ['比较页面版本','拿线上版本与本机内嵌版本比，得出「线上 HTML 已更新 / 已是最新版本 / 本机页面版本更新」三种结论。'],
+   ['深度比对再补三样','可选的 version.json、线上页面最近一次提交，以及已冻结的 Release 基线；'
+      +'version.json 与页面 meta 不一致时取较新者，并如实列为附注。'],
+   ['只读不写','不自动下载、不替换本机文件、不执行远端代码；要不要切到线上版本，完全由你决定。']]
+  .forEach(([t,d],i)=>{
+    const r=spEl('div','pol-step');
+    r.append(spEl('i','',String(i+1)));
+    const tx=spEl('span',''); tx.append(spEl('b','',t+' · '));
+    tx.append(document.createTextNode(d)); r.append(tx); steps.append(r);
+  });
+  c.append(steps);
+
+  c.append(spEl('div','pol-h','两个版本号不要混在一起看'));
+  const v=spEl('div','pol-note');
+  v.append(spEl('b','',IRIS_APP_BASELINE));
+  v.append(document.createTextNode(' 是四段式的「安装包基线」，代表最后一个 Release；'));
+  v.append(spEl('b','',IRIS_VERSION));
+  v.append(document.createTextNode(' 是三段式的「页面版本」，代表你正在运行的 HTML。'
+    +'两者分属不同通道，不互相比较 —— 检查更新只比页面版本。'
+    +'页面显示「已是最新版本」说的是 HTML，不是安装包；安装包号会一直停在 '
+    +IRIS_APP_BASELINE+'，这是正常的。'));
+  c.append(v);
+
+  c.append(spEl('div','pol-h','作者发布新版只要三步'));
+  const pub=spEl('div','pol-steps');
+  [['覆盖同源副本','把新的 web/index.html 传到仓库，并同步 desktop/、android/assets/、'
+     +'ios/Resources/ 几处同源副本 —— 五端共用同一份文件。'],
+   ['改版本标记','更新页面头部的 <meta name="iris-version">，可选更新根目录 version.json。'],
+   ['结束','不用打 tag、不用发 Release、不用跑 Gradle / Xcode / electron-builder，'
+     +'不用重新签名，也不用重新提交应用商店。']]
+  .forEach(([t,d],i)=>{
+    const r=spEl('div','pol-step'); r.append(spEl('i','',String(i+1)));
+    const tx=spEl('span',''); tx.append(spEl('b','',t+' · '));
+    tx.append(document.createTextNode(d)); r.append(tx); pub.append(r);
+  });
+  c.append(pub);
+
+  const note=spEl('div','pol-note');
+  note.append(spEl('b','','你会看到什么：'));
+  note.append(document.createTextNode('线上 HTML 比本机新 → 提示「线上 HTML 已更新」，'
+    +'可一键打开仓库里的最新版页面查看；一致 → 「已是最新版本」；本机更超前 → 「本机页面版本更新」，'
+    +'通常说明手上这份还没上传。自动检查默认关闭，开启后每次启动静默读一次线上版本，'
+    +'只有确实发现新版才提示一次。'));
+  c.append(note);
+  return c;
+}
 function renderUpdatePage(body){
   const w=spWrap(body);
   asHero(w,'IRIS · UPDATE','检查更新',
-    '对比本机版本与 <b>'+IRIS_UPD_CFG.owner+'/'+IRIS_UPD_CFG.repo+'</b> 上发布的最新版本。'
-    +'默认<b>不自动联网</b>，只有点下面的按钮才会读取 GitHub 的公开版本信息；'
+    'Release 已冻结在 <b>'+IRIS_APP_BASELINE+'</b>，之后只替换一份 HTML。'
+    +'这里对比的是 <b>'+IRIS_UPD_CFG.owner+'/'+IRIS_UPD_CFG.repo+'</b> 里线上页面的版本与本机页面版本。'
+    +'默认<b>不自动联网</b>，只有点下面的按钮才会读取；'
     +'照片、编辑内容与本机存档一个字节都不会发送。',
-    '单文件同源 · 网页 / Windows / Linux / macOS / Android / iOS 行为一致');
+    'HTML 热更新 · 安装包不用重装 · 五端同源');
 
   const st=spEl('div','pc-stat');
-  [[IRIS_VERSION,'当前版本'],[IRIS_BUILD,'构建日期'],
-   [IRIS_CHANNEL==='rc'?'RC':'正式','版本渠道'],['默认关','自动检查']]
-    .forEach(([v,t])=>{ const d=spEl('div',''); d.innerHTML='<b>'+v+'</b><small>'+t+'</small>'; st.append(d); });
+  [[IRIS_VERSION,'当前页面版本'],[IRIS_APP_BASELINE,'安装包基线 · 已冻结'],
+   ['HTML 热更新','更新方式'],['默认关','自动检查']]
+   .forEach(([v,t])=>{ const d=spEl('div',''); d.innerHTML='<b>'+v+'</b><small>'+t+'</small>'; st.append(d); });
   w.append(st);
+
+  /* 策略说明：Release 冻结 / HTML 热更新，放在首屏最前面 */
+  w.append(irisPolicyCard());
 
   const card=spEl('div','upd-card');
   card.append(spEl('div','sk-sec','本机信息 <em>版本写在页面里，不依赖服务器</em>'));
   const kv=spEl('div','upd-kv');
-  [['当前版本',IRIS_VERSION+(IRIS_CHANNEL==='rc'?'（Release Candidate）':'')],
-   ['构建日期',IRIS_BUILD],['基于发布版',IRIS_SOURCE_TAG],
+  [['当前页面版本',IRIS_VERSION+'（HTML 热更新通道）'],
+   ['安装包基线',IRIS_APP_BASELINE+' · 最终 Release，已冻结，不再更新'],
+   ['构建日期',IRIS_BUILD],['最后一个 tag',IRIS_SOURCE_TAG],
    ['检查目标',IRIS_UPD_CFG.owner+'/'+IRIS_UPD_CFG.repo+' · '+IRIS_UPD_CFG.branch+' · '+IRIS_UPD_CFG.path],
    ['最近检查',IRIS_UPD_LAST?irisFmtTime(IRIS_UPD_LAST.checkedAt):'尚未检查']]
    .forEach(([k,v])=>{
@@ -11822,15 +12060,18 @@ function renderUpdatePage(body){
   const btns=spEl('div','upd-btns');
   const b1=spEl('button','pri upd-btn','⟳ 检查更新');
   const b2=spEl('button','upd-btn','⌁ 深度比对线上文件');
-  const b3=spEl('button','upd-btn','↗ 打开 Releases');
+  const b3=spEl('button','upd-btn','↗ 打开线上最新版 HTML');
+  const b4=spEl('button','upd-btn','↗ Releases（已冻结）');
   b1.onclick=async()=>{ await irisRunUpdate(b1,false); };
   b2.onclick=async()=>{ await irisRunUpdate(b2,true); };
-  b3.onclick=()=>irisOpenExternal(irisRepoUrls(IRIS_UPD_CFG).releases);
-  btns.append(b1,b2,b3); card.append(btns);
+  b3.onclick=()=>irisOpenExternal(irisRepoUrls(IRIS_UPD_CFG).pageView);
+  b4.onclick=()=>irisOpenExternal(irisRepoUrls(IRIS_UPD_CFG).releases);
+  btns.append(b1,b2,b3,b4); card.append(btns);
   card.append(spEl('div','fparam-tip',
-    '「检查更新」只请求一次 Releases 接口（约 2KB）；「深度比对」会再并行读取页面最近提交、'
-    +'线上页面头部 16KB 与可选的 version.json，用来确认仓库里的 HTML 究竟是哪一版。'
-    +'部分网络下 raw.githubusercontent.com 可能不可达，此时会如实标注，主结论仍以 Release 为准；'
+    '「检查更新」只请求一次线上 web/index.html 的头部（流式 16KB，读到版本 meta 即断）；'
+    +'「深度比对」会再读取可选的 version.json、线上页面最近提交与已冻结的 Release 基线。'
+    +'<b>版本结论只由线上 HTML 决定，不再看 Release tag</b> —— 因为安装包不会再发新版。'
+    +'部分网络下 raw.githubusercontent.com 可能不可达，此时会如实标注；'
     +'两种方式都不会下载或执行远端代码，最坏等待约 4 秒。'));
   w.append(card);
 
@@ -11872,9 +12113,10 @@ function renderUpdatePage(body){
   };
   const sb=spEl('div','upd-btns'); sb.append(save,reset); inner.append(sb);
   inner.append(spEl('div','fparam-tip',
-    '仓库地址可在 fork / 改名后自行调整。若根目录放一个 <b>version.json</b>'
-    +'（形如 {"version":"1.0.4","build":"2026-11-11"}），即使 GitHub 接口限流也能比对版本；'
-    +'没有这个文件也没关系，会自动改用 Release 与页面头部的版本 meta。'));
+    '仓库地址可在 fork / 改名后自行调整。主判据永远是线上 HTML 头部的版本 meta；'
+    +'根目录放一个可选的 <b>version.json</b>（形如 {"version":"1.0.19","appBaseline":"1.0.1.8"}）'
+    +'可让发布者显式声明版本，两者不一致时取较新者。'
+    +'<b>不需要打 tag，也不需要发新 Release。</b>'));
   fold.append(inner); w.append(fold);
 
   const priv=spEl('div','upd-card upd-priv');
@@ -11884,8 +12126,10 @@ function renderUpdatePage(body){
    '只读取公开信息：api.github.com 的 Release 元数据，以及 raw.githubusercontent.com 上的版本标记。',
    '请求不带 Cookie、不带 Referrer、不带自定义头，也不发送照片、编辑参数、本机存档或设备标识。',
    '远端文本只用于显示，绝不插入 DOM、绝不执行；外链只放行 https 的 GitHub 域名。',
-   '检查更新不会自动下载或替换文件，也不会改动当前正在编辑的照片。',
-   'GitHub 匿名接口限流为每小时 60 次；限流时会自动降级到 raw 文件通道，并如实告知。']
+   '检查更新不会自动下载、替换或执行远端 HTML，也不会改动当前正在编辑的照片；'
+     +'本机页面副本是否更新，始终由你自己决定。',
+   '安装包版本号固定为 '+IRIS_APP_BASELINE+'，不会随 HTML 变化；页面版本才会在热更新时递增。',
+   'GitHub 匿名接口限流为每小时 60 次；本功能主通道走 raw 文件，不依赖该接口，限流也不影响版本结论。']
    .forEach(t=>{ const d=spEl('div','upd-priv-i',''); d.textContent=t; ul.append(d); });
   priv.append(ul); w.append(priv);
   /* 页面开着时，任何一次检查（含启动自动检查）都刷新结果；关闭后自动失效 */
@@ -11899,7 +12143,7 @@ async function irisRunUpdate(btn,deep){
   const old=btn.textContent;
   btn.textContent='检查中…'; btn.disabled=true;
   const res=document.getElementById('updResult');
-  if(res) res.innerHTML='<div class="upd-loading">正在读取 GitHub 的公开版本信息…</div>';
+  if(res) res.innerHTML='<div class="upd-loading">正在读取线上 HTML 的版本标记…</div>';
   try{
     const out=await irisCheckUpdate({deep:deep});
     if(res) renderUpdateResult(res,out);
@@ -11913,7 +12157,7 @@ function renderUpdateResult(box,out){
   const wrap=spEl('div','upd-card');
   if(!out){
     wrap.append(spEl('div','sk-sec','检查结果 <em>尚未检查</em>'));
-    const p=spEl('div','upd-empty','还没有检查过。点上面的「检查更新」读取仓库里的最新版本；不检查就永远不会联网。');
+    const p=spEl('div','upd-empty','还没有检查过。点上面的「检查更新」读取线上 HTML 的版本标记；不检查就永远不会联网。安装包基线 '+IRIS_APP_BASELINE+' 已冻结，之后只替换 HTML。');
     wrap.append(p); box.append(wrap); return;
   }
   const head=spEl('div','upd-head');
@@ -11924,23 +12168,25 @@ function renderUpdateResult(box,out){
 
   const kv=spEl('div','upd-kv');
   const rows=[
-    ['本机版本',out.local.version+(out.local.channel==='rc'?'（RC）':'')],
-    ['线上版本',out.remote||'未读到版本号'],
+    ['本机页面版本',out.local.version+(out.local.channel==='hot'?'（HTML 热更新通道）':'')],
+    ['线上页面版本',out.remote||'未读到版本号'],
+    ['安装包基线',(out.appBaseline||IRIS_APP_BASELINE)+' · 最终 Release，已冻结，不参与判定'],
+    ['判据来源',out.remoteSource||'—'],
     ['数据来源',out.sources.length?out.sources.join('、'):'无'],
-    ['接口余量',out.rate!==undefined&&out.rate!==null?('剩余 '+out.rate+' 次 / 小时'):'—']
+    ['接口余量',out.rate!==undefined&&out.rate!==null?('剩余 '+out.rate+' 次 / 小时（仅深度比对读取）'):'—']
   ];
   if(out.release&&out.release.kind==='ok'){
+    rows.push(['最后 Release',out.release.name||out.release.tag]);
     rows.push(['发布时间',irisFmtTime(out.release.published)]);
-    rows.push(['Release',out.release.name||out.release.tag]);
   }
   if(out.pageMeta&&!out.pageMeta.error){
     /* 不显示 content-length：GitHub raw 走 gzip，那是压缩后的传输字节，
        不是文件真实大小，写出来会误导。只报告读到了什么版本标记。 */
-    rows.push(['线上页面','已读取头部 · '+(out.pageMeta.legacy
+    rows.push(['线上 HTML','已读取头部 · '+(out.pageMeta.legacy
       ?'旧版格式（未内嵌版本 meta）':'内嵌版本 '+out.pageMeta.version)]);
   }
   if(out.lastCommit&&out.lastCommit.sha){
-    rows.push(['页面最近提交',out.lastCommit.sha+' · '+irisFmtTime(out.lastCommit.date)
+    rows.push(['HTML 最近提交',out.lastCommit.sha+' · '+irisFmtTime(out.lastCommit.date)
       +(out.lastCommit.msg?' · '+out.lastCommit.msg:'')]);
   }
   rows.forEach(([k,v])=>{
@@ -11951,10 +12197,14 @@ function renderUpdateResult(box,out){
 
   const msg=spEl('div','upd-msg');
   msg.textContent=({
-    new:'仓库里已发布比本机更新的版本。下面的链接可以打开 Release 页面查看更新内容与安装包；本功能不会替你自动下载或替换文件。',
-    same:'本机版本与线上最新发布一致，无需更新。',
-    ahead:'本机版本比仓库里已发布的版本更新 —— 通常说明你手上这份是尚未上传 / 尚未打 tag 的开发版。把这版页面传上去并发布对应 tag 后，就会显示「已是最新版本」。',
-    unknown:'没有拿到可比较的版本号。可能是仓库还没有 Release、页面是未带版本标记的旧格式，或网络受限。下面列出了具体原因。',
+    new:'线上那份 HTML 比本机的更新了。这只是一次「页面热更新」—— 安装包不用重装、也不用重新构建；'
+      +'点下面的「打开线上最新版 HTML」可查看仓库里的最新页面。安装包基线永远是 '+IRIS_APP_BASELINE
+      +'，不会跟着变。本功能不会替你自动下载、替换或执行远端文件。',
+    same:'本机页面版本与线上 HTML 一致，已是最新。安装包基线 '+IRIS_APP_BASELINE+' 已冻结，不需要任何操作。',
+    ahead:'本机页面版本比线上 HTML 更新 —— 通常说明你手上这份还没上传到仓库。'
+      +'把 web/index.html 覆盖上去、同步几处同源副本即可，<b>不用打 tag、不用发 Release、不用重新构建安装包</b>。',
+    unknown:'没有拿到线上 HTML 的版本号。可能是线上页面还没有内嵌版本 meta、路径配置不对，或网络受限；'
+      +'安装包基线固定为 '+IRIS_APP_BASELINE+'，不参与判定。下面列出了具体原因。',
     error:'检查没有完成。编辑与导出功能完全不受影响，可稍后重试。'
   })[out.status]||'';
   wrap.append(msg);
@@ -11967,12 +12217,12 @@ function renderUpdateResult(box,out){
   }
   if(out.release&&out.release.kind==='ok'&&out.release.body){
     const det=document.createElement('details'); det.className='upd-fold upd-notes';
-    const su=document.createElement('summary'); su.textContent='查看本次 Release 的更新说明'; det.append(su);
+    const su=document.createElement('summary'); su.textContent='查看最后一份 Release 的更新说明（已冻结）'; det.append(su);
     const pre=spEl('div','upd-body',''); pre.textContent=out.release.body; det.append(pre);
     wrap.append(det);
   }
   if(out.release&&out.release.kind==='ok'&&out.release.assets&&out.release.assets.length){
-    const ah=spEl('div','sk-sec','发布资源 <em>点击交给系统浏览器下载 · 不在页面内加载</em>');
+    const ah=spEl('div','sk-sec','历史安装包资源 <em>Release 已冻结 · 后续更新不再需要下载</em>');
     wrap.append(ah);
     const list=spEl('div','upd-assets');
     out.release.assets.forEach(a=>{
@@ -11987,18 +12237,20 @@ function renderUpdateResult(box,out){
     wrap.append(list);
   }
   const acts=spEl('div','upd-btns');
-  const b1=spEl('button','upd-btn','↗ 打开仓库');
-  b1.onclick=()=>irisOpenExternal(out.urls.repo);
-  const b2=spEl('button','upd-btn','↗ 打开 Releases');
-  b2.onclick=()=>irisOpenExternal(out.urls.releases);
-  const b3=spEl('button','upd-btn','⧉ 复制 Release 链接');
-  b3.onclick=()=>{
-    const u=(out.release&&out.release.kind==='ok')?out.release.url:out.urls.releases;
+  const b1=spEl('button','upd-btn pri','↗ 打开线上最新版 HTML');
+  b1.onclick=()=>irisOpenExternal(out.urls.pageView||out.urls.repo);
+  const b2=spEl('button','upd-btn','↗ 打开仓库');
+  b2.onclick=()=>irisOpenExternal(out.urls.repo);
+  const b3=spEl('button','upd-btn','↗ Releases（已冻结）');
+  b3.onclick=()=>irisOpenExternal(out.urls.releases);
+  const b4=spEl('button','upd-btn','⧉ 复制线上页面链接');
+  b4.onclick=()=>{
+    const u=out.urls.pageView||out.urls.repo;
     if(irisSafeUrl(u)&&navigator.clipboard&&navigator.clipboard.writeText){
       navigator.clipboard.writeText(u).then(()=>toast('链接已复制'),()=>toast('复制失败，请手动打开'));
     }else toast('复制失败，请手动打开');
   };
-  acts.append(b1,b2,b3); wrap.append(acts);
+  acts.append(b1,b2,b3,b4); wrap.append(acts);
   box.append(wrap);
 }
 
@@ -12007,7 +12259,7 @@ function renderUpdateResult(box,out){
 setTimeout(()=>{
   if(!IRIS_UPD_CFG.auto) return;
   irisCheckUpdate({deep:false,silent:true}).then(o=>{
-    if(o&&o.status==='new') toast('发现新版本 '+(o.remote||'')+' · 打开「检查更新」查看');
+    if(o&&o.status==='new') toast('线上 HTML 已更新到 '+(o.remote||'')+' · 安装包不用重装');
   }).catch(()=>{});
 },2200);
 
@@ -12442,7 +12694,7 @@ function renderMoreMenu(){
   pgrid.append(hub);
   menu.append(pgrid);
   const tip=document.createElement('div'); tip.className='more-tip';
-  tip.textContent='数字键 1–9 / 0 切换工具 · 23 个独立页面统一收在「页面中心」，折叠分组不刷屏'; menu.append(tip);
+  tip.textContent='数字键 1–9 / 0 切换工具 · 22 个独立页面统一收在「页面中心」，折叠分组不刷屏'; menu.append(tip);
 }
 document.addEventListener('click',e=>{
   if(moreOpen&&!e.target.closest('#moreMenu')&&!e.target.closest('.tool')){
@@ -12647,10 +12899,10 @@ function buildPlate(p){
     if(isMobile()) tonePickerOpen=false;   // 手机上选完即收起，立刻回到调色盘
     buildPanel(true);
   }));
-  /* 主盘（全局 · 全部）才有20 种模式；其余 11 色调 / 层归属仍是原分色调盘 */
+  /* 主盘（全局 · 全部）才有 30 种模式；其余 11 色调 / 层归属仍是原分色调盘 */
   const isMain=state.plateScope==='global'&&state.plateTarget==='all';
   if(isMain){
-    /* 20 款按 5 组折叠：默认只占一行，点开才构建 20 个 chip。
+    /* 30 款按 7 组折叠：默认只占一行，点开才构建 30 个 chip。
        折叠状态记住，选完一款自动收起，立刻回到盘面。 */
     let foldOpen=false;
     try{ foldOpen=localStorage.getItem('iris_pad_mode_fold')==='1'; }catch(e){}
@@ -12684,7 +12936,7 @@ function buildPlate(p){
     }
     const body=document.createElement('div'); body.className='pm-body'; fold.append(body);
     function buildPmBody(){
-      if(body.childElementCount) return;   // 懒构建：收起时不创建 20 个 DOM
+      if(body.childElementCount) return;   // 懒构建：收起时不创建 30 个 DOM
       PAD_GROUPS.forEach(g=>{
         const sec=document.createElement('div'); sec.className='pm-grp';
         const h=document.createElement('h5'); h.textContent=g.name; sec.append(h);
@@ -12845,13 +13097,13 @@ function buildPlate(p){
   sum.textContent='操作说明 · 已启用色调 ('+act.length+')';
   s3.append(sum);
   s3.append(hint(isMain
-    ? '<b>'+mm.name+'</b>：'+mm.desc+'。20 种模式各自记住自己的两轴与强度，切换回来数值还在；'
+    ? '<b>'+mm.name+'</b>：'+mm.desc+'。30 种模式各自记住自己的两轴与强度，切换回来数值还在；'
       +'白点居中（零位）严格等于原图，不会引入偏色。向下滑还能看当前读数。'
     : '像 iPhone 一样：白点上下＝色调深浅，左右＝颜色彩度，下方横条＝套用强度。每个归属都有 12 个独立色调（高光/中间调/阴影 + 8 色相）。双击白点或滑杆可归零。'));
   s3.append(hint(semActive
     ? `语义轴：影调 ${state.sem.tone>0?'+':''}${Math.round(state.sem.tone*100)} / 颜色 ${state.sem.color>0?'+':''}${Math.round(state.sem.color*100)} / 强度 ${Math.round(state.sem.intensity*100)}。切到具体色相可继续做专业分色调。`
     : (act.length?act.map(t=>`${t.name} 色调${PL[t.id].y>0?'+':''}${Math.round(PL[t.id].y*100)} / 颜色${PL[t.id].x>0?'+':''}${Math.round(PL[t.id].x*100)}`).join('　·　'):'还没有调整任何色调，拖一下上面的白点试试。')));
-  s3.append(hint('主盘有 <b>语义感知 / 经典 12 色 / 电影双色 / 银盐黑白</b> 20 种模式，上方「盘模式」一行直接切换，互不串扰。'
+  s3.append(hint('主盘有 <b>语义感知 / 经典 12 色 / 电影双色 / 银盐黑白</b> 30 种模式，上方「盘模式」一行直接切换，互不串扰。'
     +'语义盘配色可跟随当前照片的大致色调；经典盘固定 iPhone 原生黄橙；电影盘与银盐盘各有专属盘面。'
     +'盘面只改变观感，不改变任何调色参数。'));
   p.append(s3);
@@ -13153,7 +13405,7 @@ function buildFilters(p){
       filterText='';filterGroup='我的';filterBrowse=false;buildPanel();
     }
   },'accent sm');
-  saveAll.title='把当前整套调色参数（滤镜层 / 12 色调 / 20 种盘模式 / HSL / 曲线 / 分级 等）存成一款可复用的滤镜，点击即存';
+  saveAll.title='把当前整套调色参数（滤镜层 / 12 色调 / 30 种盘模式 / HSL / 曲线 / 分级 等）存成一款可复用的滤镜，点击即存';
   tools.append(saveAll);
   const rnd=button('🎲',()=>mutate(()=>{
     const pool=FILTERS.filter(f=>f.name!=='原图'&&f.name!==cur.name&&!f.full&&!f.toneId);
@@ -14558,8 +14810,8 @@ function cropResize(start,h,u,v){
   }
   return cropClampBox([l,t,r,bo]);
 }
-/* 烘焙精度状态：参数键、上次变更时刻、精修定时器 */
-let GEOM_KEY='', GEOM_DIRTY_AT=0, GEOM_FINE_TIMER=0;
+/* 烘焙精度状态：参数键、精修定时器、精修标志 */
+let GEOM_KEY='', GEOM_FINE_TIMER=0, GEOM_FINE=false;
 function drawCropEditor(){
   if(tool!=='crop'||!imageReady||!LIVE.still){ cropEd.classList.remove('on'); return; }
   cropEd.classList.add('on');
@@ -14574,24 +14826,29 @@ function drawCropEditor(){
   cropGeo=cropGeometry(); if(!cropGeo) return;
   const {bw,bh,M}=cropGeo;
   // 完整画面：任意角度时用烘焙后的正矩形成品图，否则用原图（含 90° / 翻转）
-  /* 烘焙精度判定（v1.0.17 收尾）
-     之前用 burst（帧间隔 <100ms 累加）判断是否在连续交互：headless /
-     低端机一旦掉一帧到 >100ms，burst 归零，那一帧就跑去算 N=12 的
-     288 个三角 —— 实测 30 帧拖动里混进 5 个 40ms+ 的慢帧。
-     现在改成「参数键 + 时间窗」：参数一变就是连续编辑，固定用 N=6；
-     参数不变且过了 200ms，才由一次性定时器补一帧 N=12 精修。
-     与帧率完全解耦，再掉帧也不会突然卡一下。
+  /* 烘焙精度判定（v1.0.19 再修一处连锁卡顿）
+     之前是「参数键 + 200ms 时间窗」：参数不变且距上次变化超过 200ms，
+     就认为停手了、改用 N=12 精修。headless / 低端机一旦某帧掉到
+     >200ms，下一帧会误判为停手 → 跑 144 个三角 → 更慢 → 继续掉帧，
+     连锁出 5 个 40ms+ 慢帧。
+     现在改成「参数键 + 一次性定时器」：参数变化期间永远固定 N=6，
+     与帧率彻底解耦；只有 220ms 内没有新参数变化，定时器才把
+     GEOM_FINE 置 true 并补画一帧 N=12。之后静止帧一直保持精修画质，
+     下一次参数变化再把标志清回 false。
      另：试过拖动期把 cropEd 的 backing store 降到 72%，实测反而更慢
      （每帧改 canvas.width 会重新分配 backing store），已放弃。 */
-  let N=12;
+  let N=cropGeo.baked?6:12;
   if(cropGeo.baked){
     const k=irisAngleKey(0);                 // N 固定为 0 → 不含分辨率的参数键
-    const now=performance.now();
     if(k!==GEOM_KEY){
-      GEOM_KEY=k; GEOM_DIRTY_AT=now; N=6;
+      GEOM_KEY=k; GEOM_FINE=false;
       clearTimeout(GEOM_FINE_TIMER);
-      GEOM_FINE_TIMER=setTimeout(()=>{ GEOM_FINE_TIMER=0; try{ render(); }catch(e){} },220);
-    } else if(now-GEOM_DIRTY_AT<200) N=6;
+      GEOM_FINE_TIMER=setTimeout(()=>{
+        GEOM_FINE_TIMER=0; GEOM_FINE=true;
+        try{ render(); }catch(e){}
+      },220);
+    }
+    if(GEOM_FINE) N=12;
   }
   const base=(typeof cropGeo.baked!=='undefined'&&cropGeo.baked)
     ?irisGeomBake(N):LIVE.still;
@@ -15458,17 +15715,24 @@ const GUIDE_CHAPTERS=[
    +'<br><b>大照片也跟手</b>：导入时只降采样一次生成共享分析图，原图完整保留供导出；6000×4000 的照片首帧约 70ms 出画面，拖动调色盘不会逐像素重算。'
    +'<br><b>第一次打开</b>会看到一张自带的演示图，方便先试手感；一旦导入过自己的照片，之后再启动就不会再显示它，'
    +'而是换成一张写着「选择一张照片开始」的中性占位画面（点「继续上次的编辑」仍会换回上次那张真照片）。'},
- {id:'pad',t:'02 · 主调色盘与20 种模式',k:'调色盘 二维盘 白点 Tone Color 强度 颜色 影调 肤色锁 语义 模式 鲜艳 vivid 经典 电影 黑白 折叠 分组',
+ {id:'pad',t:'02 · 主调色盘与 30 种模式',k:'调色盘 二维盘 白点 Tone Color 强度 颜色 影调 肤色锁 语义 模式 鲜艳 vivid 经典 电影 黑白 折叠 分组 鲜亮通透 浓金溢彩 冷艳蓝调 清朗鲜明 柔光绽放 胶片人像 铂金影调 交叉冲印 哑光质地 双色调印 鲜活 工艺',
   b:'方盘横轴 <b>Color</b>（色温偏置 + 色度）、纵轴 <b>Tone</b>（暗部深度 + 对比斜率），下方强度条控套用量，顶部实时显示数值。'
    +'<br>与普通滤镜不同，它先在端侧生成低分辨率 <b>matte</b>（皮肤 / 天空 / 头发 / 亮部四通道），再对不同区域做不等权映射：'
    +'皮肤区乘 skin_mask 压回肤色流形，非皮肤区吃满用户值 —— 所以拖冷调脸不泛蓝、拖浓艳天空不爆橙。'
    +'<br>盘面颜色会跟着照片主色变化，可点盘下标签切回 iPhone 原生配色；「全局 · 全部」＝语义主盘。'
-   +'<br><b>20 种盘模式</b>（只在「全局 · 全部」主盘出现，顶部「盘模式」一行直接切换）：'
+   +'<br><b>30 种盘模式</b>（只在「全局 · 全部」主盘出现，顶部「盘模式」一行直接切换）：'
    +'<b>语义感知</b>＝端侧分割 + 肤色锁，拖冷调脸不偏蓝；<b>经典 12 色</b>＝iPhone 原生盘的直觉映射，固定黄橙盘面；'
    +'<b>电影双色</b>＝冷阴影 + 暖高光 + S 型对比，青金渐变盘；<b>银盐黑白</b>＝白点离开中心才逐渐转黑白，横向控冷银 / 暖棕、纵向控反差，灰阶盘。'
-   +'20 种模式<b>各自记住自己的两轴与强度</b>，切回来数值还在；白点居中（零位）严格等于原图，不会引入偏色。'
+   +'30 种模式<b>各自记住自己的两轴与强度</b>，切回来数值还在；白点居中（零位）严格等于原图，不会引入偏色。'
       +'它们复用同一套渲染参数，不新增着色器通道，所以切换与拖动都不掉帧。'
-   +'<br><b>20 种模式按「直觉 / 影调 / 色彩 / 风格 / 专项」5 组折叠</b>，默认只占一行，点开才显示全部；'
+   +'<br><b>30 种模式按「直觉 / 影调 / 色彩 / 风格 / 专项 / 鲜活 / 工艺」7 组折叠</b>，默认只占一行，点开才显示全部；'
+    +'收起时连一个 chip 的 DOM 都不创建，30 款与 20 款时一样轻。'
+    +'其中<b>「鲜艳」</b>一键把饱和度、鲜明度与明快感一起推上去，有高光保护，不会溢色糊成一片。'
+    +'<br><b>v1.0.20 新增 10 款</b>：「鲜活」组 3 款鲜艳家族 —— <b>鲜亮通透</b>（清透向）、'
+    +'<b>浓金溢彩</b>（暖金向）、<b>冷艳蓝调</b>（冷蓝向），名字与原有「鲜艳」及彼此都不重复，'
+    +'各带高光保护或肤色锁；另有<b>清朗鲜明 / 柔光绽放</b>两款不浓艳的配套。'
+    +'「工艺」组 5 款走印相与冲扫方向：<b>胶片人像 / 铂金影调 / 交叉冲印 / 哑光质地 / 双色调印</b>，'
+    +'与原有 20 款不重名、不撞方向。全部仍是同一张表驱动的定长循环，模式数增加不改变每帧成本。'
    +'其中<b>「鲜艳」</b>一键把饱和度、鲜明度与明快感一起推上去，有高光保护，不会溢色糊成一片。'
    +'<br>折叠行右侧的 <b>ⓘ</b> 点开才显示当前模式的完整说明，桌面把鼠标停在选项上也能看到；默认不占画面。'},
  {id:'targets',t:'03 · 12 种独立色调',k:'色调 高光 中间调 阴影 红橙黄绿青蓝紫品红 归属 分层',
@@ -15568,7 +15832,7 @@ const GUIDE_CHAPTERS=[
  {id:'search',t:'15 · 全局搜索与快捷键',k:'搜索 Ctrl K 快捷键 命令面板 1-9 空格 对比 Esc',
   b:'顶栏放大镜或 Ctrl/⌘+K（也可按 /）打开全局搜索：工具、433 款滤镜、调整参数、78 套内置模板与我的色调、常用操作都能搜到，'
    +'↑↓ 选择、Enter 执行、Esc 关闭。搜「色温」会跳到对应滑杆并高亮；'
-  +'折叠起来的 <b>20 种盘模式</b>也能直接搜名字（如「鲜艳」「人像」「红外」）一键切换。'
+  +'折叠起来的 <b>30 种盘模式</b>也能直接搜名字（如「鲜艳」「人像」「红外」）一键切换。'
    +'<br>常用：Ctrl/⌘+Z 撤销、+Shift+Z 重做、空格按住看原图、R 分屏对比、E 导出、L 播放实况、'
    +'1–9/0 切换工具、F 收起编辑栏、\\ 切填满 / 适应。完整清单在预设页「关于」栏。'},
  {id:'archive',t:'16 · 参数存档与隐私',k:'参数 JSON 复制 粘贴 预设 自定义滤镜 localStorage 隐私 不上传 撤销 重做',
@@ -15577,7 +15841,7 @@ const GUIDE_CHAPTERS=[
    +'<br>预设页「编辑参数」可复制 / 粘贴参数、导出 / 导入 JSON；自定义滤镜、收藏、最近使用与界面偏好存在本机 localStorage。'
       +'<br><b>「我的空间」</b>（独立页面，顶栏「⋯」与页面中心首屏都能进）：一页看到<b>历史编辑过的图片</b>（本机最多 12 张，含缩略图、参数与原图，点「继续编辑」回到那一版）、'
   +'<b>我创作的滤镜 / 全套参数 / 色调</b>（可套用、重命名、删除）、书签、导出记录与最近使用。'
-  +'<br><b>「一键保存所有参数」</b>（滤镜页 / 我的空间 / 全局搜索）：点击即把滤镜层、每层独立盘、12 色调、20 种盘模式、'
+  +'<br><b>「一键保存所有参数」</b>（滤镜页 / 我的空间 / 全局搜索）：点击即把滤镜层、每层独立盘、12 色调、30 种盘模式、'
   +'基础调整、HSL、曲线、分级、分色、通道混合、光效、蒙版形状、光场、虚化、画框与色调迁移目标整套存成一款滤镜；'
   +'明确不带文字贴纸、涂抹笔迹、裁剪与导出规格。套用时是整套参数而非叠一层滤镜，完全非破坏、可撤销。'
 +'<br><b>自动保存</b>：每次编辑后约 1 秒自动把【照片原始字节 + 完整编辑状态 + 缩略图】写进本机 IndexedDB；退出或切后台会再补一次落盘。重新打开时会弹卡询问「是否编辑上次的照片」，可选继续编辑 / 重新开始 / 稍后，也能在「自动保存」页设为直接恢复或彻底关闭。演示图与待载入占位都不入档；<b>演示图只在第一次启动出现</b>，之后启动是中性占位画面，点「重新开始 / 稍后」也不会退回到测试图。浏览器不允许 IndexedDB 时会降级为「只存参数 + 缩略图」，恢复时明确要求重新选照片，不会假装成功。'
@@ -15645,32 +15909,52 @@ const GUIDE_CHAPTERS=[
    +'<br><b>启动加载页</b>：<b>每次</b>打开、刷新或从后台返回都会先看到一张启动页 —— 12 段虹彩环、中心白点、品牌名、英文 tagline 与细进度条，底部写着「本地渲染 · 照片不出设备」。它<b>最多显示 3 秒</b>（通常约 2.6 秒），不拦截任何点击与拖拽，后面界面照常可用；跟随当前主题配色，在「减少动画」或关闭界面动效时会自动变成更短的静态版本。'
    +'<br>偏好写在本机 localStorage，刷新不闪回默认；清除站点数据即恢复。'
    +'<b>切换外观不影响照片、任何编辑参数、自动保存快照与导出结果。</b>'},
- {id:'update',t:'22 · 检查更新与版本',k:'检查更新 版本 GitHub Release 最新 tag 自动检查 联网 限流 版本比对 发布',
-  b:'顶栏「⋯ → 页面中心 → 设备与状态 → 检查更新」、全局搜索「检查更新」，或桌面「帮助 → 检查更新」打开独立页面。'
-   +'<br><b>① 默认不联网</b>：不点检查、不开自动检查时，页面依然零外部请求，断网可完整使用。这是本软件唯一会发起网络请求的功能，而且必须你主动触发。'
-   +'<br><b>② 快速检查</b>只读取一次 GitHub Releases API 的公开元数据（约 2KB）：tag、发布时间、更新说明与发布资源列表，用宽松 semver 与页面内嵌版本号比较。'
-   +'<br><b>③ 深度比对</b>会再读取仓库 <b>web/index.html</b> 的头部 16KB，提取内嵌的 <code>iris-version</code> 版本标记，以及可选的 <code>version.json</code>；'
-   +'用来确认仓库里那份页面究竟是哪一版。用流式读取后立刻 cancel 连接，不会下载整份 800KB 文件。'
-   +'<br><b>④ 三种结论</b>：线上更新 → 「发现新版本」；一致 → 「已是最新版本」；本地更超前 → 「本地版本更新」'
-   +'（通常说明你手上这份还没上传 / 还没打 tag）。查不到版本号时如实列出原因，不会假装成功。'
-   +'<br><b>⑤ 自动检查</b>默认关闭；开启后每次启动延迟 2 秒发一次快速检查，只有确实发现新版本才提示一次，其余完全静默。'
-   +'<br><b>⑥ 发布新版本</b>：把这版 HTML 传到仓库（web/index.html 等几处同源副本），再打一个形如 <code>v1.0.17</code> 的 Release tag，'
-   +'页面里的版本 meta 与 tag 就会一起生效。想让限流时也能比对，可在根目录放一个 <code>version.json</code>。'
-   +'<br><b>⑦ 卡顿时先看诊断页</b>：「运行状态诊断」里有实时帧率、帧耗时 p50/p95、超过 50ms 的长任务次数、异常数与 WebGL 上下文丢失 / 恢复次数，点「⧉ 复制诊断信息」可把整段发给作者。这些都是本机数据，不上传。'
-   +'<br><b>隐私</b>：请求不带 Cookie / Referrer / 自定义头，不发送照片、编辑参数或本机存档；远端文本只用于显示，'
-   +'绝不插入页面或执行；外链只放行 https 的 GitHub 域名。检查更新不会自动下载或替换文件。'
-   +'<br>GitHub 匿名接口限流 60 次/小时，达到上限会自动降级到 raw 文件通道，并在结果里显示剩余次数。'},
-    {id:'video',t:'23 · 视频工作台',k:'视频工作台 加滤镜 一键滤镜 滤镜条 调色盘 片段调色盘 圆盘 二维盘 拖盘 强度 常用盘 全部盘模式 盘同步全部 去掉滤镜 顶部 tab 工具 tab 时间线 拖拽 排序 拖不动 播放头 裁时长 触屏 检查器 折叠 关键帧 转场 运镜 帧精确 导出视频 流畅 风格库 433 78 模板 20 盘模式 combo 样式统一',
-  b:'顶栏「导出 ▾ → 视频工作台」、顶栏「⋯ → 视频工作台」、页面中心「输出与文件」、全局搜索「视频工作台」「加滤镜」「调色盘」打开独立全屏页。'
+ {id:'update',t:'22 · 检查更新 · Release 冻结与 HTML 热更新',k:'检查更新 版本 GitHub Release 冻结 1.0.1.8 HTML 热更新 自动更新 重新构建 apk ipa 安装包 页面版本 版本 meta 自动检查 联网 限流',
+   b:'顶栏「⋯ → 页面中心 → 设备与状态 → 检查更新」、全局搜索「检查更新」，或桌面「帮助 → 检查更新」打开独立页面。'
+    +'<br><b>① 为什么要改更新方式</b>：Iris 现在已经装进 Android / iOS / Windows / Linux / macOS 的应用壳里，'
+    +'外壳只负责加载一个 HTML 文件，调色、滤镜、界面与全部功能逻辑都在这份文件里。'
+    +'以前每改一次都要重跑 Gradle / Xcode / electron-builder、重新签名、重新出包，很没必要。'
+    +'所以<b>最终安装包 / Release 版本冻结在 1.0.1.8</b>，此后 GitHub 不再发布新 Release、不再打 tag，'
+    +'所有改动只替换 <code>web/index.html</code> 一份文件，App 不用重装。'
+    +'<br><b>② 两个版本号分属两条通道</b>：<code>1.0.1.8</code> 是四段式的安装包基线，'
+    +'代表最后一个 Release；<code>'+IRIS_VERSION+'</code> 是三段式的页面版本，代表你正在运行的 HTML。'
+    +'两者<b>不互相比较</b>，检查更新只比页面版本。「已是最新版本」说的是 HTML，不是安装包；'
+    +'安装包号会一直停在 1.0.1.8，这是正常的。'
+    +'<br><b>③ 默认不联网</b>：不点检查、不开自动检查时，页面依然零外部请求，断网可完整使用。'
+    +'这是本软件唯一会发起网络请求的功能，而且必须你主动触发。'
+    +'<br><b>④ 快速检查</b>只发 1 个请求，流式读取线上 <code>web/index.html</code> 的头部 16KB，'
+    +'提取内嵌的 <code>iris-version</code> 版本标记后立即断开连接，不下载整份文件。'
+    +'<b>版本结论只由线上 HTML 决定，不再看 Release tag</b>。'
+    +'<br><b>⑤ 深度比对</b>再读可选的 <code>version.json</code>、线上页面最近一次提交，'
+    +'以及已冻结的 Release 基线（只作展示）。<code>version.json</code> 与页面 meta 不一致时取较新者，并如实列为附注。'
+    +'<br><b>⑥ 三种结论</b>：线上 HTML 更新 → 「线上 HTML 已更新」，可一键打开仓库里的最新版页面查看；'
+    +'一致 → 「已是最新版本」；本机页面更超前 → 「本机页面版本更新」，通常说明手上这份还没上传。'
+    +'查不到版本号时如实列出原因，不会假装成功。'
+    +'<br><b>⑦ 自动检查</b>默认关闭；开启后每次启动延迟 2 秒静默读一次线上版本，只有确实发现新版才提示一次，其余完全静默。'
+    +'<br><b>⑧ 作者发布新版只要三步</b>：把这版 HTML 传到仓库的 <code>web/index.html</code>，'
+    +'并同步 <code>desktop/</code>、<code>android/assets/</code>、<code>ios/Resources/</code> 几处同源副本；'
+    +'更新页面头部的版本 meta（可选更新根目录 <code>version.json</code>）；结束。'
+    +'<b>不用打 tag、不用发 Release、不用重新构建安装包、不用重新签名，也不用重新提交应用商店。</b>'
+    +'<br><b>⑨ 安全边界</b>：检查更新<b>只读取、不写入</b> —— 不自动下载、不替换本机文件、不执行远端 HTML，'
+    +'也不改动当前正在编辑的照片；本机页面副本是否更新，始终由你自己决定。'
+    +'请求不带 Cookie / Referrer / 自定义头，不发送照片、编辑参数或本机存档；'
+    +'远端文本只用于显示，绝不插入页面或执行；外链只放行 https 的 GitHub 域名。'
+    +'主通道走 raw 文件，不依赖 GitHub API，匿名限流 60 次/小时也不影响版本结论。'
+    +'<br><b>⑩ 卡顿时先看诊断页</b>：「运行状态诊断」里有实时帧率、帧耗时 p50/p95、超过 50ms 的长任务次数、异常数与 WebGL 上下文丢失 / 恢复次数，点「⧉ 复制诊断信息」可把整段发给作者。这些都是本机数据，不上传。'},
+    {id:'video',t:'23 · 视频工作台（暂未开放）',k:'视频工作台 加滤镜 一键滤镜 滤镜条 调色盘 片段调色盘 圆盘 二维盘 拖盘 强度 常用盘 全部盘模式 盘同步全部 去掉滤镜 顶部 tab 工具 tab 时间线 拖拽 排序 拖不动 播放头 裁时长 触屏 检查器 折叠 关键帧 转场 运镜 帧精确 导出视频 流畅 风格库 433 78 模板 30 盘模式 combo 样式统一',
+  b:'<b style="color:var(--accent)">⚠ 视频工作台暂未开放</b>：这一章记录的是打磨中的多片段视频编辑设计，'
+    +'当前版本的入口已隐藏、导出菜单里的视频项已置灰，下面的操作暂时用不上；'
+    +'代码与设置都保留着，等打磨完成会直接恢复。照片、GIF、实况配对素材与打包导出不受影响，照常使用。'
+    +'<br>（恢复后）顶栏「导出 ▾ → 视频工作台」、页面中心「输出与文件」、全局搜索「视频工作台」打开独立全屏页。'
    +'<br><b>① 先说主界面的顶部 tab</b>：原来 5 个工具切换（调色盘 / 滤镜 / 调整 / 元素 / 更多）挂在底部编辑区，'
    +'屏幕 64% 处才出现，看着像掉到页面下半截。现在它们<b>搬进顶栏</b>：宽屏与品牌、导出按钮同排居中，'
    +'窄屏自动变成顶栏第二行；点「全屏看图」收起编辑区时一起隐藏。预设页的「风格 / 导出 / 关于」三栏也改成滚动吸顶。'
    +'<br><b>② 视频页首屏只有三件事</b>：预览 + 播放条、<b>片段调色盘</b>、<b>一键滤镜条</b>。'
    +'大段介绍、统计卡、8 个工具栏按钮、11 根滑杆全部收进折叠或压缩成一行，不再一屏塞满。'
    +'<br><b>③ 片段调色盘：一个圆盘 + 一根强度条</b>'
-   +'（不需要理解「起点 A / 终点 B」、不需要打关键帧、不需要选 20 种模式才能开始）。'
+   +'（不需要理解「起点 A / 终点 B」、不需要打关键帧、不需要选 30 种模式才能开始）。'
    +'<b>横轴 COLOR 冷↔暖、纵轴 TONE 亮↔暗，白点离中心越远效果越浓</b>，拖动时画面立刻变，松手即存进当前片段。'
-   +'右侧只有 4 个常用盘 chip（鲜艳 / 电影双色 / 暖金日落 / 冷调电影），其余 16 种收在「全部 20 种盘模式」折叠里；'
+   +'右侧只有 4 个常用盘 chip（鲜艳 / 电影双色 / 暖金日落 / 冷调电影），其余 26 种收在「全部 30 种盘模式」折叠里；'
    +'下面一根「效果强度」，四个按钮：<b>↺ 归零</b>、<b>⧉ 盘同步全部</b>（把当前盘位复制到整条时间线）、'
    +'<b>✕ 去掉滤镜</b>（只清滤镜、盘调整保留）、<b>✦ 去加滤镜</b>。'
    +'卡上实时显示盘位数值与「当前滤镜」，切换片段时盘跟着切。'
@@ -15695,7 +15979,7 @@ const GUIDE_CHAPTERS=[
    +'<br><b>⑦ 检查器默认很轻</b>：只显示名称、时长、转场、运镜四个字段和一行「当前风格 → ⇄ 换滤镜」。'
    +'「高级：起点 A → 终点 B 混合」与「高级：关键帧与动画参数」（11 根滑杆）都收进折叠，'
    +'展开状态跨重建保留，功能一个没删。工具栏次要操作收进「更多操作」。'
-   +'<br><b>⑧ 高级风格库仍完整保留</b>（点「⋯ 更多风格」）：433 款滤镜 / 78 套模板 / 20 种盘模式 / 当前编辑 / 原图，'
+   +'<br><b>⑧ 高级风格库仍完整保留</b>（点「⋯ 更多风格」）：433 款滤镜 / 78 套模板 / 30 种盘模式 / 当前编辑 / 原图，'
    +'每个风格临时构造完整渲染状态走<b>主编辑器同一套 WebGL 管线</b>，渲染后严格还原。'
    +'五套一键成片模板、四种转场、六种运镜、11 项关键帧参数也都在。'
    +'<br><b>⑨ 导出不卡</b>：导出前按帧率采样关键帧参数 → 量化去重 → 分批预生成风格帧（进度可见），'
@@ -15735,22 +16019,21 @@ const SP_ENTRIES=[
   {id:'colorbook',name:'色彩术语表',sub:'28 个词条 · 可搜 · 直达实现章节',icon:'◈',sv:'aperture'},
   {id:'appearance',name:'外观与主题',sub:'9 套配色（含液态玻璃）/ 原版 · Nova 双界面 / 顶栏留白 / 工具栏位置 / 圆角 / 动效',icon:'◐',sv:'aperture'},
   {id:'zones',name:'区域工作台',sub:'v4 · 10 通道预览 · 四区直调 · 涂抹精修 · 一键生成蒙版与虚化',icon:'◈',sv:'aperture'},
-  {id:'update',name:'检查更新',sub:'对比本机版本与 GitHub 最新 Release · 默认不联网',icon:'⟳',sv:'aperture'},
-  {id:'video',name:'视频工作台',sub:'多片段时间线 · 关键帧调色 · 转场运镜 · 帧精确导出',icon:'▷',sv:'video'}
+  {id:'update',name:'检查更新',sub:'对比本机版本与 GitHub 最新 Release · 默认不联网',icon:'⟳',sv:'aperture'}
 ];
 
-/* 页面中心的分组：23 个内容页按用途归到 6 组，一次只看一组。
+/* 页面中心的分组：22 个内容页按用途归到 6 组，一次只看一组。
    「页面中心」本身是枢纽，不混进 SP_ENTRIES，避免目录里出现自己。 */
 const PAGE_GROUPS=[
   {id:'help',name:'帮助与阅读',ids:['guide','tech','shortcuts','gestures','colorbook']},
   {id:'browse',name:'编辑与浏览',ids:['tools','filters','templates','zones']},
-  {id:'output',name:'输出与文件',ids:['export','video','archive','exports','autosave']},
+  {id:'output',name:'输出与文件',ids:['export','archive','exports','autosave']},
   {id:'status',name:'设备与状态',ids:['mine','history','recent','diagnostics','info','changelog','update']},
   {id:'about',name:'关于',ids:['about']},
   {id:'look',name:'外观与偏好',ids:['appearance']}
 ];
 const PAGE_FAV=['appearance','mine','zones','guide','tech','autosave','export','shortcuts'];
-const PAGE_HUB={title:'页面中心',sub:'23 个独立页面 · 按用途分组 · 可搜索 · 记录最近打开',
+const PAGE_HUB={title:'页面中心',sub:'22 个独立页面 · 按用途分组 · 可搜索 · 记录最近打开',
   render:renderPageCenter};
 let recentPages=[];
 try{ recentPages=JSON.parse(localStorage.getItem('iris_recent_pages')||'[]'); }catch(e){ recentPages=[]; }
@@ -15782,6 +16065,7 @@ function closeSubPage(){
   app.classList.remove('sp-open'); $('#spBody').innerHTML='';
 }
 function openSubPage(id,anchor){
+  if(id==='video'&&!VIDEO_STUDIO_ON){ toast('视频工作台暂未开放'); return; }
   const meta=SUBPAGES[id]||(id==='pages'?PAGE_HUB:null);
   if(!meta){ toast('页面不存在'); return; }
   closeCmd?.(); toggleTbMenu(false); setExportMenu(false);
@@ -15946,13 +16230,14 @@ function renderTemplatesPage(body){
 /* ---------- 06 导出中心 ---------- */
 function renderExportPage(body){
   const w=spWrap(body);
-  w.append(spEl('div','sp-note','视频默认「原格式 / 原画质 / 不压缩 / 无变化」，帧率最高 60fps；导出全过程在本机完成。'));
+  w.append(spEl('div','sp-note','照片 / GIF / 打包 / 设置均在本机完成；视频导出暂未开放，打磨完成后会在这里恢复。'));
   const grid=spEl('div','sp-card');
   [['↧','导出照片','PNG / JPG / WebP','photo'],['◎','导出 GIF 动图','256 色 · 可循环','gif'],
    ['▷','导出视频','不限时长 · 最高 60fps','video'],['▣','实况配对素材','封面 + 视频 ZIP','pair'],
    ['▤','打包全格式','PNG + JPG + WebP','bundle'],['⚙','导出设置','尺寸 / 画质 / 画框','settings']
   ].forEach(([ic,t,d,act])=>{
-    const b=spEl('button','sp-tile',`<b>${ic} ${t}</b><small>${d}</small>`);
+    const b=spEl('button','sp-tile'+(act==='video'?' off':''),`<b>${ic} ${t}</b><small>${act==='video'?'暂未开放 · 打磨中':d}</small>`);
+    if(act==='video'&&!VIDEO_EXPORT_ON){ b.title='视频导出暂未开放'; grid.append(b); return; }
     b.onclick=()=>{
       closeSubPage();
       if(act==='settings'){
@@ -16365,8 +16650,8 @@ const AB_CHAPTERS=[
  <div class="ab-item"><b>◉ 色彩系统</b><small>iPhone 式二维调色盘（Tone × Color + 强度，盘面随照片主色变化）、12 种独立色调、每层滤镜各自的调色盘、433 款分类滤镜、78 套模板、语义保肤渲染、<b>区域工作台（matte 可视化 + 四区独立调色 + 一键生成蒙版 / 虚化）</b>、色彩迁移（Lab 均值方差 → 16³ 3D LUT）、HSL 分色、曲线、三色轮、通道混合与 .cube LUT。</small></div>
  <div class="ab-item"><b>◐ 局部与空间</b><small>涂抹式局部蒙版（直接刷出选区，可擦除 / 撤销 / 伪彩预览，形状渐变保留为可选）、背景虚化（一键检测人物或物品 + 涂抹选取主体或虚化区域 + 六种模糊）、光场计算（重聚焦、视差微动、方向重打光）、涂抹式马赛克 / 柔焦 / 动态 / 径向模糊，最多 6 块区域、可调范围与羽化。</small></div>
  <div class="ab-item"><b>▣ 构图与元素</b><small>可视化拖拽裁剪（角点、边框、比例锁、精确数值兜底）、裁剪页首屏的<b>左右 / 上下透视倾斜</b>（两根 −45°~+45° 度数滑杆、斜切与梯形两种模式、照片上横拖纵拖、自动裁切填满不露黑角）、折叠里的任意角度拉直、90° 步进与水平 / 垂直翻转（无损、导出按旋转后尺寸）、构图缩放与位移、文字 / 贴纸 / 形状 / 涂鸦（可拖动、缩放、旋转、改字体颜色描边）、留白画框、旋转翻转与透视矫正。</small></div>
- <div class="ab-item"><b>▷ 动态与输出</b><small>iOS 实况照片逐帧编辑与选封面、不限时长视频（默认原格式 / 原画质 / 不压缩 / 无变化，最高 60fps）、GIF 动图、PNG / JPG / WebP、原始视频零重编码直出、实况配对素材与全格式 ZIP 打包。</small></div>
- <div class="ab-item"><b>⌕ 效率</b><small>全局搜索（工具 / 滤镜 / 参数 / 模板 / 操作一处直达）、12 个一键快捷、23 章说明书 + 18 章技术实现、23 个独立二级页面（收拢进「页面中心」分组浏览）、本机自动保存与恢复、撤销重做、参数复制与 JSON 存档、自定义滤镜与我的色调、20 种主盘模式、「我的空间」历史图片与一键保存整套参数，以及多片段「视频工作台」。</small></div>
+ <div class="ab-item"><b>▷ 动态与输出</b><small>iOS 实况照片逐帧编辑与选封面、GIF 动图、PNG / JPG / WebP、实况配对素材与全格式 ZIP 打包。视频工作台与视频导出暂未开放，待打磨完成后恢复。</small></div>
+ <div class="ab-item"><b>⌕ 效率</b><small>全局搜索（工具 / 滤镜 / 参数 / 模板 / 操作一处直达）、12 个一键快捷、23 章说明书 + 18 章技术实现、22 个独立二级页面（收拢进「页面中心」分组浏览）、本机自动保存与恢复、撤销重做、参数复制与 JSON 存档、自定义滤镜与我的色调、30 种主盘模式、「我的空间」历史图片与一键保存整套参数。视频工作台暂未开放，待打磨完成后再恢复入口。</small></div>
  <div class="ab-item"><b>◇ 体验</b><small>移动端大图优先、编辑栏可拖动可收起、25%–800% 缩放、按住看原图与可拖动分屏线、直方图三模式、轻动画（尊重系统「减少动画」）、统一细线图标、桌面与手机自适应。</small></div>
 </div>`},
 {id:'architecture',n:'04',eyebrow:'ARCHITECTURE',t:'技术架构 · 四层与实现',html:`
@@ -16401,7 +16686,7 @@ const AB_CHAPTERS=[
 </div>
 <p>唯一的硬性要求是浏览器支持 <b>WebGL</b>；不支持时页面会明确提示。不读取相册、不请求相机或定位权限，除非你主动点「换照片」从设备里选一张。</p>
 <p class="ab-dim">关于「照片不上传」：自动保存写的是本机存储，不是服务器。桌面版写在这台电脑的用户数据目录，移动版写在 App 自己的沙盒里，网页版写在当前浏览器的站点存储 —— 四端行为一致，但快照<b>不会跨设备同步</b>。想彻底不留痕，到「自动保存」页点「清除上次的编辑」，或清除站点数据。</p>`},
-{id:'version',n:'06',eyebrow:'RELEASE',t:'版本状态 · 近乎最终版',html:`
+{id:'version',n:'06',eyebrow:'RELEASE',t:'版本状态 · 安装包冻结 / 页面热更新',html:`
 <p>外观系统加入后，界面提供<b>原版 / Nova 双版本</b>与<b>9 套配色主题（含液态玻璃）</b>，可在「外观与主题」页随时切换或一键还原，照片与编辑参数不受影响。</p>
 <p>当前版本是 <b>Release Candidate（近乎最终版）</b>。功能面已经完整，接下来<b>只会小修小改</b>：兼容性、边界情况、文案与手感、性能、以及 bug 修复，不再堆叠新模块。</p>
 <p>理由很简单：一个工具的价值不在于功能数量，而在于每次打开都稳定、可预期、不会在你赶时间的时候出岔子。所以这一版把力气花在了收敛上 —— 界面分组、目录式说明书、独立二级页面、逐项回归与像素级验证，而不是再加一层新东西。</p>
@@ -16413,7 +16698,8 @@ const AB_CHAPTERS=[
  <div class="ab-step"><b>工程化与收敛</b>色彩迁移、23 章说明书、18 章技术实现、22 个二级页面与「页面中心」分组浏览、自动保存与恢复、界面精简与移动端重排。</div>
  <div class="ab-step"><b>现在 · 近乎最终</b>作者与关于页、细节修复、稳定性优先。</div>
 </div>
- <p style="margin-top:14px">当前内嵌版本 <b>1.0.17</b>（构建 2026-11-12，Release Candidate）。页面头部写有版本 meta，可在独立「检查更新」页与 GitHub 上发布的最新 Release 对比；每次打开都会先看到一张最多 3 秒的启动页，随后才进入编辑界面；<b>默认不联网</b>，只有主动点击才会读取公开版本信息。</p>
+ <p style="margin-top:14px"><b>更新方式已经变了</b>：最终安装包 / Release 版本冻结在 <b>1.0.1.8</b>，之后不再重新构建 apk / ipa / exe，也不再发布新 Release。所有后续改动只替换一份 <code>web/index.html</code>，App 不用重装；当前页面版本是 <b>1.0.19</b>（构建 2026-11-19，HTML 热更新通道），检查更新时会自动读到线上最新的页面版本。两个版本号分属不同通道，不互相比较 —— 详见「检查更新」页里的完整策略说明与说明书第 22 章。</p>
+ <p>页面头部写有版本 meta；每次打开都会先看到一张最多 3 秒的启动页，随后才进入编辑界面；<b>默认不联网</b>，只有主动点击才会读取线上版本标记，而且只读不写，不会自动下载、替换或执行远端文件。</p>
  <div class="sp-row"><button data-goupdate="1">⟳ 检查更新</button></div>`},
 {id:'limits',n:'07',eyebrow:'BOUNDARIES',t:'已知边界 · 如实说明',html:`
 <div class="ab-grid">
@@ -16821,13 +17107,13 @@ c = mix(shifted, clampToSkin(shifted, src), skinMask * u_semLock);</pre>
     "对 <code>measureText</code> 宽度差做探测（<code>document.fonts.check</code> 对系统字体恒为 true，不能判存在），"
     "只保留设备上真有的字体；每款再配不同的通用族、字重与 <code>letterSpacing</code> 兜底，8 款逐像素互不相同。"
     "<code>applyFont()</code> 让 <code>elMetrics</code> 与 <code>drawEl</code> 共用同一设置，测量框与导出不会错位。</li>
- <li><b>20 种盘模式表驱动</b>：每款只声明 <code>参数 = (ax·x + ay·y)·强度 + aa·amt</code>，启动时预编译成扁平数组并建 <code>Map</code> 索引；"
-        "逐帧只做一次定长循环，无 <code>Object.keys</code>、无临时对象、无 20 路分支，模式数从 4 增到 20 但每帧成本不变。"
-        "<code>amt = min(1, hypot(x,y))·强度</code> 让黑白 / 棕褐这类效果「离开中心才生效」，零位严格恒等。折叠面板收起时连 20 个 chip 的 DOM 都不创建。</li>
+ <li><b>30 种盘模式表驱动</b>：每款只声明 <code>参数 = (ax·x + ay·y)·强度 + aa·amt</code>，启动时预编译成扁平数组并建 <code>Map</code> 索引；"
+        "逐帧只做一次定长循环，无 <code>Object.keys</code>、无临时对象、无 30 路分支，模式数从 4 增到 30 但每帧成本不变。"
+        "<code>amt = min(1, hypot(x,y))·强度</code> 让黑白 / 棕褐这类效果「离开中心才生效」，零位严格恒等。折叠面板收起时连 30 个 chip 的 DOM 都不创建。</li>
      <li><b>433 款缩略图懒加载</b>：<code>renderSmall</code> 每张都要一次同步 <code>gl.readPixels</code> + <code>toDataURL</code>。"
         "现在图片先挂 1×1 占位，<code>IntersectionObserver</code> 提前 180px 才真正生成，每批最多 3 张、批间让出一帧；"
         "生成后的主画面重绘合并成一次 rAF。433 款平铺与 44 张分类卡都不再一口气阻塞主线程。</li>
-     <li><b>20 种盘模式共用一条渲染路径</b>：<code>state.padMode</code> + <code>state.padVals[mode]</code> 各存一份两轴与强度，"
+     <li><b>30 种盘模式共用一条渲染路径</b>：<code>state.padMode</code> + <code>state.padVals[mode]</code> 各存一份两轴与强度，"
     "<code>applyPadModeToEffective()</code> 在 <code>effectiveRaw()</code> 末尾只把<b>当前模式</b>展开成已有 uniform 的增量（O(1)、零分配），"
     "语义模式仍走原本的 matte + 肤色锁通道。零位增量全为 0，逐像素恒等；不新增纹理 / 分支，切换与拖动不掉帧。"
     "<code>normalizeState()</code> 会把旧存档的语义盘与全局盘迁移成对应模式的值。</li>
@@ -18063,6 +18349,24 @@ const AS_CHANGELOG=[
  {v:'v1.0.5',t:'视频工作台',d:'多片段时间线、关键帧调色、四种转场与六种运镜、五套成片模板；导出改为手工推帧 + 画面签名跳过重绘，静止段几乎零 CPU，预览与缩略图分批让帧；四端同源。'},
  {v:'v1.0.6',t:'视频风格库',d:'视频工作台接入完整色彩引擎：433 款滤镜、78 套模板、20 种盘模式可作为片段风格 A/B；新增可拖二维盘与盘动画、11 项关键帧参数、风格帧预生成导出；四端同源。'},
  {v:'v1.0.7',t:'一键滤镜',d:'预览正下方新增常驻滤镜速贴条：分类 + 搜索 + 缩略图横排，点一下就整段套用，也可拖到时间线片段；修复改滤镜后预览不重绘、只换终点导致半段渐显两个真 bug；签名改用轻量标签避免每帧序列化整份编辑状态；四端同源。'},
+ {v:'v1.0.20',t:'缩放手感 · 盘面微调 · 30 种盘模式',d:'三处手感问题一起修：'
+    +'① 手机双指缩放时一根手指先松开，画面会突然飘走 —— 根因是指针数从 2 变 1 后仍留着第一根手指'
+    +'最初按下的 dragStart 基准，捏合过程的位移与 pan 变化被一次性算进单指拖动；现在指针数一变就用'
+    +'剩余指针当前坐标 + 当前 pan/zoom 重新播种基准，3→2 指也一并重建捏合基准。'
+    +'② 桌面滚轮系数从 0.00085 提到 0.0013、单步上限 1.10 放到 1.18，鼠标一格约 14%，不再滚半天没反应。'
+    +'③ 主盘每个断点只放大 6~8px（默认 190→198px），窄侧栏与手机断点逐档复核零溢出。'
+    +'④ 盘模式 20 → 30：新增「鲜活」「工艺」两组，其中 3 款鲜艳家族（鲜亮通透 / 浓金溢彩 / 冷艳蓝调）'
+    +'与原有「鲜艳」及彼此均不重名，另有 7 款非浓艳；仍是表驱动定长循环，每帧成本不变，'
+    +'零位严格恒等、旧存档自动补齐。说明书第 2 章、技术页、关于页、检查更新策略卡与 README 数字全部同步。'},
+ {v:'v1.0.19',t:'Release 冻结 · HTML 热更新',d:'安装包已经是 apk / ipa / 桌面三端的应用壳，外壳只加载一个 HTML 文件，'
+    +'再为每次改动重跑构建、重新签名、重新出包没有意义。于是把<b>最终安装包 / Release 版本冻结在 1.0.1.8</b>：'
+    +'GitHub 不再发新 tag、不再发 Release；之后所有改动只替换 web/index.html 一份文件，App 不用重装。'
+    +'检查更新随之改写 —— 主判据换成线上 HTML 头部的 iris-version（快速检查 1 个请求、流式 16KB、读到即断），'
+    +'Release 降级为只展示的冻结基线，version.json / 最近提交作深度比对的补充；四段式 1.0.1.8 与三段式页面版本分属两条通道、互不比较。'
+    +'检查更新页新增完整「更新策略」说明卡，说明书第 22 章、关于页版本章同步重写；只读不写、不自动替换或执行远端 HTML 的安全边界不变。'},
+ {v:'v1.0.18',t:'视频功能收敛',d:'视频工作台尚未打磨成熟：隐藏顶栏导出菜单 / 页面中心 / 全局搜索 / 命令面板 / 桌面菜单里的全部入口，'
+    +'并给独立页面加深链守卫；导出菜单的「快速导出视频」与预设页「导出」分页里的视频规格整块置灰且控件禁用。'
+    +'代码、参数、存档与函数一行未删，两个开关改回 true 即可完整恢复。照片 / GIF / 实况配对 / 打包导出全部照常。'},
  {v:'v1.0.17',t:'全面代码优化 · 流畅与稳定运行 · 当前版本',d:'不加任何新功能，按真实性能画像逐项收紧。测得<b>裁剪页整面板重建</b>是最大卡顿源（平均 58ms、峰值 92ms），于是把拖完倾斜、快捷度数、切换斜切/梯形、90° 翻转后的 <code>buildPanel(true)</code> 换成<b>只刷新变化的几个节点</b>的局部刷新；<code>syncPanelFit</code> 的逐元素 <code>getComputedStyle</code> 改成按类缓存、每类最多抽查 12 个。倾斜烘焙图改成 <b>canvas 按网格级别复用 + 双级缓存</b>（拖动 560px / 静止 900px、6 与 12 互不踢缓存），所有坐标数组预分配复用 —— 40 步拖动不再产生近 100MB 垃圾。缩略图的 <code>readPixels</code> / 行翻转缓冲也改为复用，异常时返回全零缓冲而不是 null，避免调用点直接读 <code>px.length</code> 把整页带崩。叠加层尺寸由 ResizeObserver 缓存，静止帧零布局读取。<br><b>稳定性</b>：新增全局异常与未处理拒绝记录、长任务观测、帧耗时 p50/p95；<code>paintFrame</code> 顶层兜底让单帧异常不再打断 rAF 链（以前会永久卡住画面）；WebGL <code>contextlost</code> 阻止默认销毁、恢复后整体失效 uniform 与纹理缓存再重画。诊断页新增 4 组稳定性指标，一键复制就能带上。全部既有回归复跑通过。'},
  {v:'v1.0.16',t:'真正的左右 / 上下倾斜',d:'上一版又理解偏了一次：把「调度数的倾斜」做成了整图旋转拉直。这版把<b>透视倾斜</b>做成裁剪页首屏的主角 —— 两根独立度数滑杆（−45°~+45°、0.1° 步进）分别控制<b>↔ 左右倾斜</b>与<b>↕ 上下倾斜</b>，可切「斜切」（推成平行四边形）与「梯形透视」（上窄下宽 / 左高右矮），还有 7 个快捷度数、双轴归零、以及在照片上横拖 / 纵拖的手势。变换在物理等比例空间完成，自动按 1/(1+|sLR|+|sUD|) 放大裁切填满、四角不露黑边；零位时整段恒等，逐像素等于旧版。裁剪编辑器底图改成<b>透视网格贴图</b>，用逐行复刻 shader 的逆映射做分片仿射，预览与导出共用同一套几何（含 90° 步进、翻转、任意角度、构图位移），历史遗留的顺序差异也一并修正。任意角度拉直降级为折叠、完整保留；光效页那套旧的百分比梯形滑杆撤掉，只留一个跳转卡，避免两处数值打架。倾斜进入撤销、自动保存、刷新恢复，换照片自动归零。'},
  {v:'v1.0.15',t:'真正的任意角度拉直',d:'上一版把 90° 步进按钮提到了首屏，但这不是要的「调度数」。现在裁剪页的主角是一根 <b>−45°~+45°、0.1° 步进</b>的倾斜角度滑杆：左右滑动即可拉直，还有 −45/−15/−5/0/+5/+15/+45 快捷角度、以及「在照片上左右拖调角度」手势（6px≈1°）。着色器在<b>物理等比例空间</b>旋转（先乘宽高比、转完再除回去），不会把横图拉变形；旋转后按 <code>k=|cos a|+|sin a|·max(ar,1/ar)</code> 自动放大裁切填满，<b>不露黑角</b>。「构图微调」里再给缩放与水平 / 垂直位移，重新决定保留哪一块。90° 步进、水平 / 垂直翻转、裁剪框全部保留且叠加生效，零位时所有新增 uniform 都是恒等值，逐像素等于旧版。裁剪编辑器改用旋转烘焙后的正矩形底图，框不再跟着歪。角度与构图进入撤销、自动保存、恢复链路，换照片自动归零。'},
@@ -18425,13 +18729,13 @@ const SUBPAGES={
   video:{title:'视频工作台',sub:'多片段时间线 · 关键帧 / 转场 / 运镜 · 静止段零重绘导出',render:renderVideoPage}
 };
 /* ============================================================
-   页面中心：把 23 个独立页面从「一排平铺」改成「分组 + 搜索 + 最近」
+   页面中心：把 22 个独立页面从「一排平铺」改成「分组 + 搜索 + 最近」
    默认只显示 5 张常用卡；点分类 tab 才展开该组；搜索跨全部分组。
    ============================================================ */
 function renderPageCenter(body){
   const w=spWrap(body);
   asHero(w,'IRIS · PAGES','页面中心',
-    '23 个独立页面不再一次全铺出来：首屏只有 7 个常用入口，其余按用途收进折叠分组，点组名才展开；也可以直接搜名字，或点最近打开。',
+    '22 个独立页面不再一次全铺出来：首屏只有 7 个常用入口，其余按用途收进折叠分组，点组名才展开；也可以直接搜名字，或点最近打开。',
     '所有页面原样保留，全局搜索 Ctrl/⌘+K 依旧能直达任意一页。');
   const st=spEl('div','pc-stat');
   [[SP_ENTRIES.length,'独立页面'],[PAGE_GROUPS.length,'用途分组'],
@@ -18544,9 +18848,9 @@ function toggleTbMenu(v){
 function buildTbPages(){
   const box=$('#tbPages'); if(!box) return; box.innerHTML='';
   const hub=spEl('button','tbm-page tbm-hub',
-    `<i>◫</i><span><b>页面中心 · 全部 23 页</b><small>按用途分组浏览 / 搜索 / 最近打开</small></span>`);
+    `<i>◫</i><span><b>页面中心 · 全部 22 页</b><small>按用途分组浏览 / 搜索 / 最近打开</small></span>`);
   hub.dataset.spid='pages'; hub.onclick=()=>openSubPage('pages'); box.append(hub);
-  ['appearance','mine','video','guide','update'].forEach(id=>{
+  ['appearance','mine','guide','update'].forEach(id=>{
     const e=SP_ENTRIES.find(v=>v.id===id); if(!e) return;
     const b=spEl('button','tbm-page',`<i>${svg(e.sv,15)}</i><span><b>${e.name}</b><small>${e.sub}</small></span>`);
     b.dataset.spid=e.id; b.onclick=()=>{ openSubPage(e.id); };
@@ -19068,13 +19372,15 @@ function buildPresets(p){
   sf.append(hint('画框只在导出时叠加，原图与所有编辑参数都不改写；照片 / 视频 / GIF / 实况封面都会带上。'));
   sf.dataset.ptab='export'; p.append(sf);
 
-  const sv=section('导出视频 · 原画质 / 最高 60fps / 不限时长');
+  const sv=section('导出视频 · 暂未开放');
+  if(!VIDEO_EXPORT_ON) sv.classList.add('sec-off');
   const vrow=document.createElement('div'); vrow.className='row';
-  vrow.append(button('▷ 打开视频工作台（多片段 / 关键帧 / 转场）',()=>openSubPage('video'),'accent'));
-  sv.append(vrow);
-  sv.append(hint('复杂视频在时间线里编辑：拖片段排序与裁时长、打关键帧调色强度 / 亮度 / 色温 / 缩放、'
-    +'加淡入淡出与交叉溶解、一键套用成片模板，导出按帧精确推进且静止段零重绘。'
-    +'下面这些是<b>单段快速导出</b>的规格，工作台也会沿用。'));
+  if(VIDEO_STUDIO_ON) vrow.append(button('▷ 打开视频工作台（多片段 / 关键帧 / 转场）',()=>openSubPage('video'),'accent'));
+  if(vrow.childNodes.length) sv.append(vrow);
+  sv.append(hint(VIDEO_EXPORT_ON
+    ? '复杂视频在时间线里编辑：拖片段排序与裁时长、打关键帧调色强度 / 亮度 / 色温 / 缩放。下面这些是单段快速导出的规格。'
+    : '<b>视频导出暂未开放</b>：功能还在打磨，入口已收起、下面的规格仅作保留，改完参数不会生效。'
+      +'照片 / GIF / 实况配对素材与打包导出不受影响，全部照常使用。'));
   const vm=videoMimeChoice();
   sv.append(hint(LIVE.pair
     ? '已载入实况视频（'+LIVE.duration.toFixed(1)+'s）：默认按原格式、原始分辨率、不主动限码率逐帧套用编辑导出。'
@@ -19107,6 +19413,7 @@ function buildPresets(p){
     +'60fps / 4K 同时开启会明显吃资源，建议桌面端使用。时长自定义最长 24 小时，导出中可随时停止并保存已录部分。'
     +'当前可用编码：'+(vm.supported.join(' / ')||'无')+'。'));
   sv.dataset.ptab='export'; p.append(sv);
+  if(!VIDEO_EXPORT_ON) sv.querySelectorAll('input,select,textarea,button').forEach(el=>{ el.disabled=true; });
 
   /* ---------- GIF 动图 ---------- */
   const sg=section('导出 GIF 动图');
@@ -19544,15 +19851,20 @@ function refreshExportMenu(){
   $('#emPhotoHint').textContent=f+' · '+exportDims().join('×')+' px';
   const vm=videoMimeChoice();
   const secs=state.exportVideoCustom>0?state.exportVideoCustom:(state.exportVideoSeconds||3);
-  $('#emVideoHint').textContent=LIVE.pair
-    ? '实况 '+LIVE.duration.toFixed(1)+'s · 逐帧调色'
-    : secs+'s 视频 · 可自定义到 24 小时';
+  $('#emVideoHint').textContent=VIDEO_EXPORT_ON
+    ? (LIVE.pair ? '实况 '+LIVE.duration.toFixed(1)+'s · 逐帧调色'
+                 : secs+'s 视频 · 可自定义到 24 小时')
+    : '暂未开放 · 打磨中';
   const gf=Math.min(400,Math.round(clamp(state.exportGifFps||10,5,20)*clamp(state.exportGifSeconds||2,.3,30)));
   $('#emGifHint').textContent=state.exportGifSeconds+'s · '+gf+' 帧 · '+state.exportGifMaxEdge+'px';
   const pairBtn=exportMenu.querySelector('[data-act="pair"]');
   pairBtn.classList.toggle('disabled',!LIVE.pair);
   const videoBtn=exportMenu.querySelector('[data-act="video"]');
-  videoBtn.classList.toggle('disabled',!vm.mime);
+  /* v1.0.18：视频导出固定置灰，不受浏览器录制能力影响 */
+  videoBtn.classList.toggle('disabled',!VIDEO_EXPORT_ON||!vm.mime);
+  if(!VIDEO_EXPORT_ON) videoBtn.setAttribute('aria-disabled','true');
+  const studioBtn=exportMenu.querySelector('[data-act="studio"]');
+  if(studioBtn) studioBtn.hidden=!VIDEO_STUDIO_ON;
   exportMenu.querySelector('[data-act="photo"] i').innerHTML=svg('photo',15);
   exportMenu.querySelector('[data-act="gif"] i').innerHTML=svg('video',15);
   exportMenu.querySelector('[data-act="video"] i').innerHTML=svg('video',15);
@@ -19581,14 +19893,13 @@ exportMenu.addEventListener('click',e=>{
   const act=b.dataset.act; setExportMenu(false);
   if(act==='photo') doExport();
   else if(act==='gif') exportGif();
-  else if(act==='video') exportVideo();
-  else if(act==='studio') openSubPage('video');
+  else if(act==='video'){ if(VIDEO_EXPORT_ON) exportVideo(); }
+  else if(act==='studio'){ if(VIDEO_STUDIO_ON) openSubPage('video'); }
   else if(act==='pair') exportLivePair();
   else if(act==='bundle') exportBundle();
   else if(act==='settings'){
   gotoTool('presets');
-    const sec=[...document.querySelectorAll('#panel .sec-h')].find(h=>h.textContent.includes('导出视频'));
-    if(sec) sec.scrollIntoView({block:'start',behavior:'smooth'});
+    $('#panel').scrollTop=0;
     toast('已打开导出设置');
   }
 });
@@ -19698,12 +20009,12 @@ function cmdActions(){
     {name:'一键保存所有参数',desc:'把当前整套调色参数存成一款可复用的滤镜（点击即存）',
      key:'一键 保存 所有参数 全套 存为滤镜 full preset',hint:'',icon:'✦',
      run:()=>{ if(saveAllParamsOneClick()) toast('已存入「我的空间 → 我创作的滤镜」'); }},
-    /* 折叠后的 20 种盘模式也能从全局搜索直达，不用先展开面板 */
+    /* 折叠后的 30 种盘模式也能从全局搜索直达，不用先展开面板 */
     ...PAD_MODES.map(m=>({type:'盘模式',name:'盘模式 · '+m.name,
       desc:m.desc,
       key:'盘模式 调色盘 pad '+m.name+' '+m.short+' '+m.id+' '
         +(PAD_GROUP_MAP.get(m.grp)||{name:''}).name
-        +(m.id==='vivid'?' 鲜艳 浓艳 饱和度 vibrance vivid 鲜明度':''),
+        +(m.vivid||m.id==='vivid'?' 鲜艳 浓艳 饱和度 vibrance vivid 鲜明度 鲜亮':''),
       hint:'',icon:'◈',
       run:()=>{
         mutate(()=>{ state.padMode=m.id; });
@@ -19871,7 +20182,7 @@ function cmdActions(){
   ];
 }
 function buildCmdItems(){
-  const items=[];
+  let items=[];
   const push=(type,icon,name,desc,key,hint,run)=>items.push({type,icon,name,desc,key:key||'',hint:hint||'',run});
   cmdActions().forEach(a=>push(a.type||'操作',a.icon,a.name,a.desc,a.key,a.hint,a.run));
   TOOLS.forEach(t=>push('工具','◈',t.name,(PANEL_META[t.id]||[])[1]||'',t.id,'',()=>gotoTool(t.id)));
@@ -19933,7 +20244,7 @@ function buildCmdItems(){
     push('页面','◈','页面 · '+e.name,e.sub,
       '页面 独立 '+e.name+' '+e.id,'',()=>openSubPage(e.id));
   });
-  push('页面','◫','页面 · 页面中心','23 个独立页面按用途分组，一次只看一组，可搜索 / 最近打开',
+  push('页面','◫','页面 · 页面中心','22 个独立页面按用途分组，一次只看一组，可搜索 / 最近打开',
     '页面中心 全部页面 pages hub 分组 目录 独立页面','',()=>openSubPage('pages'));
   /* 自动保存的常用操作 */
   [['立即保存到本机','把当前照片与全部编辑立刻写入本机存储',
@@ -19956,6 +20267,11 @@ function buildCmdItems(){
       else IrisAutosave.setMode(act);
     });
   });
+  /* v1.0.18：视频命令随开关一起收起，避免从全局搜索绕过置灰入口 */
+  if(!VIDEO_STUDIO_ON) items=items.filter(x=>
+    !/视频工作台|视频成片模板|视频模板|时间线|剪辑 studio/.test((x.key||'')+' '+x.name));
+  if(!VIDEO_EXPORT_ON) items=items.filter(x=>
+    !/^(导出视频|停止视频导出)$/.test(x.name));
   CMD.items=items; CMD.built=true;
 }
 function cmdScore(it,words){
@@ -19992,8 +20308,11 @@ function cmdSearch(q){
   /* 其余按类型分桶：同组标题只出现一次，且每类都有配额，不会被某一类刷屏 */
   /* 页面 / 技术 / 关于 / 自动保存等结果都有配额，不会被某一类刷屏；
      独立页面最多 3 条，想看全部走「页面中心」折叠分组。 */
-  const ORDER=['操作','工具','参数','滤镜','预设','页面','关于','技术','自动保存','模板','我的色调'];
-  const CAP={'操作':5,'工具':5,'参数':5,'滤镜':9,'预设':4,'页面':3,'关于':3,'技术':3,
+  /* v1.0.20：'盘模式' 之前漏在这个列表里 —— 盘模式项即使 cmdScore 命中，
+     也永远进不了结果桶，只有 name 恰好以关键词开头时才可能挤进 top。
+     实测搜「鲜艳」「鲜亮通透」「双色调印」全部返回 0 条。补上类型与配额。 */
+  const ORDER=['操作','工具','参数','滤镜','盘模式','预设','页面','关于','技术','自动保存','模板','我的色调'];
+  const CAP={'操作':5,'工具':5,'参数':5,'滤镜':9,'盘模式':4,'预设':4,'页面':3,'关于':3,'技术':3,
              '自动保存':3,'模板':4,'我的色调':3};
   const buckets={};
   hits.forEach(x=>{ if(used.has(x.it))return; (buckets[x.it.type]||(buckets[x.it.type]=[])).push(x); });
