@@ -7329,7 +7329,7 @@ function paintFrame(){
     const tu=performance.now();
     /* 录制时目标帧率通常低于显示器刷新率：未到下一帧时刻就复用上一帧纹理，
        省掉一半以上的 texImage2D 上传，画面与输出帧率都不变。 */
-    const gap=LIVE.recording?(1000/Math.max(1,+state.exportVideoFps||30)-1.5):0;
+    const gap=LIVE.recording?(1000/Math.max(30,+state.exportVideoFps||30)-1.5):0;
     if(!LIVE.lastUpload||tu-LIVE.lastUpload>=gap){
       try{
         gl.activeTexture(gl.TEXTURE0);
@@ -7347,9 +7347,11 @@ function paintFrame(){
   lastFrameAt=now;
   const dpr=Math.min(window.devicePixelRatio||1,2);
   const scale=(burst>=2&&!LIVE.recording&&!LIVE.playing)?.65:1;
-  const fw=Math.max(2,Math.round(canvas.clientWidth*dpr)),
-        fh=Math.max(2,Math.round(canvas.clientHeight*dpr));
-  const w=Math.max(2,Math.round(fw*scale)), h=Math.max(2,Math.round(fh*scale));
+  const rd=LIVE.recording&&LIVE.recordDims;
+  const fw=rd?LIVE.recordDims[0]:Math.max(2,Math.round(canvas.clientWidth*dpr)),
+        fh=rd?LIVE.recordDims[1]:Math.max(2,Math.round(canvas.clientHeight*dpr));
+  const w=rd?fw:Math.max(2,Math.round(fw*scale)),
+        h=rd?fh:Math.max(2,Math.round(fh*scale));
   if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;}
   /* 裁剪工具由 2D 画布接管画面，跳过 WebGL 主绘制省一帧 GPU */
   if(tool!=='crop') draw(w,h,{original:comparing,outSize:[fw,fh]});
@@ -8694,16 +8696,22 @@ function recordLiveClip(mimeOverride){
     const v=LIVE.video, mime=mimeOverride||liveRecorderMime();
     /* WebGL 画布的 captureStream 在部分浏览器（含 iOS Safari）不出帧。
        用一张 2D 中转画布逐帧 drawImage，录制源始终是普通 2D canvas。 */
-    const dpr=Math.min(window.devicePixelRatio||1,2);
+    /* 动态不再从屏幕小画布取像素：按导出画幅、原片级长边逐帧重渲染 */
+    const [ew,eh]=exportDims();
+    const capEdge=1440;
+    const rs=Math.min(1,capEdge/Math.max(ew,eh));
+    const rw=Math.max(2,Math.round(ew*rs)), rh=Math.max(2,Math.round(eh*rs));
+    LIVE.recordDims=[rw,rh];
     const proxy=document.createElement('canvas');
-    proxy.width=Math.max(2,Math.round(canvas.clientWidth*dpr));
-    proxy.height=Math.max(2,Math.round(canvas.clientHeight*dpr));
+    proxy.width=rw; proxy.height=rh;
     const px=proxy.getContext('2d');
     let rec, stream;
     try{
-      stream=proxy.captureStream(clamp(+state.exportVideoFps||30,12,60));
-      rec=new MediaRecorder(stream,videoRecorderOpts(mime));
-    }catch(e){ reject(e); return; }
+      stream=proxy.captureStream(clamp(Math.max(30,+state.exportVideoFps||30),30,60));
+      const ropts=videoRecorderOpts(mime);
+      if(!ropts.videoBitsPerSecond) ropts.videoBitsPerSecond=20000000;
+      rec=new MediaRecorder(stream,ropts);
+    }catch(e){ LIVE.recordDims=null; reject(e); return; }
     const chunks=[]; let done=false, guard=0, guard2=0, pump=0;
     let lastPaint=0;
     const paint=()=>{
@@ -8719,12 +8727,15 @@ function recordLiveClip(mimeOverride){
       if(done) return; done=true;
       clearTimeout(guard); clearTimeout(guard2); cancelAnimationFrame(pump);
       try{ livePause(); }catch(e){}
+      LIVE.recordDims=null;
       LIVE.recording=false; updateLiveUI();
+      try{ render(); }catch(e){}
       if(rec.state!=='inactive'){ try{rec.stop();}catch(e){} }
       setTimeout(()=>{ try{ stream.getTracks().forEach(t=>t.stop()); }catch(e){} },300);
     };
     rec.ondataavailable=e=>{ if(e.data&&e.data.size) chunks.push(e.data); };
     rec.onerror=e=>{ done=true; clearTimeout(guard); clearTimeout(guard2); cancelAnimationFrame(pump);
+      LIVE.recordDims=null;
       LIVE.recording=false; updateLiveUI(); reject(e.error||new Error('REC_ERR')); };
     rec.onstop=()=>resolve(new Blob(chunks,{type:rec.mimeType||mime||'video/webm'}));
     const dur=clamp(LIVE.duration||1.5,.3,3600);
@@ -8732,6 +8743,7 @@ function recordLiveClip(mimeOverride){
     const start=()=>{
       if(started||done) return; started=true;
       v.removeEventListener('seeked',start);
+      try{ paintFrame(); }catch(e){}
       try{ px.drawImage(canvas,0,0,proxy.width,proxy.height); }catch(e){}
       try{ rec.start(100); }catch(e){ LIVE.recording=false; reject(e); return; }
       livePlay(); pump=requestAnimationFrame(paint);
