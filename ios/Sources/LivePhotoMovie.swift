@@ -67,8 +67,14 @@ enum LivePhotoMovie {
         var failed = false
         var finishedVideo = false
 
-        vIn.requestMediaDataWhenReady(on: queue) {
+        vIn.requestMediaDataWhenReady(on: queue) { [reader, writer] in
+            _ = (reader, writer)   // 必须强持有，否则函数返回后 reader 被释放，copyNextSampleBuffer 会抛异常
             while vIn.isReadyForMoreMediaData {
+                if reader.status == .failed || reader.status == .cancelled || reader.status == .completed {
+                    failed = true
+                    vIn.markAsFinished()
+                    return
+                }
                 guard let sb = vOut.copyNextSampleBuffer() else {
                     finishedVideo = true
                     vIn.markAsFinished()
@@ -85,6 +91,7 @@ enum LivePhotoMovie {
         mIn.markAsFinished()
 
         func finishIfReady() {
+            _ = (reader, writer)
             if failed || writer.status == .failed {
                 writer.cancelWriting()
                 DispatchQueue.main.async { completion(nil) }
