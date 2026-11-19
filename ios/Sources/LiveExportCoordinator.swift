@@ -64,6 +64,7 @@ final class LiveExportCoordinator {
             H.postMessage({op:'liveFramesBegin', n:n, w:W, h:Hh, fps:fps});
             try{ v.pause(); }catch(e){}
             LIVE.recording = true; LIVE.recordDims = [W, Hh]; LIVE.playing = true;
+            var scratch = document.createElement('canvas'); scratch.width = W; scratch.height = Hh;
             function seek(t){
               return new Promise(function(res){
                 var done = false;
@@ -76,7 +77,10 @@ final class LiveExportCoordinator {
               for(var i=0;i<n;i++){
                 await seek(Math.min(i / fps, Math.max(0, dur - 0.001)));
                 try{ paintFrame(); }catch(e){}
-                var blob = await new Promise(function(r){ canvas.toBlob(r, 'image/jpeg', 0.92); });
+                // 立刻把 WebGL 画布同步拷到 2D 画布，再从 2D 画布编码：
+                // 避免 WebGL 缓冲区在合成后被清空导致抓到黑帧。
+                try{ scratch.getContext('2d').drawImage(canvas, 0, 0, W, Hh); }catch(e){}
+                var blob = await new Promise(function(r){ scratch.toBlob(r, 'image/jpeg', 0.92); });
                 if(!blob) throw new Error('frame encode failed');
                 H.postMessage({op:'liveFrame', i:i, b64: await b64(blob)});
               }
