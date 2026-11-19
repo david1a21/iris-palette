@@ -71,9 +71,13 @@ final class ShellViewController: UIViewController, WKScriptMessageHandler, WKNav
             loadedPageSHA = HotUpdate.sha256(of: page)
             web.loadFileURL(page, allowingReadAccessTo: page.deletingLastPathComponent())
         }
-        // 后台发现新版页面时，问用户要不要立刻换上；不选就下次启动生效。
-        HotUpdate.checkInBackground { [weak self] version in
-            self?.offerHotUpdate(version)
+        // 上次没确认的 pending：这次启动再问一次
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
+            self?.offerHotUpdate()
+        }
+        // 后台发现新版页面时同样只询问，不偷偷换页
+        HotUpdate.checkInBackground { [weak self] _ in
+            self?.offerHotUpdate()
         }
     }
 
@@ -192,21 +196,23 @@ final class ShellViewController: UIViewController, WKScriptMessageHandler, WKNav
         return (fh.readData(ofLength: 4) == Data([0x50, 0x4b, 0x03, 0x04]))
     }
 
-    /// 热更新确认：只有缓存页与当前已加载页确实不同才问。
-    private func offerHotUpdate(_ version: String) {
-        guard let cached = HotUpdate.pageForLaunch(),
-              HotUpdate.sha256(of: cached) != loadedPageSHA,
+    /// 热更新确认：只有 pending 与当前已加载页确实不同才问。
+    /// 选“稍后提醒”什么都不做——旧页面继续用，下次启动还会再问一次。
+    private func offerHotUpdate() {
+        guard let pending = HotUpdate.pendingPage(),
+              HotUpdate.sha256(of: pending) != loadedPageSHA,
               presentedViewController == nil else { return }
+        let version = HotUpdate.version(of: pending)
         let sheet = UIAlertController(
             title: "发现新版本页面",
-            message: "已下载 \(version.isEmpty ? "新页面" : version)，是否立即加载？\n现在加载会重开当前页面。",
+            message: "已下载 \(version.isEmpty ? "新页面" : version)，是否立即加载？\n现在加载会重开当前页面；选“稍后提醒”则保持现状，下次启动再问你。",
             preferredStyle: .alert)
         sheet.addAction(UIAlertAction(title: "立即加载", style: .default) { [weak self] _ in
-            guard let self = self else { return }
-            self.loadedPageSHA = HotUpdate.sha256(of: cached)
-            self.web.loadFileURL(cached, allowingReadAccessTo: cached.deletingLastPathComponent())
+            guard let self = self, let page = HotUpdate.promotePending() else { return }
+            self.loadedPageSHA = HotUpdate.sha256(of: page)
+            self.web.loadFileURL(page, allowingReadAccessTo: page.deletingLastPathComponent())
         })
-        sheet.addAction(UIAlertAction(title: "下次启动", style: .cancel))
+        sheet.addAction(UIAlertAction(title: "稍后提醒", style: .cancel))
         present(sheet, animated: true)
     }
 

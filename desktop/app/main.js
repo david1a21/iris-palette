@@ -121,7 +121,10 @@ function createWindow() {
   mainWin.on('close', () => mainWin && saveWindowState(mainWin));
 
   mainWin.loadURL('iris://app/index.html');
-  mainWin.webContents.on('did-finish-load', () => mainWin && mainWin.setTitle('Iris 调色盘'));
+  mainWin.webContents.on('did-finish-load', () => {
+    if (mainWin) mainWin.setTitle('Iris 调色盘');
+    setTimeout(askUpdate, 1200);       // 上次没确认的 pending，这次启动继续问
+  });
 
   // 安全：不允许页面把窗口导航走 / 开新窗口
   mainWin.webContents.on('will-navigate', (e, url) => {
@@ -415,7 +418,12 @@ function buildMenu() {
 }
 
 
-// ---------- 热更新：内容哈希判定 ----------
+// ---------- 热更新：已接受 / 待确认 两套槽位 ----------
+// current  = 用户点头过的页面，启动就加载它
+// pending  = 下载好但还没确认的页面，只弹窗询问，绝不擅自替换
+const APPROVED_DIR = path.join(PAGE_CACHE_DIR, 'current');
+const PENDING_DIR = path.join(PAGE_CACHE_DIR, 'pending');
+
 function sha256File(file) {
   try {
     return crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
@@ -424,79 +432,118 @@ function sha256File(file) {
   }
 }
 
-function cachedPage() {
+function readSlot(dir) {
   try {
-    const metaPath = path.join(PAGE_CACHE_DIR, 'meta.json');
-    const pagePath = path.join(PAGE_CACHE_DIR, 'index.html');
+    const metaPath = path.join(dir, 'meta.json');
+    const pagePath = path.join(dir, 'index.html');
     if (!fs.existsSync(metaPath) || !fs.existsSync(pagePath)) return null;
     const meta = JSON.parse(fs.readFileSync(metaPath, 'utf8'));
     const sha = sha256File(pagePath);
     if (!sha || sha !== meta.sha256) return null;
-    return { pagePath, sha256: sha, version: meta.version || '' };
+    return { pagePath, sha256: sha, version: meta.version || '', dir };
   } catch {
     return null;
   }
 }
 
-async function resolveActivePage() {
-  const cached = cachedPage();
-  const bundledSha = sha256File(path.join(ASSETS_DIR, 'index.html'));
-  if (cached && cached.sha256 !== bundledSha) {
-    ACTIVE_PAGE = cached.pagePath;
-  } else {
-    ACTIVE_PAGE = path.join(ASSETS_DIR, 'index.html');
+function approvedPage() {
+  return readSlot(APPROVED_DIR) || readSlot(PAGE_CACHE_DIR);   // 兼容上一版单槽缓存
+}
+
+function pendingPage() {
+  return readSlot(PENDING_DIR);
+}
+
+function resolveActivePage() {
+  const approved = approvedPage();
+  ACTIVE_PAGE = approved ? approved.pagePath : path.join(ASSETS_DIR, 'index.html');
+}
+
+function dropDir(dir) {
+  try { fs.rmSync(dir, { recursive: true, force: true }); } catch {}
+}
+
+/* 把 pending 转正：复制到 current，删掉 pending，返回新页面信息 */
+function promotePending() {
+  const pending = pendingPage();
+  if (!pending) return null;
+  fs.mkdirSync(APPROVED_DIR, { recursive: true });
+  const dst = path.join(APPROVED_DIR, 'index.html');
+  const tmp = dst + '.tmp';
+  fs.copyFileSync(pending.pagePath, tmp);
+  fs.renameSync(tmp, dst);
+  fs.writeFileSync(path.join(APPROVED_DIR, 'meta.json'), JSON.stringify({
+    version: pending.version, sha256: pending.sha256, size: fs.statSync(dst).size,
+  }));
+  dropDir(PENDING_DIR);
+  dropDir(PAGE_CACHE_DIR + '/index.html');   // 清掉旧单槽残留
+  return { pagePath: dst, sha256: pending.sha256, version: pending.version };
+}
+
+/* 有 pending 就弹窗；选“稍后提醒”保持现状，下次启动还会再问 */
+async function askUpdate() {
+  const pending = pendingPage();
+  if (!pending) return;
+  if (pending.sha256 === sha256File(ACTIVE_PAGE)) { dropDir(PENDING_DIR); return; }
+  if (!mainWin || mainWin.isDestroyed()) return;
+  const { response } = await dialog.showMessageBox(mainWin, {
+    type: 'question',
+    title: '发现新版本页面',
+    message: `已下载 ${pending.version || '新页面'}，是否立即加载？`,
+    detail: '选“稍后提醒”会继续用当前页面，下次启动时会再次询问。',
+    buttons: ['立即加载', '稍后提醒'],
+    defaultId: 0,
+    cancelId: 1,
+    noLink: true,
+  });
+  if (response === 0) {
+    const page = promotePending();
+    if (page) {
+      ACTIVE_PAGE = page.pagePath;
+      mainWin.loadURL('iris://app/index.html');
+    }
   }
 }
 
-/* 后台静默检查：下载 -> 校验 -> 原子替换，下次启动生效。任何一步失败都当没发生。 */
+/* 后台检查：只负责把新版下到 pending，换不换由用户决定 */
 async function refreshHotUpdate() {
   try {
     const res = await net.fetch(HOT_MANIFEST_URL, { cache: 'no-store' });
     if (!res.ok) return;
     const manifest = await res.json();
     if (!manifest || !manifest.sha256 || !manifest.url) return;
+
     const bundledSha = sha256File(path.join(ASSETS_DIR, 'index.html'));
-    const cached = cachedPage();
-    if (manifest.sha256 === bundledSha) {
-      // 远端就是出厂版本，清掉过期缓存，避免旧页面常驻
-      if (cached) {
-        fs.rmSync(PAGE_CACHE_DIR, { recursive: true, force: true });
+    const activeSha = sha256File(ACTIVE_PAGE);
+
+    if (manifest.sha256 === bundledSha || manifest.sha256 === activeSha) {
+      // 远端就是当前在用的版本，清掉多余的 pending / 旧缓存即可
+      if (manifest.sha256 === bundledSha) {
+        dropDir(APPROVED_DIR);
         ACTIVE_PAGE = path.join(ASSETS_DIR, 'index.html');
       }
+      dropDir(PENDING_DIR);
       return;
     }
-    if (cached && cached.sha256 === manifest.sha256) return;
+
+    const pending = pendingPage();
+    if (pending && pending.sha256 === manifest.sha256) { askUpdate(); return; }
+
     const pageRes = await net.fetch(manifest.url, { cache: 'no-store' });
     if (!pageRes.ok) return;
     const buf = Buffer.from(await pageRes.arrayBuffer());
     const sha = crypto.createHash('sha256').update(buf).digest('hex');
     if (sha !== manifest.sha256) return;
-    fs.mkdirSync(PAGE_CACHE_DIR, { recursive: true });
-    const tmp = path.join(PAGE_CACHE_DIR, 'index.html.tmp');
+
+    fs.mkdirSync(PENDING_DIR, { recursive: true });
+    const tmp = path.join(PENDING_DIR, 'index.html.tmp');
     fs.writeFileSync(tmp, buf);
-    fs.renameSync(tmp, path.join(PAGE_CACHE_DIR, 'index.html'));
-    fs.writeFileSync(path.join(PAGE_CACHE_DIR, 'meta.json'), JSON.stringify({
+    fs.renameSync(tmp, path.join(PENDING_DIR, 'index.html'));
+    fs.writeFileSync(path.join(PENDING_DIR, 'meta.json'), JSON.stringify({
       version: manifest.version || '', sha256: sha, size: buf.length,
     }));
-    console.log(`[hot-update] 已缓存 ${manifest.version || sha.slice(0, 8)}`);
-    // 问一句要不要现在换：换的话直接把协议指向新页面并重开一次
-    const cachedPath = path.join(PAGE_CACHE_DIR, 'index.html');
-    if (manifest.sha256 !== sha256File(ACTIVE_PAGE) && mainWin && !mainWin.isDestroyed()) {
-      const { response } = await dialog.showMessageBox(mainWin, {
-        type: 'question',
-        title: '发现新版本页面',
-        message: `已下载 ${manifest.version || '新页面'}，是否立即加载？`,
-        detail: '现在加载会重开当前页面；选择“下次启动”则保持现状。',
-        buttons: ['立即加载', '下次启动'],
-        defaultId: 0,
-        cancelId: 1,
-        noLink: true,
-      });
-      if (response === 0) {
-        ACTIVE_PAGE = cachedPath;
-        mainWin.loadURL('iris://app/index.html');
-      }
-    }
+    console.log(`[hot-update] 已下载 ${manifest.version || sha.slice(0, 8)}，等待用户确认`);
+    askUpdate();
   } catch (e) {
     console.log('[hot-update] 检查失败，继续用当前页面：', e && e.message);
   }

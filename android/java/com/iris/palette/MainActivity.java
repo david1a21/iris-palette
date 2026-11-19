@@ -132,6 +132,7 @@ public class MainActivity extends Activity {
             web.loadUrl(START_URL);
         }
         startHotCheck();
+        ui.postDelayed(this::askUpdate, 2000);   /* 上次没确认的 pending，这次启动继续问 */
     }
 
     /** 只有用户想拿走的成品才允许落盘：图片、视频、打包、配置。 */
@@ -369,24 +370,114 @@ public class MainActivity extends Activity {
         } catch (Exception e) { return null; }
     }
 
-    private File pageDir() {
+    private File pageRoot() {
         return new File(getFilesDir(), "page");
     }
 
-    private void applyCachedPage() {
+    private File approvedDir() {
+        return new File(pageRoot(), "current");
+    }
+
+    private File pendingDir() {
+        return new File(pageRoot(), "pending");
+    }
+
+    /** 校验某个槽位：页面存在且哈希与 meta 对得上 */
+    private boolean validSlot(File dir) {
+        File page = new File(dir, "index.html");
+        File meta = new File(dir, "meta.json");
+        if (!page.exists() || !meta.exists()) return false;
+        String text = readText(meta);
+        if (text == null) return false;
         try {
-            File dir = pageDir();
-            File page = new File(dir, "index.html");
-            File meta = new File(dir, "meta.json");
-            if (!page.exists() || !meta.exists()) return;
-            JSONObject o = new JSONObject(readText(meta));
-            String expected = o.optString("sha256");
-            if (expected.isEmpty() || !expected.equals(sha256Of(page))) return;
-            activePageFile = page;
-            Log.i("IrisHot", "使用热更新页面：" + o.optString("version"));
+            String expected = new JSONObject(text).optString("sha256");
+            return !expected.isEmpty() && expected.equals(sha256Of(page));
         } catch (Exception e) {
-            Log.w("IrisHot", "缓存页面无效：" + e.getMessage());
+            return false;
         }
+    }
+
+    private String slotVersion(File dir) {
+        String text = readText(new File(dir, "meta.json"));
+        if (text == null) return "";
+        try { return new JSONObject(text).optString("version"); } catch (Exception e) { return ""; }
+    }
+
+    private void applyCachedPage() {
+        if (validSlot(approvedDir())) {
+            activePageFile = new File(approvedDir(), "index.html");
+            Log.i("IrisHot", "使用已确认页面：" + slotVersion(approvedDir()));
+            return;
+        }
+        // 兼容上一版单槽缓存
+        if (validSlot(pageRoot())) {
+            activePageFile = new File(pageRoot(), "index.html");
+            Log.i("IrisHot", "使用旧缓存页面：" + slotVersion(pageRoot()));
+        }
+    }
+
+    private File pendingPage() {
+        return validSlot(pendingDir()) ? new File(pendingDir(), "index.html") : null;
+    }
+
+    private void promotePending() {
+        File dir = pendingDir();
+        File cur = approvedDir();
+        try {
+            if (!cur.exists() && !cur.mkdirs()) return;
+            File src = new File(dir, "index.html");
+            File dst = new File(cur, "index.html");
+            File tmp = new File(cur, "index.html.tmp");
+            copyFile(src, tmp);
+            if (dst.exists() && !dst.delete()) return;
+            if (!tmp.renameTo(dst)) return;
+            copyFile(new File(dir, "meta.json"), new File(cur, "meta.json"));
+            deleteTree(dir);
+        } catch (Exception e) {
+            Log.w("IrisHot", "转正失败：" + e.getMessage());
+        }
+    }
+
+    private static void copyFile(File src, File dst) throws IOException {
+        try (InputStream in = new FileInputStream(src); OutputStream out = new FileOutputStream(dst)) {
+            byte[] buf = new byte[8192];
+            int n;
+            while ((n = in.read(buf)) > 0) out.write(buf, 0, n);
+        }
+    }
+
+    private static void deleteTree(File f) {
+        if (f == null || !f.exists()) return;
+        File[] kids = f.listFiles();
+        if (kids != null) for (File k : kids) deleteTree(k);
+        f.delete();
+    }
+
+    /** 有 pending 就弹窗；选“稍后提醒”保持现状，下次启动还会再问 */
+    private void askUpdate() {
+        final File pending = pendingPage();
+        if (pending == null) return;
+        String activeSha = activePageFile != null ? sha256Of(activePageFile) : null;
+        if (activeSha != null && activeSha.equals(sha256Of(pending))) {
+            deleteTree(pendingDir());
+            return;
+        }
+        final String ver = slotVersion(pendingDir());
+        if (isFinishing() || isDestroyed()) return;
+        new AlertDialog.Builder(MainActivity.this)
+                .setTitle("发现新版本页面")
+                .setMessage("已下载 " + (ver.isEmpty() ? "新页面" : ver)
+                        + "，是否立即加载？\n选“稍后提醒”会继续用当前页面，下次启动再问你。")
+                .setPositiveButton("立即加载", (d, w) -> {
+                    promotePending();
+                    File page = new File(approvedDir(), "index.html");
+                    if (page.exists()) {
+                        activePageFile = page;
+                        web.loadUrl(START_URL);
+                    }
+                })
+                .setNegativeButton("稍后提醒", null)
+                .show();
     }
 
     private void startHotCheck() {
@@ -406,10 +497,16 @@ public class MainActivity extends Activity {
                 if (remote.isEmpty() || url.isEmpty()) return;
 
                 String bundled = sha256Of(getAssets().open("index.html"));
-                File dir = pageDir();
-                File page = new File(dir, "index.html");
-                if (remote.equals(bundled)) return;
-                if (page.exists() && remote.equals(sha256Of(page))) return;
+                String activeSha = activePageFile != null ? sha256Of(activePageFile) : bundled;
+                if (remote.equals(bundled) || remote.equals(activeSha)) {
+                    deleteTree(pendingDir());
+                    return;
+                }
+                File pending = pendingPage();
+                if (pending != null && remote.equals(sha256Of(pending))) {
+                    ui.post(this::askUpdate);
+                    return;
+                }
 
                 HttpURLConnection pc = (HttpURLConnection) new URL(url).openConnection();
                 pc.setConnectTimeout(15000);
@@ -422,11 +519,13 @@ public class MainActivity extends Activity {
                     Log.w("IrisHot", "下载页面哈希不匹配，丢弃");
                     return;
                 }
+                File dir = pendingDir();
                 if (!dir.exists() && !dir.mkdirs()) return;
                 File tmp = new File(dir, "index.html.tmp");
                 try (FileOutputStream out = new FileOutputStream(tmp)) { out.write(data); }
-                if (page.exists() && !page.delete()) return;
-                if (!tmp.renameTo(page)) return;
+                File target = new File(dir, "index.html");
+                if (target.exists() && !target.delete()) return;
+                if (!tmp.renameTo(target)) return;
                 JSONObject meta = new JSONObject();
                 meta.put("version", o.optString("version"));
                 meta.put("sha256", remote);
@@ -434,22 +533,8 @@ public class MainActivity extends Activity {
                 try (FileOutputStream out = new FileOutputStream(new File(dir, "meta.json"))) {
                     out.write(meta.toString().getBytes("UTF-8"));
                 }
-                Log.i("IrisHot", "已缓存新页面");
-                final String ver = o.optString("version");
-                final File cached = page;
-                ui.post(() -> {
-                    if (isFinishing() || isDestroyed()) return;
-                    new AlertDialog.Builder(MainActivity.this)
-                            .setTitle("发现新版本页面")
-                            .setMessage("已下载 " + (ver.isEmpty() ? "新页面" : ver)
-                                    + "，是否立即加载？\n现在加载会重开当前页面。")
-                            .setPositiveButton("立即加载", (d, w) -> {
-                                activePageFile = cached;
-                                web.loadUrl(START_URL);
-                            })
-                            .setNegativeButton("下次启动", null)
-                            .show();
-                });
+                Log.i("IrisHot", "已下载新页面，等待确认");
+                ui.post(this::askUpdate);
             } catch (Exception e) {
                 Log.w("IrisHot", "检查失败，继续用当前页面：" + e.getMessage());
             }
