@@ -10,6 +10,26 @@
   var H = (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.iris) || null;
   if (!H) return;
 
+  /* ---------- 0) 抬高录制码率 ----------
+     页面的 recordLiveClip 用 MediaRecorder 默认码率，录出来很软；
+     这里包一层，凡是页面发起的录制都按 12 Mbps 走，画面细节能保住。 */
+  (function () {
+    try {
+      var Orig = window.MediaRecorder;
+      if (!Orig || Orig.__irisPatched) return;
+      function Patched(stream, opts) {
+        var o = {};
+        if (opts) for (var k in opts) { if (Object.prototype.hasOwnProperty.call(opts, k)) o[k] = opts[k]; }
+        if (!o.videoBitsPerSecond) o.videoBitsPerSecond = 12000000;
+        return new Orig(stream, o);
+      }
+      Patched.prototype = Orig.prototype;
+      Patched.isTypeSupported = Orig.isTypeSupported.bind(Orig);
+      Patched.__irisPatched = true;
+      window.MediaRecorder = Patched;
+    } catch (e) {}
+  })();
+
   /* ---------- 1) 手势闸 ---------- */
   var BOOT_AT = Date.now();
   var BOOT_GRACE = 2500;

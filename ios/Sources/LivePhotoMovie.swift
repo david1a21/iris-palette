@@ -36,10 +36,21 @@ enum LivePhotoMovie {
         let dw = abs(disp.width), dh = abs(disp.height)
         guard dw > 0, dh > 0 else { completion(nil); return }
 
-        let tw = CGFloat(Int(targetSize.width.rounded()))
-        let th = CGFloat(Int(targetSize.height.rounded()))
-        let targetAspect = tw / th
+        let targetAspect = targetSize.width / targetSize.height
         let currentAspect = dw / dh
+
+        // 只允许「裁切」不允许「放大」：录出来的片子多大，动态就多大，
+        // 放大只会把 750×688 插值成糊图。
+        let cap: CGFloat = 1440
+        var tw: CGFloat
+        var th: CGFloat
+        if currentAspect > targetAspect {
+            th = min(dh, cap)
+            tw = (th * targetAspect).rounded()
+        } else {
+            tw = min(dw, cap)
+            th = (tw / targetAspect).rounded()
+        }
 
         // 画幅已经一致就不用再动它，纯搬运即可。
         if abs(targetAspect - currentAspect) < 0.02 {
