@@ -1,6 +1,7 @@
 import Foundation
 import Photos
 import UIKit
+import AVFoundation
 
 /// 把页面导出的「实况配对素材 ZIP」（封面 + 视频）写成相册里的原生 Live Photo。
 ///
@@ -88,16 +89,50 @@ enum LivePhotoExport {
                 DispatchQueue.main.async { completion?(false) }
                 return
             }
-            PHPhotoLibrary.shared().performChanges({
-                let req = PHAssetCreationRequest.forAsset()
-                let po = PHAssetResourceCreationOptions()
-                po.originalFilename = photoName
-                req.addResource(with: .photo, fileURL: photo, options: po)
-                let vo = PHAssetResourceCreationOptions()
-                vo.originalFilename = videoName
-                req.addResource(with: .pairedVideo, fileURL: video, options: vo)
-            }) { ok, _ in
-                DispatchQueue.main.async { completion?(ok) }
+            // 相册对「配对视频」只认 QuickTime 容器，MediaRecorder 出来的 mp4 先转一层。
+            ensureMov(video: video, originalName: videoName) { mov, movName in
+                guard let mov = mov else {
+                    DispatchQueue.main.async { completion?(false) }
+                    return
+                }
+                PHPhotoLibrary.shared().performChanges({
+                    let req = PHAssetCreationRequest.forAsset()
+                    let po = PHAssetResourceCreationOptions()
+                    po.originalFilename = photoName
+                    req.addResource(with: .photo, fileURL: photo, options: po)
+                    let vo = PHAssetResourceCreationOptions()
+                    vo.originalFilename = movName
+                    req.addResource(with: .pairedVideo, fileURL: mov, options: vo)
+                }) { ok, _ in
+                    DispatchQueue.main.async { completion?(ok) }
+                }
+            }
+        }
+    }
+
+    private static func ensureMov(video: URL, originalName: String,
+                                  completion: @escaping (URL?, String) -> Void) {
+        if video.pathExtension.lowercased() == "mov" {
+            completion(video, originalName)
+            return
+        }
+        let asset = AVURLAsset(url: video)
+        guard asset.tracks(withMediaType: .video).count > 0,
+              let session = AVAssetExportSession(asset: asset, presetName: AVAssetExportPresetPassthrough) else {
+            completion(nil, originalName)
+            return
+        }
+        let out = video.deletingPathExtension().appendingPathExtension("mov")
+        try? FileManager.default.removeItem(at: out)
+        session.outputURL = out
+        session.outputFileType = .mov
+        session.exportAsynchronously {
+            DispatchQueue.main.async {
+                if session.status == .completed {
+                    completion(out, (originalName as NSString).deletingPathExtension + ".mov")
+                } else {
+                    completion(nil, originalName)
+                }
             }
         }
     }
