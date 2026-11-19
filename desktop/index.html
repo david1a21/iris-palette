@@ -6,8 +6,8 @@
 <title>Iris 调色盘 · 语义感知的在线照片编辑器</title>
 <meta name="theme-color" content="#0b0b0d">
 <!-- 版本元数据：检查更新时远端只需读取文件头部即可比对，不必下载整份页面 -->
-<meta name="iris-version" content="1.0.13">
-<meta name="iris-build" content="2026-11-19">
+<meta name="iris-version" content="1.0.17">
+<meta name="iris-build" content="2026-11-12">
 <meta name="iris-repo" content="david1a21/iris-palette">
 <meta name="description" content="Iris 调色盘：语义感知的二维色彩控制器。Tone × Color 两轴、端侧区域分割与肤色锁，433 款滤镜、78 套模板，支持照片 / 视频 / GIF 导出，纯前端不上传。">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -135,6 +135,80 @@ button{cursor:pointer;border:0;background:none}
   overflow:hidden;text-overflow:ellipsis;max-width:40vw}
 /* 编辑栏被收起时不显示完成条；面板里与画面双击仍可完成 */
 #app.dock-off #cropBar{display:none}
+/* 照片方向：裁剪页首屏的大控件，不随侧栏变窄被挤成一行小字 */
+.dir-wrap{margin:11px 0 9px;padding:11px 12px 12px;border-radius:16px;
+  border:1px solid var(--w12);
+  background:linear-gradient(135deg,rgba(var(--accent-rgb),.075),rgba(var(--accent-rgb),.018));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.045)}
+.dir-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
+.dir-head b{font-size:11.5px;letter-spacing:.4px;color:var(--txt);font-weight:700}
+.dir-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 9px;border-radius:999px;
+  font-size:10.5px;font-weight:700;color:var(--accent);
+  background:rgba(var(--accent-rgb),.14);border:1px solid rgba(var(--accent-rgb),.30)}
+.dir-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px}
+.dir-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;
+  min-width:0;padding:9px 3px 8px;border-radius:13px;cursor:pointer;
+  border:1px solid var(--w12);background:var(--w045);color:var(--txt);
+  font:600 10.5px/1.25 -apple-system,BlinkMacSystemFont,sans-serif;
+  transition:transform .16s ease,background .16s ease,border-color .16s ease}
+.dir-btn i{font-style:normal;font-size:19px;line-height:1;color:var(--accent);
+  filter:drop-shadow(0 2px 6px rgba(var(--accent-rgb),.25))}
+.dir-btn span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.dir-btn:hover{background:rgba(var(--accent-rgb),.13);border-color:rgba(var(--accent-rgb),.42);
+  transform:translateY(-2px)}
+.dir-btn:active{transform:translateY(0) scale(.97)}
+.dir-btn.warn i{color:var(--sub)}
+.dir-state{margin-top:9px;font-size:10.5px;line-height:1.7;color:var(--sub)}
+.dir-state b{color:var(--txt);font-weight:700}
+#app.slim .dir-grid,.dock.slim .dir-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media(max-width:560px){.dir-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+/* 任意角度拉直：大读数 + 主滑杆 + 快捷角度 */
+.dir-big{display:flex;align-items:baseline;gap:9px;margin:2px 0 9px}
+.dir-big b{font:700 29px/1 -apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;
+  letter-spacing:-1px;color:var(--accent);font-variant-numeric:tabular-nums}
+.dir-big span{font-size:10.5px;color:var(--sub);letter-spacing:.5px}
+.dir-wrap .sld{margin:0 0 9px}
+.dir-wrap .sld input[type=range]{height:22px}
+.dir-chips{display:flex;flex-wrap:wrap;gap:5px;margin:0 0 9px}
+.dir-chips button{flex:1 1 auto;min-width:42px;padding:5px 6px;border-radius:9px;cursor:pointer;
+  font:600 10.5px/1.2 -apple-system,BlinkMacSystemFont,sans-serif;
+  border:1px solid var(--w12);background:var(--w045);color:var(--sub);
+  font-variant-numeric:tabular-nums}
+.dir-chips button:hover{color:var(--txt);border-color:rgba(var(--accent-rgb),.45)}
+.dir-chips button.active{background:rgba(var(--accent-rgb),.18);
+  border-color:rgba(var(--accent-rgb),.55);color:var(--accent)}
+.dir-gesture{margin:0 0 9px}
+.dir-gesture button{width:100%;justify-content:center}
+.dir-gesture button.on{background:rgba(var(--accent-rgb),.18);
+  border-color:rgba(var(--accent-rgb),.6);color:var(--accent)}
+.dir-sub{font-size:10px;letter-spacing:.5px;color:var(--sub);margin:10px 0 7px;
+  display:flex;align-items:center;gap:7px}
+.dir-sub::after{content:'';flex:1;height:1px;background:var(--w10)}
+.dir-compose{margin-top:9px}
+.dir-compose .sld{margin-bottom:8px}
+/* 左右 / 上下倾斜：两轴大读数 + 模式切换 */
+.tilt-big{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin:2px 0 10px}
+.tilt-big .tb{border:1px solid var(--w12);background:var(--w045);border-radius:12px;
+  padding:7px 9px;min-width:0}
+.tilt-big .tb span{display:block;font-size:10px;letter-spacing:.5px;color:var(--sub);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tilt-big .tb b{display:block;font:700 21px/1.3 -apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;
+  letter-spacing:-.5px;color:var(--accent);font-variant-numeric:tabular-nums}
+.tilt-mode{display:flex;gap:5px;margin:0 0 9px;flex-wrap:wrap}
+.tilt-mode button{flex:1 1 auto;min-width:84px;padding:6px 8px;border-radius:9px;cursor:pointer;
+  font:600 10.5px/1.2 -apple-system,BlinkMacSystemFont,sans-serif;
+  border:1px solid var(--w12);background:var(--w045);color:var(--sub)}
+.tilt-mode button.active{background:rgba(var(--accent-rgb),.18);
+  border-color:rgba(var(--accent-rgb),.55);color:var(--accent)}
+.tilt-quick{display:flex;flex-wrap:wrap;gap:5px;margin:0 0 9px}
+.tilt-quick button{flex:1 1 auto;min-width:38px;padding:5px 6px;border-radius:9px;cursor:pointer;
+  font:600 10.5px/1.2 -apple-system,BlinkMacSystemFont,sans-serif;
+  border:1px solid var(--w12);background:var(--w045);color:var(--sub);
+  font-variant-numeric:tabular-nums}
+.tilt-quick button:hover{color:var(--txt);border-color:rgba(var(--accent-rgb),.45)}
+.tilt-quick button.active{background:rgba(var(--accent-rgb),.18);
+  border-color:rgba(var(--accent-rgb),.55);color:var(--accent)}
+.dir-wrap .tilt-sld .sld-h span{font-weight:600}
 .crop-btn{border:1px solid var(--w16);background:var(--w07);
   color:var(--txt);border-radius:10px;padding:9px 12px;font-size:13px;font-weight:600;
   min-height:38px;cursor:pointer;flex:0 0 auto}
@@ -3228,6 +3302,66 @@ html[data-theme="mist"] .gp-read,html[data-theme="paper"] .gp-read{
 }
 </style>
 <script>
+/* ============================================================
+   稳定性基座（v1.0.17）
+   越早装越好：连主题偏好脚本自己出错都能记下来。只观测、不吞异常、
+   不弹窗、不阻断原有逻辑；数据只留在本机内存，供诊断页「一键复制」。
+   ============================================================ */
+(function(){
+  var MAX=24;
+  var S={errors:[],rejections:[],longTasks:[],longMs:0,frameMs:[],
+    contextLost:0,contextRestored:0,startedAt:Date.now(),boot:0};
+  function trim(a){ if(a.length>MAX) a.splice(0,a.length-MAX); }
+  function brief(e){
+    if(!e) return 'unknown';
+    if(typeof e==='string') return e.slice(0,220);
+    return String(e.message||e.reason||e||'unknown').slice(0,220);
+  }
+  window.addEventListener('error',function(ev){
+    S.errors.push({t:Date.now(),msg:brief(ev.error||ev.message),
+      src:(ev.filename||'').split('/').pop()+':'+(ev.lineno||0)});
+    trim(S.errors);
+  });
+  window.addEventListener('unhandledrejection',function(ev){
+    S.rejections.push({t:Date.now(),msg:brief(ev.reason)});
+    trim(S.rejections);
+  });
+  try{
+    new PerformanceObserver(function(l){
+      for(var i=0;i<l.getEntries().length;i++){
+        var d=l.getEntries()[i].duration;
+        S.longTasks.push(Math.round(d)); trim(S.longTasks); S.longMs+=d;
+      }
+    }).observe({entryTypes:['longtask']});
+  }catch(e){}
+  S.recordFrame=function(ms){
+    S.frameMs.push(ms); if(S.frameMs.length>240) S.frameMs.shift();
+  };
+  S.noteContext=function(kind){
+    if(kind==='lost') S.contextLost++; else S.contextRestored++;
+  };
+  /* rAF 回调里被 try/catch 接住的异常不会触发 window.onerror，
+     这里主动登记，诊断页才看得到「这一帧被跳过了」。 */
+  S.noteFrameError=function(e){
+    S.errors.push({t:Date.now(),msg:'帧内跳过：'+brief(e),src:'paintFrame'});
+    trim(S.errors);
+  };
+  S.snapshot=function(){
+    var f=S.frameMs.slice().sort(function(a,b){return a-b;});
+    return {errors:S.errors.length,rejections:S.rejections.length,
+      lastError:(S.errors.length?S.errors[S.errors.length-1].msg:
+        (S.rejections.length?S.rejections[S.rejections.length-1].msg:'—')),
+      longTasks:S.longTasks.length,longMs:Math.round(S.longMs),
+      longMax:S.longTasks.length?Math.max.apply(null,S.longTasks):0,
+      frameP50:f.length?+f[Math.floor(f.length*.5)].toFixed(2):0,
+      frameP95:f.length?+f[Math.floor(f.length*.95)].toFixed(2):0,
+      frameMax:f.length?+f[f.length-1].toFixed(2):0,
+      contextLost:S.contextLost,contextRestored:S.contextRestored,
+      uptime:Math.round((Date.now()-S.startedAt)/1000)};
+  };
+  S.detail=function(){ return {errors:S.errors.slice(),rejections:S.rejections.slice()}; };
+  window.IrisStability=S;
+})();
 /* 外观偏好在样式解析完、DOM 构建前就应用，避免切主题时首屏闪一下 */
 (function(){
   try{
@@ -3705,6 +3839,12 @@ function defaultState(){
     hsl:hslZero(), hslChannel:'red',
     curve:[0,.2,.4,.6,.8,1], curveChannel:0,
     crop:[0,0,1,1], rot:0, flipX:1, flipY:1, aspect:'free',
+    /* 任意角度拉直（度）：左右滑调度数，与 rot*90 叠加成总角度。
+       frameZoom / framePan 是旋转自动裁切填满之后的「重新构图」。 */
+    angle:0, frameZoom:1, framePan:[0,0],
+    /* 左右 / 上下倾斜（度）：tilt=[左右, 上下]，−45~+45。
+       tiltMode: 'skew' 斜切 / 'keystone' 梯形透视。旧存档缺字段时按 0 处理。 */
+    tilt:[0,0], tiltMode:'skew',
     zoom:1, pan:[0,0],
     /* 滤镜层：每层可叠加，且各自拥有独立调色盘 */
     layers:[newLayer('原图')],
@@ -4698,7 +4838,8 @@ function applyFullFilter(name){
     const merged=deep(cur);
     Object.keys(snap).forEach(k=>{ merged[k]=deep(snap[k]); });
     /* 只换调色参数：当前照片的构图、叠加元素、涂抹笔迹、导出规格一律不动 */
-    ['zoom','pan','crop','rot','flipX','flipY','aspect','elements','fxRegions',
+    ['zoom','pan','crop','rot','angle','frameZoom','framePan','tilt','tiltMode',
+     'flipX','flipY','aspect','elements','fxRegions',
      'brushStrokes','brushSize','brushStrength','exportScale','exportMax',
      'exportQuality','exportFormat','exportOptimizePng'].forEach(k=>{ merged[k]=cur[k]; });
     merged.masks=(snap.masks||[]).map((m,i)=>({...m,
@@ -4881,10 +5022,155 @@ function demoImage(){
   return c;
 }
 
+/* ---------- 待载入占位图 ----------
+   只在「本机已经导入过照片」之后的启动 / 重新开始 / 稍后 / 恢复失败时出现。
+   它是一张中性引导画面，不是测试图，也不带色卡与示例文字；
+   isDemoPhoto 仍为 true，所以不会入自动保存、不会进历史图片。 */
+function placeholderImage(){
+  const c=document.createElement('canvas'); c.width=1600; c.height=1200;
+  const x=c.getContext('2d');
+  const g=x.createLinearGradient(0,0,1600,1200);
+  g.addColorStop(0,'#10131a'); g.addColorStop(.55,'#171b24'); g.addColorStop(1,'#0c0e13');
+  x.fillStyle=g; x.fillRect(0,0,1600,1200);
+  x.strokeStyle='rgba(255,255,255,.028)'; x.lineWidth=1;
+  for(let i=0;i<1600;i+=80){ x.beginPath();x.moveTo(i,0);x.lineTo(i,1200);x.stroke(); }
+  for(let j=0;j<1200;j+=80){ x.beginPath();x.moveTo(0,j);x.lineTo(1600,j);x.stroke(); }
+  const r=x.createRadialGradient(800,560,0,800,560,430);
+  r.addColorStop(0,'rgba(227,182,92,.10)');r.addColorStop(1,'rgba(227,182,92,0)');
+  x.fillStyle=r; x.fillRect(0,0,1600,1200);
+  x.strokeStyle='rgba(227,182,92,.30)';x.lineWidth=2;
+  x.beginPath();x.arc(800,520,74,0,7);x.stroke();
+  x.fillStyle='rgba(255,255,255,.90)';x.beginPath();x.arc(800,520,7,0,7);x.fill();
+  x.textAlign='center';
+  x.fillStyle='rgba(255,255,255,.88)';
+  x.font='600 40px -apple-system,BlinkMacSystemFont,sans-serif';
+  x.fillText('Iris 调色盘',800,660);
+  x.fillStyle='rgba(255,255,255,.42)';
+  x.font='400 22px -apple-system,BlinkMacSystemFont,sans-serif';
+  x.fillText('选择一张照片开始 · 照片只在本机处理',800,706);
+  return c;
+}
+const PHOTO_SEEN_KEY='plate_has_imported';
+function hasImportedPhoto(){
+  try{ return localStorage.getItem(PHOTO_SEEN_KEY)==='1'
+      || !!localStorage.getItem('plate_autosave_meta')
+      || !!localStorage.getItem('plate_import_dismissed'); }catch(e){ return false; }
+}
+function markPhotoImported(){
+  try{ localStorage.setItem(PHOTO_SEEN_KEY,'1'); }catch(e){}
+}
+/* 把画面切回中性占位：用于「重新开始」「稍后」「恢复失败」，
+   绝不再把演示图放回来。同时把导入引导卡重新亮出来。 */
+function resetToPlaceholder(){
+  try{ localStorage.removeItem('plate_import_dismissed'); }catch(e){}
+  const card=$('#drop'); if(card) card.classList.remove('hidden');
+  uploadImage(placeholderImage(),'未载入照片',true,{resetEdits:true,token:++importToken});
+}
+
+/* ============================================================
+   大照片加载：一次降采样，处处复用
+   6000×4000 的照片，浏览器把整张原图缩放一次要 100ms 以上。
+   旧版光是「分析主色调」和「语义分割」就各缩一次，再加上缩略图、
+   自动保存的 PNG 重编码，导入瞬间主线程会被堵住半秒到几秒。
+   现在只生成一张最长边 1024 的共享分析图，所有下游都从它取像素；
+   原图对象仍完整保留，供导出与裁剪编辑器按原始分辨率使用。
+   ============================================================ */
+const ANALYSIS_MAX=1024;
+function irisDims(src){
+  return [src&&(src.width||src.naturalWidth||src.videoWidth)||0,
+          src&&(src.height||src.naturalHeight||src.videoHeight)||0];
+}
+/* 同步兜底：一次 drawImage 生成共享小图。小图本身直接返回原图，不复制。 */
+function irisAnalysisSync(src){
+  if(!src) return null;
+  const [w,h]=irisDims(src); if(!w||!h) return null;
+  const k=Math.min(1,ANALYSIS_MAX/Math.max(w,h));
+  if(k>=.999) return src;
+  const tw=Math.max(1,Math.round(w*k)), th=Math.max(1,Math.round(h*k));
+  try{
+    const c=document.createElement('canvas'); c.width=tw; c.height=th;
+    c.getContext('2d',{willReadFrequently:true}).drawImage(src,0,0,tw,th);
+    return c;
+  }catch(e){ return src; }
+}
+/* 首选：createImageBitmap 在解码/合成线程做缩放，主线程完全不阻塞。
+   Safari 老版本不支持 options，抛错就回退到同步版本。 */
+async function irisAnalysisAsync(src){
+  if(!src) return null;
+  const [w,h]=irisDims(src); if(!w||!h) return null;
+  const k=Math.min(1,ANALYSIS_MAX/Math.max(w,h));
+  if(k>=.999) return src;
+  const tw=Math.max(1,Math.round(w*k)), th=Math.max(1,Math.round(h*k));
+  if(typeof createImageBitmap==='function'){
+    try{
+      const bm=await createImageBitmap(src,{resizeWidth:tw,resizeHeight:th,resizeQuality:'medium'});
+      const c=document.createElement('canvas'); c.width=tw; c.height=th;
+      c.getContext('2d',{willReadFrequently:true}).drawImage(bm,0,0);
+      try{ bm.close&&bm.close(); }catch(e){}
+      return c;
+    }catch(e){ /* 落到同步兜底 */ }
+  }
+  return irisAnalysisSync(src);
+}
+/* 超过 GPU 纹理上限时，预览用按比例缩小的纹理，避免 texImage2D 失败变黑屏。
+   导出时 draw() 会自动临时换回完整原图。 */
+function irisPreviewTexture(src){
+  const edge=Math.max(imgW,imgH,1);
+  if(edge<=MAX_TEX) return src;
+  const k=MAX_TEX/edge;
+  const tw=Math.max(1,Math.round(imgW*k)), th=Math.max(1,Math.round(imgH*k));
+  try{
+    const c=document.createElement('canvas'); c.width=tw; c.height=th;
+    c.getContext('2d',{willReadFrequently:true}).drawImage(src,0,0,tw,th);
+    return c;
+  }catch(e){ return src; }
+}
+let analysisToken=0;
+/* 首帧先出画面，重活分级到后续帧 / 空闲。连续换照片用 token 取消上一次。 */
+function irisScheduleAnalysis(src){
+  const token=++analysisToken;
+  const alive=()=>token===analysisToken && typeof LIVE!=='undefined' && LIVE.still===src;
+  requestAnimationFrame(()=>{
+    if(!alive()) return;
+    try{ photoTone=analyzePhotoTone(src); applyPadTone(); }catch(e){}
+    setTimeout(()=>{
+      if(!alive()) return;
+      try{ analyzeSemantic(src); }catch(e){}
+      const idle=window.requestIdleCallback||((fn)=>setTimeout(fn,50));
+      try{ idle(()=>{
+        if(!alive()) return;
+        try{ buildFilterThumbs(); drawHistogram(); }catch(e){}
+      },{timeout:600}); }catch(e){ setTimeout(()=>{ if(alive()){ try{buildFilterThumbs();drawHistogram();}catch(e){} } },120); }
+    },0);
+  });
+}
+
 /* ---------- WebGL ---------- */
 const canvas=$('#gl');
 const gl=canvas.getContext('webgl',{preserveDrawingBuffer:true,antialias:false,alpha:false,premultipliedAlpha:false});
 if(!gl){ $('#err').style.display='grid'; $('#err').textContent='当前浏览器不支持 WebGL，无法运行编辑器。'; throw new Error('no webgl'); }
+/* 设备允许的最大纹理边长。超过它 texImage2D 会失败、画面变黑，
+   所以预览纹理按比例缩到上限内，导出时再临时换回完整原图。 */
+const MAX_TEX=(()=>{ try{ return Math.max(1024,+gl.getParameter(gl.MAX_TEXTURE_SIZE)||4096); }
+  catch(e){ return 4096; } })();
+/* 上下文丢失（移动端切后台、显存压力、驱动重置）时阻止默认销毁，
+   让浏览器有机会自动恢复；恢复后 uniform / 纹理缓存必须整体失效，
+   否则 uc 里记着旧值，画面会一直停在丢帧那一刻。 */
+canvas.addEventListener('webglcontextlost',function(ev){
+  ev.preventDefault();
+  try{ window.IrisStability&&IrisStability.noteContext('lost'); }catch(e){}
+  try{ LIVE.contextLost=true; }catch(e){}
+},false);
+canvas.addEventListener('webglcontextrestored',function(){
+  try{ window.IrisStability&&IrisStability.noteContext('restored'); }catch(e){}
+  try{
+    for(const k in U) delete U[k];
+    if(window.IrisPerf) IrisPerf.invalidateUniforms();
+    LIVE.contextLost=false; LIVE.texDirty=true;
+    if(typeof onContextRestored==='function') onContextRestored();
+    render();
+  }catch(e){}
+},false);
 
 const PLATE_CODE = (()=>{ let s=''; for(let i=0;i<12;i++) s+=`
   { vec3 pl = u_plate[${i}];
@@ -4997,6 +5283,13 @@ uniform sampler2D u_image, u_lut;
 uniform vec2 u_texSize, u_outSize, u_pan, u_flip, u_persp;
 uniform vec4 u_crop;
 uniform float u_viewAspect, u_imgAspect, u_zoom, u_rot, u_original, u_thumb, u_splitBalance, u_fit;
+/* 任意角度拉直：u_angle 弧度，u_angleScale = 1/(自动填满系数 × 构图缩放)，u_framePan 构图位移 */
+uniform float u_angle, u_angleScale;
+uniform vec2 u_framePan;
+/* 左右 / 上下倾斜（v1.0.16）：u_tilt = 两轴系数，u_tiltMode 0=斜切 1=梯形透视，
+   u_tiltFill = 自动裁切填满系数，u_tiltOn = 是否启用。零位时整段恒等。 */
+uniform vec2 u_tilt;
+uniform float u_tiltMode, u_tiltFill, u_tiltOn;
 uniform float u_exposure,u_brilliance,u_highlights,u_shadows,u_contrast,u_brightness,u_black,
   u_saturation,u_vibrance,u_temp,u_tint,u_clarity,u_sharpen,u_noise,u_vignette,u_grain,
   u_fade,u_bw,u_sepia,u_lift,u_gamma,u_gain,u_hue,
@@ -5077,6 +5370,41 @@ vec2 mapSrc(vec2 uv){
   float a = u_rot*1.57079633;
   float ca=cos(a), sa=sin(a);
   r = vec2(r.x*ca + r.y*sa, -r.x*sa + r.y*ca);
+  /* ---- 任意角度拉直（v1.0.15）----
+     r 是「图片矩形归一化坐标」：x 对应宽、y 对应高，两者尺度不同，
+     直接在这里旋转会把照片拉变形。先乘 u_imgAspect 变到物理等比例空间，
+     旋转后再除回去。u_angleScale 把采样范围缩小到旋转后矩形的最大内接
+     同比例矩形（自动裁切填满、不露黑角），u_framePan 让用户重新取景。
+     角度为 0、缩放为 1、位移为 0 时整段等价于恒等变换，逐像素等于旧版。 */
+  if (abs(u_angle) > 0.000001 || abs(u_angleScale-1.0) > 0.000001
+      || abs(u_framePan.x)+abs(u_framePan.y) > 0.000001) {
+    vec2 q = vec2(r.x * u_imgAspect, r.y);
+    float cb=cos(u_angle), sb=sin(u_angle);
+    q = vec2(q.x*cb + q.y*sb, -q.x*sb + q.y*cb);
+    q = q * u_angleScale + u_framePan;
+    r = vec2(q.x / max(u_imgAspect,0.0001), q.y);
+  }
+  /* ---- 左右 / 上下倾斜（v1.0.16）----
+     放在任意角度之后、crop 之前：倾斜作用于已经拉直的画面，
+     裁剪框因此始终作用在「看到的这张倾斜后的图」上，所见即所得。
+     两种模式都先在物理等比例空间里算，横图不会被拉歪。
+       · 斜切 skew：q = (x + sLR·y, y + sUD·x) → 整张图推成平行四边形
+       · 梯形 keystone：q = (x/(1+2·sUD·y), y/(1+2·sLR·x)) → 上窄下宽 / 左高右矮
+     再乘 u_tiltFill 缩小采样范围（= 画面放大裁掉四角），保证不露黑边。
+     u_tiltOn=0 时整段跳过，逐像素等于旧版。 */
+  if (u_tiltOn > 0.5) {
+    float ar = max(u_imgAspect, 0.0001);
+    vec2 q = vec2(r.x * ar, r.y);
+    if (u_tiltMode < 0.5) {
+      vec2 q0 = q;
+      q = vec2(q0.x + u_tilt.x * q0.y, q0.y + u_tilt.y * q0.x);
+    } else {
+      q = vec2(q.x / max(1.0 + 2.0*u_tilt.y*q.y/ar, 0.15),
+               q.y / max(1.0 + 2.0*u_tilt.x*q.x, 0.15));
+    }
+    q *= u_tiltFill;
+    r = vec2(q.x / ar, q.y);
+  }
   return mix(u_crop.xy, u_crop.zw, clamp(r+0.5,0.0,1.0));
 }
 vec3 src(vec2 uv){ return texture2D(u_image, mapSrc(uv)).rgb; }
@@ -6027,6 +6355,9 @@ function analyzeSemantic(source,force){
   if(SEM.busy) return;
   const sw=source.width||source.naturalWidth||0, sh=source.height||source.naturalHeight||0;
   if(!sw||!sh) return;
+  /* 只从共享分析小图取像素，避免再把 6000×4000 原图缩放一次。
+     W/H 与 hash 仍按原图尺寸算，matte 分辨率与语义完全不变。 */
+  const pxSrc=(typeof LIVE!=='undefined'&&LIVE.analysis&&source===LIVE.still)?LIVE.analysis:source;
   /* 精度档：快速 0.65× / 标准 1× / 精细 2×（更高分辨率 matte，边缘更贴） */
   const q=(state&&state.sem&&state.sem.quality)||'standard';
   const mul=q==='fine'?2:(q==='fast'?.65:1);
@@ -6038,7 +6369,7 @@ function analyzeSemantic(source,force){
   try{
     const cv=document.createElement('canvas'); cv.width=W; cv.height=H;
     const x=cv.getContext('2d',{willReadFrequently:true});
-    x.drawImage(source,0,0,W,H);
+    x.drawImage(pxSrc,0,0,W,H);
     const d=x.getImageData(0,0,W,H).data;
     const n=W*H, lum=new Float32Array(n),
           sk=new Float32Array(n), sy=new Float32Array(n), hr=new Float32Array(n), hi=new Float32Array(n);
@@ -6635,6 +6966,37 @@ function imageAspect(){
   const ch=Math.max(.001,state.crop[3]-state.crop[1])*imgH;
   return (state.rot%2) ? ch/cw : cw/ch;
 }
+/* ============================================================
+   任意角度拉直：角度、自动填满系数、构图
+   旋转 a 之后，要让输出矩形完全落在旋转后的照片里（不露黑角），
+   采样范围要缩小 k 倍：k = |cos a| + |sin a| · max(ar, 1/ar)。
+   这是「旋转并裁切填满」的标准系数：正方形 45° 得到 √2，横图会更大。
+   ============================================================ */
+function irisTotalAngle(){ return ((state.rot||0)*90 + (+(state.angle||0))); }
+function irisAngleRad(){ return (+(state.angle||0))*Math.PI/180; }
+function irisAngleActive(){
+  return Math.abs(+(state.angle||0))>1e-4 ||
+         Math.abs((+(state.frameZoom||1))-1)>1e-4 ||
+         Math.abs(+((state.framePan||[0,0])[0]))>1e-4 ||
+         Math.abs(+((state.framePan||[0,0])[1]))>1e-4;
+}
+function irisFillK(){
+  const a=irisAngleRad(), ar=Math.max(.0001,imageAspect());
+  return Math.abs(Math.cos(a))+Math.abs(Math.sin(a))*Math.max(ar,1/ar);
+}
+function irisAngleScale(){
+  const k=irisFillK(), z=clamp(+(state.frameZoom||1),1,3);
+  return 1/Math.max(.0001,k*z);
+}
+const FP_BUF=new Float32Array(2), FP_BUF_ZERO=new Float32Array(2);
+function irisFramePanUniform(){
+  const p=state.framePan||[0,0], ar=Math.max(.0001,imageAspect());
+  /* 滑杆 -0.5~0.5 → 物理空间偏移（x 按宽高比缩放，y 直接是半高）。
+     复用定长缓冲，每帧零分配。 */
+  FP_BUF[0]=(+p[0]||0)*ar*0.5; FP_BUF[1]=(+p[1]||0)*0.5;
+  return FP_BUF;
+}
+
 /* 动态模糊的方向 = 最后一笔动态模糊笔画的手势方向。
    q 是照片归一化坐标，uv 是输出归一化坐标：duv ≈ dp · fitScale · zoom。
    没有笔画时退回水平方向（与 Photoshop 动感模糊默认角度一致）。 */
@@ -6681,6 +7043,15 @@ function setUniforms(o){
   u1('u_fit',(o.fit||viewFit)==='cover'?1:0);
   u1('u_zoom',o.zoom);
   u1('u_rot',state.rot);
+  u1('u_angle',irisAngleActive()?irisAngleRad():0);
+  u1('u_angleScale',irisAngleActive()?irisAngleScale():1);
+  const _fp=irisAngleActive()?irisFramePanUniform():FP_BUF_ZERO;
+  u2('u_framePan',_fp[0],_fp[1]);
+  const _ta=irisTiltActive(), _tc=irisTiltCoef();
+  u2('u_tilt',_ta?_tc[0]:0,_ta?_tc[1]:0);
+  u1('u_tiltMode',_ta?irisTiltMode():0);
+  u1('u_tiltFill',_ta?irisTiltFill():1);
+  u1('u_tiltOn',_ta?1:0);
   u1('u_original',o.original?1:0);
   u1('u_thumb',o.thumb?1:0);
   u1('u_splitBalance',e.splitBalance);
@@ -6811,8 +7182,20 @@ function draw(w,h,opts={}){
     pan:opts.pan||state.pan, zoom:opts.zoom||state.zoom,
     viewAspect:opts.viewAspect!==undefined?opts.viewAspect:w/h,
     original:!!opts.original, thumb:!!opts.thumb,
-    outSize:opts.outSize||null
+    outSize:opts.outSize||null,
+    fullRes:!!opts.fullRes
   };
+  /* 预览纹理被降采样过、而这一帧是导出（尺寸更大或显式 fullRes）时，
+     临时把完整原图上传为纹理；下一次预览帧会自动换回轻量预览纹理。 */
+  if(LIVE.texNeedsFull&&!LIVE.fullTexActive&&
+     (o.fullRes||o.w>LIVE.texW*1.01||o.h>LIVE.texH*1.01)){
+    try{
+      gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D,tex);
+      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,false);
+      gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,LIVE.fullSource);
+      LIVE.fullTexActive=true;
+    }catch(e){}
+  }
   gl.viewport(0,0,w,h);
   gl.useProgram(prog);
   rebuildBrushTextures(!!o.noFx);
@@ -6823,6 +7206,17 @@ function draw(w,h,opts={}){
 let raf=0, lastFrameAt=0, burst=0, hiResTimer=0;
 /* 绘制主体：既可经 render() 合并到下一帧，也可由实况播放循环每帧同步调用 */
 function paintFrame(){
+  const __t0=performance.now();
+  try{
+  /* 导出结束后回到预览帧：把纹理换回轻量预览版（上传的是小图，很快） */
+  if(LIVE.fullTexActive&&LIVE.texSource){
+    try{
+      gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D,tex);
+      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,false);
+      gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,LIVE.texSource);
+      LIVE.fullTexActive=false;
+    }catch(e){}
+  }
   /* 每帧开头失效一次几何缓存：帧内多次坐标换算只读一次布局 */
   invalidateStageRect(); IrisPerf.tick();
   /* 实况播放：把视频当前帧直接上传为纹理，复用同一套 shader，
@@ -6862,6 +7256,18 @@ function paintFrame(){
   if(scale<1){
     clearTimeout(hiResTimer);
     hiResTimer=setTimeout(()=>{ burst=0; lastFrameAt=0; render(); scheduleHist(); },140);
+  }
+  }catch(__e){
+    /* 一帧里的任何异常都只影响这一帧：记下来、下一帧继续。
+       以前 paintFrame 抛异常会让 rAF 链彻底断掉，界面看起来「卡死」。 */
+    try{ console.error('[Iris] frame skipped',__e); }catch(e2){}
+    try{ window.IrisStability&&IrisStability.noteFrameError(__e); }catch(e2){}
+    if(!paintFrame.__recover){
+      paintFrame.__recover=true;
+      requestAnimationFrame(()=>{ paintFrame.__recover=false; try{ render(); }catch(e3){} });
+    }
+  }finally{
+    try{ window.IrisStability&&IrisStability.recordFrame(performance.now()-__t0); }catch(e){}
   }
 }
 function render(){ cancelAnimationFrame(raf); raf=requestAnimationFrame(paintFrame); }
@@ -7223,8 +7629,16 @@ function paintSelection(x,W,H){
 /* ---------- 画布叠加层：蒙版范围可视化 / 分屏手柄 ---------- */
 const ov=$('#ov'), splitHandle=$('#splitHandle');
 let ovClean=false, lastSplitOn=null, lastSplitX=null;
+let _ovW=0,_ovH=0;
+function invalidateOvSize(){ _ovW=0; _ovH=0; }
 function paintOverlay(dpr){
-  const W=ov.clientWidth, H=ov.clientHeight;
+  /* ov 的 CSS 尺寸只在窗口 / 分栏变化时改变；每帧读 clientWidth 会强制布局。
+     由 ResizeObserver 失效缓存，静止帧零布局读取。 */
+  let W=_ovW,H=_ovH;
+  if(!W){
+    W=ov.clientWidth; H=ov.clientHeight;
+    if(W>=2&&H>=2){ _ovW=W; _ovH=H; }
+  }
   if(W<2||H<2)return;
   const pw=Math.max(2,Math.round(W*dpr)), ph=Math.max(2,Math.round(H*dpr));
   if(ov.width!==pw||ov.height!==ph){ov.width=pw;ov.height=ph;ovClean=false;}
@@ -7327,7 +7741,9 @@ let histTimer=0;
 function scheduleHist(){ clearTimeout(histTimer); histTimer=setTimeout(drawHistogram,260); }
 
 /* ---------- 小图渲染（滤镜缩略图 / 直方图） ---------- */
+let SMALL_PX=null, SMALL_PX_N=0, FLIP_BUF=null, FLIP_N=0;
 function renderSmall(size,opts){
+  try{
   ensureFBO(160,160);
   gl.bindFramebuffer(gl.FRAMEBUFFER,histFBO);
   gl.viewport(0,0,size,size);
@@ -7340,17 +7756,33 @@ function renderSmall(size,opts){
     noTone:!!opts.noTone};
   setUniforms(o);
   gl.drawArrays(gl.TRIANGLES,0,6);
-  const px=new Uint8Array(size*size*4);
+  /* 缓冲复用：409 张缩略图以前每张 new 一个 100KB Uint8Array + 一个
+     Uint8ClampedArray，合计近 80MB 垃圾，GC 一抖就掉帧。 */
+  const need=size*size*4;
+  if(!SMALL_PX||SMALL_PX_N!==need){ SMALL_PX=new Uint8Array(need); SMALL_PX_N=need; }
+  const px=SMALL_PX;
   gl.readPixels(0,0,size,size,gl.RGBA,gl.UNSIGNED_BYTE,px);
   gl.bindFramebuffer(gl.FRAMEBUFFER,null);
   return px;
+  }catch(e){
+    /* 上下文丢失 / FBO 失败时返回一张全零缓冲而不是 null：
+       直方图和色调指纹的调用点都直接读 px.length，null 会把整页带崩。 */
+    try{ gl.bindFramebuffer(gl.FRAMEBUFFER,null); }catch(e2){}
+    const need=size*size*4;
+    if(!SMALL_PX||SMALL_PX_N!==need){ SMALL_PX=new Uint8Array(need); SMALL_PX_N=need; }
+    else SMALL_PX.fill(0);
+    return SMALL_PX;
+  }
 }
 function flipRows(px,size){
-  const out=new Uint8ClampedArray(px.length), row=size*4;
+  const row=size*4, len=px.length;
+  if(!FLIP_BUF||FLIP_N!==len){ FLIP_BUF=new Uint8ClampedArray(len); FLIP_N=len; }
+  const out=FLIP_BUF;
   for(let y=0;y<size;y++) out.set(px.subarray((size-1-y)*row,(size-y)*row),y*row);
   return out;
 }
 function dataURLFromPixels(px,size){
+  if(!px) return '';
   const c=document.createElement('canvas'); c.width=c.height=size;
   c.getContext('2d').putImageData(new ImageData(flipRows(px,size),size,size),0,0);
   return c.toDataURL();
@@ -7564,7 +7996,8 @@ try{ const m=localStorage.getItem('plate_pad_tone'); if(m==='native') padToneMod
 function analyzePhotoTone(source){
   const N=48, c=document.createElement('canvas'); c.width=c.height=N;
   const x=c.getContext('2d',{willReadFrequently:true});
-  try{ x.drawImage(source,0,0,N,N); }catch(e){ return null; }
+  const s0=(typeof LIVE!=='undefined'&&LIVE.analysis&&source===LIVE.still)?LIVE.analysis:source;
+  try{ x.drawImage(s0,0,0,N,N); }catch(e){ return null; }
   let px;
   try{ px=x.getImageData(0,0,N,N).data; }catch(e){ return null; }
   let sx=0,sy=0,wsum=0,ssum=0,lsum=0,valid=0;
@@ -7687,7 +8120,7 @@ function restoreLiveStill(){
   if(!LIVE.still) return;
   gl.bindTexture(gl.TEXTURE_2D,tex);
   gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,false);
-  try{ gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,LIVE.still); }catch(e){}
+  try{ gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,LIVE.texSource||LIVE.still); }catch(e){}
 }
 function updateLiveProgress(){
   const v=LIVE.video, t=$('#liveTime'); if(!v||!t) return;
@@ -7742,12 +8175,20 @@ function liveFrame(t){
 }
 function loadImageFile(f,withVideo,token){
   const url=URL.createObjectURL(f), im=new Image();
-  im.onload=()=>{
+  im.onload=async()=>{
+    /* 先在异步阶段生成共享分析小图（createImageBitmap 不阻塞主线程），
+       再进入 uploadImage；这样大照片「点开 → 出画面」不再被缩放堵住。 */
+    let small=null;
+    try{ small=await irisAnalysisAsync(im); }catch(e){}
+    if(token!==importToken){ URL.revokeObjectURL(url); return; }  // 连续选图：丢弃过期结果
+    LIVE.srcFile=f;
+    LIVE.analysis=small||im; LIVE.analysisFor=im;
     uploadImage(im,f.name,false,{resetEdits:true,token}); URL.revokeObjectURL(url); updateLiveUI();
     if(withVideo) toast('实况照片已载入 · 长按画面或点 LIVE 播放'+(LIVE.matched?'（同名配对）':''));
   };
   im.onerror=()=>{
     URL.revokeObjectURL(url);
+    LIVE.srcFile=null;
     if(LIVE.pair&&LIVE.video&&LIVE.video.videoWidth){
       liveFrame(Math.min(.6,(LIVE.duration||1.5)/2)).then(c=>{
         uploadImage(c,liveBase(f.name)+'_封面',false,{resetEdits:true,token}); updateLiveUI();
@@ -7868,7 +8309,7 @@ function applyExportFrame(src){
 function renderExportCanvas(){
   const [ew,eh]=exportDims(), oldW=canvas.width, oldH=canvas.height;
   canvas.width=ew; canvas.height=eh;
-  draw(ew,eh,{e:effective(),pan:[0,0],zoom:1,viewAspect:imageAspect(),original:false,thumb:true});
+  draw(ew,eh,{e:effective(),pan:[0,0],zoom:1,viewAspect:imageAspect(),original:false,thumb:true,fullRes:true});
   const out=document.createElement('canvas'); out.width=ew; out.height=eh;
   const ox=out.getContext('2d'); ox.drawImage(canvas,0,0,ew,eh);
   if(state.elements.length) paintElementsOn(ox,ew,eh,true);
@@ -8319,13 +8760,22 @@ function resetEditsForNewPhoto(){
 function uploadImage(source,name,demo,opts){
   const o=opts||{};
   LIVE.still=source; LIVE.imgName=demo?'':(name||'');
+  imgW=source.width||source.naturalWidth; imgH=source.height||source.naturalHeight;
+  /* 没有预生成的分析小图（恢复 / 实况封面 / 启动占位）时同步兜底一次 */
+  if(!LIVE.analysis||LIVE.analysisFor!==source){
+    LIVE.analysis=irisAnalysisSync(source)||source; LIVE.analysisFor=source;
+  }
+  /* 超过 GPU 纹理上限：预览用缩小纹理，fullSource 留给导出 */
+  const up=irisPreviewTexture(source);
+  LIVE.fullSource=source; LIVE.texSource=up;
+  LIVE.texNeedsFull=(up!==source); LIVE.fullTexActive=false;
+  const [tw,th]=irisDims(up); LIVE.texW=tw; LIVE.texH=th;
   /* 必须先锁定 unit 0：色调迁移 / 分割 / 虚化都会切换活动纹理单元，
      否则 texImage2D 会写进别的单元，画面仍显示上一张照片。 */
   gl.activeTexture(gl.TEXTURE0);
   gl.bindTexture(gl.TEXTURE_2D,tex);
   gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,false);
-  gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,source);
-  imgW=source.width||source.naturalWidth; imgH=source.height||source.naturalHeight;
+  gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,up);
   imageReady=true; isDemoPhoto=!!demo; photoName=name||'我的照片';
   const card=$('#drop');
   let dismissed=false;
@@ -8339,13 +8789,19 @@ function uploadImage(source,name,demo,opts){
     resetEditsForNewPhoto();
   }
   state.zoom=1; state.pan=[0,0];
-  photoTone=analyzePhotoTone(source);
-  applyPadTone();
-  /* 端侧单次推理：1/8 分辨率 matte，之后拖动 pad 只改 uniform，不重复分割 */
-  analyzeSemantic(source);
-BOK.low=null; BOK.ready=false;
-if(state.bokeh&&state.bokeh.on) setTimeout(()=>detectSubject(state.bokeh.mode,true),80);
-  buildFilterThumbs(); render(); drawHistogram(); pulsePhoto();
+  /* 首帧立刻出画面；色调分析 / 语义 matte / 缩略图 / 直方图分级到后续帧与空闲。
+     导入大照片时不再把 300ms 的同步重活全压在 onload 里。 */
+  render(); pulsePhoto();
+  irisScheduleAnalysis(source);
+  BOK.low=null; BOK.ready=false;
+  if(state.bokeh&&state.bokeh.on) setTimeout(()=>detectSubject(state.bokeh.mode,true),120);
+  if(!demo){
+    markPhotoImported();
+    /* 已打开的独立页面里凡是含照片 / matte / 统计的，立刻重建，
+       不让上一张（尤其是演示图）的预览残留在屏幕上。 */
+    try{ window.dispatchEvent(new CustomEvent('iris-photo-changed',
+      {detail:{name:photoName,w:imgW,h:imgH}})); }catch(e){}
+  }
   if(!demo) toast(o.resetEdits&&o.token===lastResetToken
     ? '已载入「'+photoName+'」· 编辑已清空（上一张的色调可在「我的色调」里重新迁移）'
     : '已载入「'+photoName+'」· 盘面跟随「'+toneName(photoTone)+'」');
@@ -8358,7 +8814,10 @@ if(state.bokeh&&state.bokeh.on) setTimeout(()=>detectSubject(state.bokeh.mode,tr
   }
 }
 function loadFile(f){ loadFiles(f?[f]:[]); }
-uploadImage(demoImage(),'演示图',true);
+/* 演示图只在真正第一次启动（本机从未导入过照片、也没有任何存档）时出现。
+   之后任何一次启动都用中性占位，恢复成功再由快照换成上次的真照片。 */
+if(hasImportedPhoto()) uploadImage(placeholderImage(),'未载入照片',true);
+else uploadImage(demoImage(),'演示图',true);
 
 /* 导入引导：点击卡片 / 关闭 / 拖放高亮 */
 const dropCard=$('#drop'), stageEarly=$('#stage');
@@ -11081,8 +11540,8 @@ function renderVideoPage(body){
    4) 断网、限流、404、旧版页面格式都有明确降级与提示，
       检查失败不影响任何编辑与导出功能。
    ============================================================ */
-const IRIS_VERSION='1.0.13';
-const IRIS_BUILD='2026-11-19';
+const IRIS_VERSION='1.0.17';
+const IRIS_BUILD='2026-11-12';
 const IRIS_CHANNEL='rc';                 /* rc = 近乎最终版 */
 const IRIS_SOURCE_TAG='v1.0.3';          /* 本版基于仓库的哪个已发布版本 */
 const IRIS_REPO_DEFAULT={
@@ -11885,7 +12344,7 @@ const PANEL_META={
   light:['光效','去雾 · 光晕 · 暗角 · 透视',1],
   hsl:['分色','8 个色相独立微调',2],
   curve:['曲线','RGB 与单通道曲线',2],
-  crop:['裁剪','直接拖框 · 比例 · 旋转',2],
+  crop:['裁剪','拖框 · 左右上下倾斜 · 翻转',2],
   lightfield:['光场','重聚焦 · 视差 · 重打光（2.5D 深度代理）',3],
   bokeh:['背景虚化','一键检测人物 / 物品主体，自动虚化背景',3],
   presets:['预设','风格 · 导出 · 关于（分栏）',5],
@@ -12124,13 +12583,19 @@ function syncPanelFit(force){
   p.removeAttribute('data-fit');
   let over=p.scrollWidth>p.clientWidth+1;
   if(!over){
+    /* 同一类行用的是同一条 CSS 规则，overflow-x 只在本次测量内缓存一次；
+       同类行宽度一致，最多抽查 12 个就够判定，不必遍历 433 张卡片。
+       缓存是局部的，inline style 改了也不会留下陈旧值。 */
+    const oxCache=Object.create(null);
     for(let k=0;k<FIT_ROWS.length&&!over;k++){
-      const els=p.querySelectorAll(FIT_ROWS[k]);
-      for(let i=0;i<els.length;i++){
-        const el=els[i];
-        /* 只认「横向不可滚动」的行：.chips / .fgroup 本身允许横向滚动，不算溢出 */
-        const cs=getComputedStyle(el);
-        if(cs.overflowX==='auto'||cs.overflowX==='scroll') continue;
+      const sel=FIT_ROWS[k], els=p.querySelectorAll(sel);
+      const lim=Math.min(els.length,12);
+      for(let i=0;i<lim;i++){
+        const el=els[i], ck=sel+'|'+(el.className||el.tagName);
+        let ox=oxCache[ck];
+        if(ox===undefined){ ox=getComputedStyle(el).overflowX; oxCache[ck]=ox; }
+        /* .chips / .fgroup 本身允许横向滚动，不算溢出 */
+        if(ox==='auto'||ox==='scroll') continue;
         if(el.scrollWidth>el.clientWidth+1){ over=true; break; }
       }
     }
@@ -12149,7 +12614,7 @@ function updateTB(){
   const lnames=state.layers.filter(l=>l.name!=='原图'&&l.enabled!==false).map(l=>l.name).join(' + ')||'原图';
   const cnt=o=>TARGETS.filter(q=>{const a=o[q.id];return a&&Math.abs(a.x)+Math.abs(a.y)>.001;}).length;
   const total=cnt(state.globalPlates)+state.layers.reduce((s,L)=>s+cnt(L.plates),0);
-  const photo=(isDemoPhoto?'演示图 · 换照片':photoName+' · '+imgW+'×'+imgH)+
+  const photo=(photoName==='演示图'?'演示图 · 换照片':photoName+' · '+imgW+'×'+imgH)+
     (LIVE.pair?' · ● LIVE '+LIVE.duration.toFixed(1)+'s':'');
   const semNow=tool==='plate'&&state.plateScope==='global'&&state.plateTarget==='all';
   const detail=tool==='plate'
@@ -13649,9 +14114,12 @@ function buildLight(p){
   s2.append(slider('base.vignette','暗角强度',0,1,.01,'%',0));
   p.append(s2);
   const s3=section('透视矫正');
-  s3.append(hint('上下 / 左右梯形校正，适合建筑与翻拍，按裁剪后的实际尺寸导出。'));
-  s3.append(slider('persp.0','水平梯形',-.5,.5,.01,'%',0));
-  s3.append(slider('persp.1','垂直梯形',-.5,.5,.01,'%',0));
+  s3.append(hint('透视倾斜已统一移到 <b>裁剪页首屏</b>：两根度数滑杆分别控制左右 / 上下倾斜，'
+    +'支持斜切与梯形透视、照片上直接拖、自动裁切填满。点下面按钮直接过去。'
+    +'（这里不再放第二套控件，避免两处数值互相打架；旧存档里的梯形矫正数值仍照常生效。）'));
+  const go=document.createElement('div'); go.className='row';
+  go.append(button('↗ 去裁剪页调倾斜',()=>{ gotoTool('crop'); toast('在「透视倾斜」里左右滑两根滑杆'); },'accent'));
+  s3.append(go);
   p.append(s3);
   const s4=section('对比与预览');
   const r=document.createElement('div');r.className='row';
@@ -13750,6 +14218,200 @@ function setupCurve(cv){
    - 框坐标始终存成 state.crop（原图归一化 UV），与导出 / 渲染完全兼容
    - 命中与绘制用同一个 DOMMatrix，旋转 90° 后也不会错位
    ============================================================ */
+/* ============================================================
+   任意角度旋转后的裁剪编辑器底图
+   cropEd 是 2D 画布，不能跑着色器。这里把「原图 → 90° 步进 / 翻转 →
+   任意角度 → 自动裁切填满 → 构图缩放 / 位移」画成一张正矩形成品图，
+   裁剪框于是始终是正矩形、不跟着歪，且与 shader 里 crop 作用在
+   「旋转之后」的坐标语义一致。只在几何参数变化时重画一次。
+   ============================================================ */
+let ANGLE_BAKE={key:'',canvas:null};
+let angleGestureOn=false, tiltGestureOn=false;
+let tiltUIUpd=null;   // buildCrop 注入的两轴大读数刷新器
+/* ============================================================
+   烘焙图性能（v1.0.17）
+   之前每改一次倾斜度数就 new 一张 900×675 canvas（≈2.4MB），
+   40 步拖动就是近 100MB 垃圾；每个网格三角还各建 3 个临时数组。
+   现在：① canvas 按 N 复用，只 clear 不重建；② N=6（拖动）用
+   560px 输出、N=12（静止）用 900px；③ 6 与 12 各自独立缓存，
+   拖动→松手互不踢掉对方；④ 所有坐标数组预分配复用，帧内零分配。
+   ============================================================ */
+const BAKE_POOL=Object.create(null);      // N -> {canvas,ctx,W,H,S}
+const BAKE_CACHE=Object.create(null);     // N -> {key,canvas}
+const _triE0=[0,0],_triE1=[0,0],_triE2=[0,0];
+const _quadD=[[0,0],[0,0],[0,0],[0,0]],_quadS=[[0,0],[0,0],[0,0],[0,0]];
+const _invOut=[0,0];
+function irisAngleKey(N){
+  const fp=state.framePan||[0,0], t=state.tilt||[0,0], ps=state.persp||[0,0];
+  /* N 决定输出边长，所以 key 里带 N 就同时锁住了分辨率 */
+  return [N,state.rot,state.angle,state.flipX,state.flipY,state.frameZoom,
+    fp[0],fp[1],t[0],t[1],state.tiltMode,ps[0],ps[1],imgW,imgH,
+    LIVE.still&&(LIVE.still.width||LIVE.still.naturalWidth)].join('|');
+}
+/* 单个三角形：解 2×3 仿射，把源图三角形贴到目标三角形。
+   Canvas 2D 没有透视贴图，这是标准的网格近似；N=12 时缝隙 <0.5px。 */
+function irisTri(x,img,s0,s1,s2,d0,d1,d2){
+  const ax=s1[0]-s0[0], ay=s1[1]-s0[1], bx=s2[0]-s0[0], by=s2[1]-s0[1];
+  const den=ax*by-bx*ay;
+  if(Math.abs(den)<1e-7) return;
+  const ux=d1[0]-d0[0], uy=d1[1]-d0[1], vx=d2[0]-d0[0], vy=d2[1]-d0[1];
+  const A=(ux*by-vx*ay)/den, B=(ax*vx-bx*ux)/den;
+  const C=(uy*by-vy*ay)/den, D=(ax*vy-bx*uy)/den;
+  const E=d0[0]-A*s0[0]-B*s0[1], F=d0[1]-C*s0[0]-D*s0[1];
+  /* 目标三角略微外扩，消除相邻网格之间的 1px 白缝；三个点写进复用数组 */
+  const cx=(d0[0]+d1[0]+d2[0])/3, cy=(d0[1]+d1[1]+d2[1])/3;
+  const ex=(pt,o)=>{ const dx=pt[0]-cx,dy=pt[1]-cy;
+    o[0]=pt[0]+dx*.006+Math.sign(dx)*.45;
+    o[1]=pt[1]+dy*.006+Math.sign(dy)*.45; };
+  ex(d0,_triE0);ex(d1,_triE1);ex(d2,_triE2);
+  x.save();
+  x.beginPath();x.moveTo(_triE0[0],_triE0[1]);x.lineTo(_triE1[0],_triE1[1]);
+  x.lineTo(_triE2[0],_triE2[1]);x.closePath();x.clip();
+  x.setTransform(A,C,B,D,E,F);
+  /* 以前每个三角都 drawImage(img,0,0) —— 把整张原图按仿射变换跑一遍，
+     再靠 clip 丢掉 99% 的结果。288 个三角就是 288 次整图采样。
+     现在只取源三角的包围盒：在已经设好的仿射下，把同一块矩形从源
+     画到同坐标，像素完全等价，却只处理这一小块。 */
+  const minX=Math.min(s0[0],s1[0],s2[0]), maxX=Math.max(s0[0],s1[0],s2[0]);
+  const minY=Math.min(s0[1],s1[1],s2[1]), maxY=Math.max(s0[1],s1[1],s2[1]);
+  const iw=img.width||img.naturalWidth||img.videoWidth||1e9;
+  const ih=img.height||img.naturalHeight||img.videoHeight||1e9;
+  const sx=Math.max(0,Math.floor(minX-1)), sy=Math.max(0,Math.floor(minY-1));
+  const bx2=Math.min(iw,Math.ceil(maxX+1)), by2=Math.min(ih,Math.ceil(maxY+1));
+  const sw2=bx2-sx, sh2=by2-sy;
+  if(sw2>0&&sh2>0){
+    try{ x.drawImage(img,sx,sy,sw2,sh2,sx,sy,sw2,sh2); }catch(e){}
+  }
+  x.restore();
+}
+function bakeSlot(N,ar){
+  const S=N<=6?560:900;
+  const W=Math.max(2,Math.round(ar>=1?S:S*ar)), H=Math.max(2,Math.round(ar>=1?S/ar:S));
+  let slot=BAKE_POOL[N];
+  if(!slot){
+    const cv=document.createElement('canvas'); cv.width=W; cv.height=H;
+    slot=BAKE_POOL[N]={canvas:cv,ctx:cv.getContext('2d'),W,H,S};
+  }else if(slot.W!==W||slot.H!==H){
+    slot.canvas.width=W; slot.canvas.height=H; slot.W=W; slot.H=H; slot.S=S;
+  }
+  return slot;
+}
+function irisGeomBake(N){
+  N=N||12;
+  const key=irisAngleKey(N);
+  const hit=BAKE_CACHE[N];
+  if(hit&&hit.key===key&&hit.canvas){
+    ANGLE_BAKE={key,canvas:hit.canvas};
+    return hit.canvas;                       // 同参数连续调用：零计算
+  }
+  const src=LIVE.fullSource||LIVE.still;
+  const sw=(src&&(src.width||src.naturalWidth||src.videoWidth))||imgW;
+  const sh=(src&&(src.height||src.naturalHeight||src.videoHeight))||imgH;
+  const ar=Math.max(.0001,imageAspect());
+  const slot=bakeSlot(N,ar), out=slot.canvas, W=slot.W, H=slot.H;
+  const x=slot.ctx;
+  x.setTransform(1,0,0,1,0,0);
+  x.imageSmoothingQuality='high';
+  x.fillStyle='#0b0b0d'; x.fillRect(0,0,W,H);
+  /* 输出画布像素 (px,py) → shader uv=(px/W, 1−py/H) → 源图 UV → 源图像素 */
+  const map=(px,py,o)=>{
+    const uv=irisInvGeom(px/W,1-py/H,_invOut);
+    o[0]=uv[0]*sw; o[1]=(1-uv[1])*sh;
+  };
+  for(let j=0;j<N;j++)for(let i=0;i<N;i++){
+    const x0=i*W/N, x1=(i+1)*W/N, y0=j*H/N, y1=(j+1)*H/N;
+    const D=_quadD, S4=_quadS;
+    D[0][0]=x0;D[0][1]=y0; D[1][0]=x1;D[1][1]=y0;
+    D[2][0]=x1;D[2][1]=y1; D[3][0]=x0;D[3][1]=y1;
+    map(x0,y0,S4[0]);map(x1,y0,S4[1]);map(x1,y1,S4[2]);map(x0,y1,S4[3]);
+    irisTri(x,src,S4[0],S4[1],S4[2],D[0],D[1],D[2]);
+    irisTri(x,src,S4[0],S4[2],S4[3],D[0],D[2],D[3]);
+  }
+  BAKE_CACHE[N]={key,canvas:out};
+  ANGLE_BAKE={key,canvas:out};
+  return out;
+}
+/* 兼容旧调用名（历史验证脚本与旧诊断页仍会用） */
+const irisAngleBake=()=>irisGeomBake(12);
+function irisAngleText(){
+  const v=+(state.angle||0);
+  return (v>0?'+':'')+v.toFixed(1)+'°';
+}
+function irisTotalText(){
+  const t=irisTotalAngle();
+  return (Math.abs(t-Math.round(t))<1e-6?Math.round(t).toString():t.toFixed(1))+'°';
+}
+/* ============================================================
+   左右 / 上下倾斜（v1.0.16）
+     tilt[0] = 左右倾斜度数 dLR：垂直边左右推斜 / 左高右矮
+     tilt[1] = 上下倾斜度数 dUD：水平边上下推斜 / 上窄下宽
+   系数 c = tan(d°)/2，d∈[−45,45] → c∈[−0.5,0.5]，与旧 persp 同量级。
+   ============================================================ */
+function irisTilt(){
+  const t=state.tilt||[0,0];
+  return [clamp(+(t[0]||0),-45,45), clamp(+(t[1]||0),-45,45)];
+}
+function irisTiltCoef(){
+  const d=irisTilt();
+  return [Math.tan(d[0]*Math.PI/180)*0.5, Math.tan(d[1]*Math.PI/180)*0.5];
+}
+function irisTiltMode(){ return state.tiltMode==='keystone'?1:0; }
+function irisTiltActive(){
+  const d=irisTilt();
+  return Math.abs(d[0])>1e-4||Math.abs(d[1])>1e-4;
+}
+/* 自动裁切填满：让输出矩形完全落在倾斜后的源图里，四角不露黑边。
+   shear 矩阵逆的列和 ≈ (1+|sLR|)/(1−sLR·sUD)，取更保守的下界。 */
+function irisTiltFill(){
+  const c=irisTiltCoef(), a=Math.abs(c[0]), b=Math.abs(c[1]);
+  if(a+b<1e-9) return 1;          // 零位严格恒等，不留浮点尾巴
+  const den=Math.max(.15,1-a*b);
+  return den/(1+a+b);
+}
+function irisAnyGeomActive(){ return irisAngleActive()||irisTiltActive(); }
+function irisTiltText(i){
+  const v=irisTilt()[i];
+  return (v>0?'+':'')+v.toFixed(1)+'°';
+}
+/* 输出归一化坐标 (u,v) → 源图 UV（不含 crop，crop 由裁剪框单独处理）。
+   逐行复刻 mapSrc 的几何段，保证 2D 裁剪预览与 WebGL 导出完全一致。 */
+function irisInvGeom(u,v,out){
+  let rx=u-.5, ry=v-.5;
+  rx*=(state.flipX||1); ry*=(state.flipY||1);
+  /* 旧 persp（光效页的梯形矫正，保留兼容） */
+  const ps=state.persp||[0,0];
+  rx=rx*(1+ps[0]*ry*2); ry=ry*(1+ps[1]*rx*2);
+  /* 90° 步进 */
+  const a=(state.rot||0)*Math.PI/2, ca=Math.cos(a), sa=Math.sin(a);
+  const nrx=rx*ca+ry*sa, nry=-rx*sa+ry*ca; rx=nrx; ry=nry;
+  /* 任意角度拉直 */
+  const ar=Math.max(.0001,imageAspect());
+  if(irisAngleActive()){
+    let qx=rx*ar, qy=ry;
+    const cb=Math.cos(irisAngleRad()), sb=Math.sin(irisAngleRad());
+    const tx=qx*cb+qy*sb, ty=-qx*sb+qy*cb;
+    const fp=irisFramePanUniform();
+    qx=tx*irisAngleScale()+fp[0]; qy=ty*irisAngleScale()+fp[1];
+    rx=qx/ar; ry=qy;
+  }
+  /* 左右 / 上下倾斜 */
+  if(irisTiltActive()){
+    const c=irisTiltCoef(), f=irisTiltFill();
+    let qx=rx*ar, qy=ry;
+    if(irisTiltMode()<.5){
+      const q0x=qx, q0y=qy;
+      qx=q0x+c[0]*q0y; qy=q0y+c[1]*q0x;
+    }else{
+      qx=qx/Math.max(1+2*c[1]*qy/ar,.15);
+      qy=qy/Math.max(1+2*c[0]*qx,.15);
+    }
+    qx*=f; qy*=f;
+    rx=qx/ar; ry=qy;
+  }
+  if(out){ out[0]=rx+.5; out[1]=ry+.5; return out; }
+  return [rx+.5,ry+.5];
+}
+
 let cropGeo=null;          // {bw,bh,M,iM}：绘制尺寸与正 / 逆变换
 let cropDrag=null;         // {mode,anchor,start,before}
 const CROP_MIN=.035;
@@ -13807,13 +14469,17 @@ function cropGeometry(){
   const showAr=(rot%2)?1/ar:ar;                 // 旋转后显示区域的宽高比
   let RW=availW,RH=availW/showAr;
   if(RH>availH){ RH=availH; RW=availH*showAr; }
-  // 未旋转图的绘制尺寸（旋转 90° 时宽高互换）
-  const bw=(rot%2)?RH:RW, bh=(rot%2)?RW:RH;
+  /* 任意角度模式：底图已经是「旋转并裁切填满」后的正矩形，
+     变换矩阵退化为纯平移，裁剪框不再跟着歪。 */
+  const angleOn=irisAnyGeomActive();
+  const bw=angleOn?RW:((rot%2)?RH:RW), bh=angleOn?RH:((rot%2)?RW:RH);
   const cx=W/2, cy=H/2;
-  const M=new DOMMatrix().translateSelf(cx,cy)
-    .rotateSelf(rot*90).scaleSelf(state.flipX||1,state.flipY||1)
-    .translateSelf(-bw/2,-bh/2);
-  return {bw,bh,RW,RH,cx,cy,M,iM:M.inverse()};
+  const M=angleOn
+    ? new DOMMatrix().translateSelf(cx,cy).translateSelf(-bw/2,-bh/2)
+    : new DOMMatrix().translateSelf(cx,cy)
+        .rotateSelf(rot*90).scaleSelf(state.flipX||1,state.flipY||1)
+        .translateSelf(-bw/2,-bh/2);
+  return {bw,bh,RW,RH,cx,cy,M,iM:M.inverse(),baked:angleOn};
 }
 /* 屏幕像素 → 原图 UV */
 function cropScreenToUV(px,py){
@@ -13892,6 +14558,8 @@ function cropResize(start,h,u,v){
   }
   return cropClampBox([l,t,r,bo]);
 }
+/* 烘焙精度状态：参数键、上次变更时刻、精修定时器 */
+let GEOM_KEY='', GEOM_DIRTY_AT=0, GEOM_FINE_TIMER=0;
 function drawCropEditor(){
   if(tool!=='crop'||!imageReady||!LIVE.still){ cropEd.classList.remove('on'); return; }
   cropEd.classList.add('on');
@@ -13905,12 +14573,33 @@ function drawCropEditor(){
   x.fillStyle='#0b0b0d';x.fillRect(0,0,W,H);
   cropGeo=cropGeometry(); if(!cropGeo) return;
   const {bw,bh,M}=cropGeo;
-  // 完整原图（含旋转 / 翻转），带一点柔光边框
+  // 完整画面：任意角度时用烘焙后的正矩形成品图，否则用原图（含 90° / 翻转）
+  /* 烘焙精度判定（v1.0.17 收尾）
+     之前用 burst（帧间隔 <100ms 累加）判断是否在连续交互：headless /
+     低端机一旦掉一帧到 >100ms，burst 归零，那一帧就跑去算 N=12 的
+     288 个三角 —— 实测 30 帧拖动里混进 5 个 40ms+ 的慢帧。
+     现在改成「参数键 + 时间窗」：参数一变就是连续编辑，固定用 N=6；
+     参数不变且过了 200ms，才由一次性定时器补一帧 N=12 精修。
+     与帧率完全解耦，再掉帧也不会突然卡一下。
+     另：试过拖动期把 cropEd 的 backing store 降到 72%，实测反而更慢
+     （每帧改 canvas.width 会重新分配 backing store），已放弃。 */
+  let N=12;
+  if(cropGeo.baked){
+    const k=irisAngleKey(0);                 // N 固定为 0 → 不含分辨率的参数键
+    const now=performance.now();
+    if(k!==GEOM_KEY){
+      GEOM_KEY=k; GEOM_DIRTY_AT=now; N=6;
+      clearTimeout(GEOM_FINE_TIMER);
+      GEOM_FINE_TIMER=setTimeout(()=>{ GEOM_FINE_TIMER=0; try{ render(); }catch(e){} },220);
+    } else if(now-GEOM_DIRTY_AT<200) N=6;
+  }
+  const base=(typeof cropGeo.baked!=='undefined'&&cropGeo.baked)
+    ?irisGeomBake(N):LIVE.still;
   x.save();
   x.setTransform(dpr,0,0,dpr,0,0);
   x.transform(M.a,M.b,M.c,M.d,M.e,M.f);
   x.imageSmoothingQuality='high';
-  try{ x.drawImage(LIVE.still,0,0,bw,bh); }
+  try{ x.drawImage(base,0,0,bw,bh); }
   catch(e){ x.fillStyle='#2a2a2e';x.fillRect(0,0,bw,bh); }
   x.restore();
 
@@ -13964,6 +14653,25 @@ function drawCropEditor(){
   roundRect(x,bx,by,tw,24,9);x.fill();x.stroke();
   x.fillStyle='#f2f2f5';x.textAlign='center';x.textBaseline='middle';
   x.fillText(label,bx+tw/2,by+12.5);
+  if(tiltGestureOn){
+    const g='↔ 横向拖 = 左右 '+irisTiltText(0)+'   ↕ 纵向拖 = 上下 '+irisTiltText(1);
+    x.font='600 11px -apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif';
+    const gw=x.measureText(g).width+22;
+    const gx=clamp((W-gw)/2,8,W-gw-8), gy=H-38;
+    x.fillStyle='rgba(20,17,10,.9)';x.strokeStyle='rgba(227,182,92,.55)';x.lineWidth=1;
+    roundRect(x,gx,gy,gw,25,9);x.fill();x.stroke();
+    x.fillStyle='#e3b65c';x.textAlign='center';x.textBaseline='middle';
+    x.fillText(g,gx+gw/2,gy+12.5);
+  } else if(angleGestureOn){
+    const g='↔ 左右拖动调角度 · 当前 '+irisAngleText();
+    x.font='600 11px -apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif';
+    const gw=x.measureText(g).width+22;
+    const gx=clamp((W-gw)/2,8,W-gw-8), gy=H-38;
+    x.fillStyle='rgba(20,17,10,.9)';x.strokeStyle='rgba(227,182,92,.55)';x.lineWidth=1;
+    roundRect(x,gx,gy,gw,25,9);x.fill();x.stroke();
+    x.fillStyle='#e3b65c';x.textAlign='center';x.textBaseline='middle';
+    x.fillText(g,gx+gw/2,gy+12.5);
+  }
   x.restore();
 }
 function roundRect(x,a,b,w,h,r){
@@ -13984,6 +14692,17 @@ cropEd.addEventListener('pointerdown',e=>{
   e.preventDefault(); e.stopPropagation();
   if(!imageReady||!cropGeo) return;
   const [px,py]=cropLocal(e);
+  /* 手势模式：角度 / 倾斜，裁剪框暂时让位 */
+  if(angleGestureOn){
+    try{ cropEd.setPointerCapture(e.pointerId); }catch(err){}
+    cropDrag={mode:'angle',x:px,start:+(state.angle||0),before:JSON.stringify(state)};
+    return;
+  }
+  if(tiltGestureOn){
+    try{ cropEd.setPointerCapture(e.pointerId); }catch(err){}
+    cropDrag={mode:'tilt',x:px,y:py,start:irisTilt(),before:JSON.stringify(state)};
+    return;
+  }
   const hit=cropHit(px,py);
   if(hit.mode==='none') return;
   try{ cropEd.setPointerCapture(e.pointerId); }catch(err){}
@@ -14004,7 +14723,21 @@ cropEd.addEventListener('pointermove',e=>{
     e.preventDefault();
     const [px,py]=cropLocal(e);
     const u=cropScreenToUV(px,py);
-    const d=cropDrag, c=[...d.start];
+    const d=cropDrag;
+    if(d.mode==='angle'){
+      state.angle=clamp(Math.round((d.start+(px-d.x)/6)*10)/10,-45,45);
+      syncUI(); render();
+      return;
+    }
+    if(d.mode==='tilt'){
+      state.tilt=[
+        clamp(Math.round((d.start[0]+(px-d.x)/6)*10)/10,-45,45),
+        clamp(Math.round((d.start[1]+(py-d.y)/6)*10)/10,-45,45)
+      ];
+      syncUI(); if(tiltUIUpd) tiltUIUpd(); render();
+      return;
+    }
+    const c=[...d.start];
     if(d.mode==='move'){
       let w=c[2]-c[0],h=c[3]-c[1];
       let x0=clamp(u[0]-d.du,0,1-w), y0=clamp(u[1]-d.dv,0,1-h);
@@ -14025,8 +14758,11 @@ cropEd.addEventListener('pointermove',e=>{
   e.stopPropagation();
   if(!cropDrag) return;
   /* 拖动只在会话内改 state，不逐步写历史；由「完成」一次提交 */
+  const wasGesture=cropDrag.mode==='angle'||cropDrag.mode==='tilt';
+  const beforeStr=cropDrag.before;
   cropDrag=null;
-  syncUI(); buildPanel(true); requestRender();
+  if(wasGesture&&beforeStr) commit(beforeStr);
+  syncUI(); if(wasGesture) refreshCropTiltUI(); requestRender();
 },{passive:false}));
 /* 双击 = 完成（原来双击是重置，容易误以为裁完了） */
 cropEd.addEventListener('dblclick',e=>{ e.preventDefault(); e.stopPropagation(); cropDone(); });
@@ -14040,39 +14776,213 @@ cropEd.addEventListener('wheel',e=>{ e.preventDefault(); e.stopPropagation(); },
 /* --- 裁剪 / 旋转 --- */
 const ASPECTS=[{id:'free',name:'自由'},{id:'original',name:'原图'},{id:'1:1',name:'1:1'},{id:'4:3',name:'4:3'},
   {id:'3:2',name:'3:2'},{id:'16:9',name:'16:9'},{id:'9:16',name:'9:16'}];
+function cropStateHTML(){
+  const mir=(state.flipX<0&&state.flipY<0)?'水平 + 垂直镜像':
+            (state.flipX<0?'水平镜像':(state.flipY<0?'垂直镜像':'无镜像'));
+  return '当前 <b>左右 '+irisTiltText(0)+'</b> · <b>上下 '+irisTiltText(1)+'</b>'
+    +' · '+(state.tiltMode==='keystone'?'梯形透视':'斜切倾斜')
+    +' · '+(state.rot?'90° 步进 '+(state.rot*90)+'° · ':'')+mir
+    +' · 自动裁切填满 <b>'+(1/irisTiltFill()).toFixed(2)+'×</b>'
+    +' · 导出约 <b>'+exportSize().join(' × ')+' px</b>'
+    +'<br>两轴独立、各 −45°~+45°（0.1° 步进），可与 90° 旋转 / 翻转 / 任意角度叠加；'
+    +'倾斜后自动放大裁掉四角，裁剪框始终是正矩形、作用在倾斜之后的画面上。'
+    +'双击滑杆可把该轴归零。';
+}
+function cropAngleHintHTML(){
+  return '当前总方向 <b>'+irisTotalText()+'</b>（含 90° 步进）· 自动填满 '
+    +irisFillK().toFixed(2)+'×。';
+}
+/* 面板重建一次约 50~90ms（DOM 全量销毁 + 13 类溢出测量 + 重播动画）。
+   拖完倾斜、点快捷度数、切模式这类操作只改几个数字，没必要重建整页。
+   这里只刷新变化的节点，refs 仍指向现有滑杆，syncUI() 照常同步数值。 */
+let cropTiltRefs=null;
+function refreshCropTiltUI(){
+  const r=cropTiltRefs;
+  if(!r||tool!=='crop'||!document.getElementById('panel')) return;
+  try{ syncUI(); }catch(e){}
+  const a=irisTiltText(0), b=irisTiltText(1), t=irisTilt();
+  if(r.badge) r.badge.textContent='↔ '+a+'  ↕ '+b;
+  if(r.big0) r.big0.textContent=a;
+  if(r.big1) r.big1.textContent=b;
+  if(r.quick) r.quick.forEach((btn,i)=>{
+    const v=r.quickVals[i];
+    btn.classList.toggle('active',Math.abs(t[0]-v)<.05&&Math.abs(t[1]-v)<.05);
+  });
+  if(r.modes) r.modes.forEach((btn,i)=>
+    btn.classList.toggle('active',(state.tiltMode||'skew')===(i?'keystone':'skew')));
+  if(r.state) r.state.innerHTML=cropStateHTML();
+  if(r.angleChips) r.angleChips.forEach((btn,i)=>
+    btn.classList.toggle('active',Math.abs((+(state.angle||0))-r.angleVals[i])<.05));
+  if(r.angleHint) r.angleHint.innerHTML=cropAngleHintHTML();
+  if(tiltUIUpd) tiltUIUpd();
+}
 function buildCrop(p){
-  const s=section('裁剪 · 拖好框后点「完成裁剪」');
-  s.append(hint('<b>三步就好</b>：① 拖四个金色角点改大小、拖边改单侧、拖框内移动；'
-    +'② 选比例 / 旋转；③ 点画面下方或下面的 <b>✓ 完成裁剪</b>。'
-    +'框外按住可重新框选，双击画面 = 完成，Esc = 取消。'));
+  const s=section('裁剪与方向 · 倾斜、翻转、构图');
+  s.append(hint('<b>三件事，顺序随意</b>：① 用下面的 <b>左右 / 上下倾斜</b> 把照片推斜或校正梯形；'
+    +'② 翻转、旋转 90°、选裁剪比例并拖框；③ 点 <b>✓ 完成裁剪</b>（双击画面 = 完成，Esc = 取消）。'
+    +'倾斜后自动放大裁掉四角黑边，所有变换无损、不改动原图文件。'));
   const cr=document.createElement('div'); cr.className='row'; cr.style.marginBottom='9px';
   cr.append(button('✓ 完成裁剪',()=>cropDone(),'accent'),
     button('✕ 取消',()=>cropCancel()),
     button('↺ 重置',()=>{ mutate(()=>{state.crop=[0,0,1,1];state.aspect='free';});
       buildPanel(true); requestRender(); }));
   s.append(cr);
+
+  /* ============ 主角：左右 / 上下倾斜 ============ */
+  const dw=document.createElement('div'); dw.className='dir-wrap tilt-wrap';
+  const dh=document.createElement('div'); dh.className='dir-head';
+  dh.innerHTML='<b>透视倾斜 · 左右 / 上下</b>';
+  const badge=document.createElement('span'); badge.className='dir-badge';
+  badge.textContent='↔ '+irisTiltText(0)+'  ↕ '+irisTiltText(1);
+  dh.append(badge); dw.append(dh);
+
+  const big=document.createElement('div'); big.className='tilt-big';
+  const tb0=document.createElement('div'); tb0.className='tb';
+  tb0.innerHTML='<span>↔ 左右倾斜</span><b>'+irisTiltText(0)+'</b>';
+  const tb1=document.createElement('div'); tb1.className='tb';
+  tb1.innerHTML='<span>↕ 上下倾斜</span><b>'+irisTiltText(1)+'</b>';
+  big.append(tb0,tb1); dw.append(big);
+  const big0=tb0.querySelector('b'), big1=tb1.querySelector('b');
+
+  const sx=slider('tilt.0','↔ 左右倾斜（左右滑动）',-45,45,.1,'°',0); sx.classList.add('tilt-sld');
+  const sy=slider('tilt.1','↕ 上下倾斜（左右滑动）',-45,45,.1,'°',0); sy.classList.add('tilt-sld');
+  const updTilt=()=>{
+    const a=irisTiltText(0), b=irisTiltText(1);
+    badge.textContent='↔ '+a+'  ↕ '+b;
+    tb0.querySelector('b').textContent=a; tb1.querySelector('b').textContent=b;
+  };
+  tiltUIUpd=updTilt;
+  [sx,sy].forEach(w=>{
+    const i=w.querySelector('input[type=range]');
+    if(i) i.addEventListener('input',updTilt);
+  });
+  dw.append(sx,sy);
+
+  /* 倾斜方式：斜切（推成平行四边形） / 梯形透视（上窄下宽、左高右矮） */
+  const tm=document.createElement('div'); tm.className='tilt-mode';
+  [['skew','▱ 斜切倾斜'],['keystone','▱ 梯形透视']].forEach(([id,name])=>{
+    const b=document.createElement('button'); b.type='button'; b.textContent=name;
+    if((state.tiltMode||'skew')===id) b.classList.add('active');
+    b.onclick=()=>{ mutate(()=>{state.tiltMode=id;}); refreshCropTiltUI(); requestRender();
+      toast(id==='skew'?'斜切倾斜：整张图推成平行四边形':'梯形透视：上窄下宽 / 左高右矮'); };
+    tm.append(b);
+  });
+  dw.append(tm);
+  const modeBtns=[...tm.querySelectorAll('button')];
+
+  /* 快捷度数：对两根滑杆一起生效（0 = 双轴归零） */
+  const q=document.createElement('div'); q.className='tilt-quick';
+  [-30,-15,-5,0,5,15,30].forEach(v=>{
+    const b=document.createElement('button'); b.type='button';
+    b.textContent=(v>0?'+':'')+v+'°';
+    const t=irisTilt();
+    if(Math.abs(t[0]-v)<.05&&Math.abs(t[1]-v)<.05) b.classList.add('active');
+    b.onclick=()=>{ mutate(()=>{state.tilt=[v,v];}); refreshCropTiltUI(); requestRender();
+      toast('双轴倾斜 '+(v>0?'+':'')+v+'°'); };
+    q.append(b);
+  });
+  dw.append(q);
+  const quickBtns=[...q.querySelectorAll('button')];
+  const quickVals=[-30,-15,-5,0,5,15,30];
+
+  /* 画面手势：横向拖调左右倾斜，纵向拖调上下倾斜 */
+  const gr=document.createElement('div'); gr.className='row dir-gesture';
+  gr.append(button(tiltGestureOn?'✓ 手势已开启 · 在照片上拖调倾斜':'↔↕ 在照片上拖调倾斜',()=>{
+    tiltGestureOn=!tiltGestureOn; if(tiltGestureOn) angleGestureOn=false;
+    buildPanel(true); requestRender();
+    toast(tiltGestureOn?'横向拖 = 左右倾斜，纵向拖 = 上下倾斜（6px ≈ 1°）':'已回到裁剪框拖拽');
+  },tiltGestureOn?'accent':''));
+  dw.append(gr);
+
+  const ds=document.createElement('div'); ds.className='dir-state';
+  ds.innerHTML=cropStateHTML();
+  dw.append(ds); s.append(dw);
+
+  /* ============ 90° 步进与翻转 ============ */
+  const sub=document.createElement('div'); sub.className='dir-sub'; sub.textContent='90° 步进与翻转';
+  s.append(sub);
+  const dg=document.createElement('div'); dg.className='dir-grid';
+  const DIRS=[
+    ['↶','左转 90°',()=>{state.rot=(((state.rot||0)+3)%4+4)%4;}],
+    ['↻','右转 90°',()=>{state.rot=(((state.rot||0)+1)%4+4)%4;}],
+    ['⇋','水平翻转',()=>{state.flipX=(state.flipX||1)*-1;}],
+    ['⇅','垂直翻转',()=>{state.flipY=(state.flipY||1)*-1;}],
+    ['↺','复位方向',()=>{state.rot=0;state.flipX=1;state.flipY=1;}]
+  ];
+  DIRS.forEach(([ic,label,fn])=>{
+    const b=document.createElement('button'); b.type='button';
+    b.className='dir-btn'+(label==='复位方向'?' warn':'');
+    b.title=label; b.setAttribute('aria-label',label);
+    b.innerHTML='<i>'+ic+'</i><span>'+label+'</span>';
+    b.onclick=()=>{ mutate(fn); refreshCropTiltUI(); requestRender();
+      toast('照片方向：'+label); };
+    dg.append(b);
+  });
+  s.append(dg);
+
+  /* ============ 裁剪比例 ============ */
+  const sub2=document.createElement('div'); sub2.className='dir-sub'; sub2.textContent='裁剪比例';
+  s.append(sub2);
   s.append(chipRow(ASPECTS,state.aspect,id=>mutate(()=>{state.aspect=id;applyAspect(id);buildPanel();requestRender();})));
   const r1=document.createElement('div'); r1.className='row'; r1.style.marginTop='9px';
   r1.append(button('↺ 重置裁剪',()=>mutate(()=>{state.crop=[0,0,1,1];state.aspect='free';requestRender();})),
     button('◉ 居中最大',()=>mutate(()=>{state.crop=[0,0,1,1];applyAspect(state.aspect);requestRender();})),
     button('□ 居中方形',()=>mutate(()=>{state.aspect='1:1';state.crop=[0,0,1,1];applyAspect('1:1');requestRender();})));
   s.append(r1);
-  const r2=document.createElement('div'); r2.className='row';
-  r2.append(button('↺ 左转 90°',()=>mutate(()=>{state.rot=(state.rot+3)%4;requestRender();})),
-    button('↻ 右转 90°',()=>mutate(()=>{state.rot=(state.rot+1)%4;requestRender();})),
-    button('⇋ 水平翻转',()=>mutate(()=>{state.flipX*=-1;requestRender();})),
-    button('⇅ 垂直翻转',()=>mutate(()=>{state.flipY*=-1;requestRender();})));
-  s.append(r2);
   const [w,h]=exportSize();
-  s.append(hint(`当前导出约 <b>${w} × ${h}</b> px（按裁剪与旋转后的实际尺寸，全分辨率导出）。`));
+  s.append(hint(`当前导出约 <b>${w} × ${h}</b> px（按裁剪与 90° 旋转后的实际尺寸，全分辨率导出）。`));
   p.append(s);
 
-  /* 精确数值仍保留，只在需要逐像素对齐时展开 */
+  /* ============ 折叠：任意角度拉直（上一版主角，完整保留） ============ */
+  const fa=document.createElement('details'); fa.className='sec fold dir-compose';
+  const smA=document.createElement('summary'); smA.textContent='任意角度拉直 · 旋转校正'; fa.append(smA);
+  fa.append(hint('把照片整体旋转 <b>−45°~+45°</b>（0.1° 步进），用于拉歪的水平线。'
+    +'与上面的「透视倾斜」是两回事：这里转的是整张图的方向，上面推的是图的形状。'));
+  const angSld=slider('angle','旋转角度（左右滑动）',-45,45,.1,'°',0);
+  fa.append(angSld);
+  const aq=document.createElement('div'); aq.className='dir-chips';
+  const angleVals=[-45,-15,-5,0,5,15,45];
+  angleVals.forEach(v=>{
+    const b=document.createElement('button'); b.type='button';
+    b.textContent=(v>0?'+':'')+v+'°';
+    if(Math.abs(v-(+(state.angle||0)))<.05) b.classList.add('active');
+    b.onclick=()=>{ mutate(()=>{state.angle=v;}); refreshCropTiltUI(); requestRender(); };
+    aq.append(b);
+  });
+  fa.append(aq);
+  const angleChips=[...aq.querySelectorAll('button')];
+  const ar=document.createElement('div'); ar.className='row dir-gesture';
+  ar.append(button(angleGestureOn?'✓ 手势已开启 · 左右拖照片调角度':'↔ 在照片上左右拖调角度',()=>{
+    angleGestureOn=!angleGestureOn; if(angleGestureOn) tiltGestureOn=false;
+    buildPanel(true); requestRender();
+  },angleGestureOn?'accent':''));
+  fa.append(ar);
+  const angleHint=hint(cropAngleHintHTML());
+  fa.append(angleHint);
+  p.append(fa);
+
+  /* ============ 折叠：构图微调 ============ */
+  const fx=document.createElement('details'); fx.className='sec fold dir-compose';
+  const sm=document.createElement('summary'); sm.textContent='构图微调 · 缩放 / 水平 / 垂直'; fx.append(sm);
+  fx.append(hint('倾斜或旋转后为避免黑角，画面会自动放大并裁切填满。'
+    +'这里可以再放大或平移，重新决定保留哪一块；三根滑杆只改取景，不动原图，也不改导出尺寸。'));
+  fx.append(slider('frameZoom','构图缩放',1,2.5,.01,'×',1));
+  fx.append(slider('framePan.0','水平位移',-.5,.5,.01,'',0));
+  fx.append(slider('framePan.1','垂直位移',-.5,.5,.01,'',0));
+  const fr=document.createElement('div'); fr.className='row';
+  fr.append(button('↺ 重置构图',()=>{ mutate(()=>{state.frameZoom=1;state.framePan=[0,0];});
+    buildPanel(true); requestRender(); toast('构图已重置'); }));
+  fx.append(fr);
+  p.append(fx);
+
+  /* 精确数值仍保留 */
   const ex=document.createElement('details'); ex.className='sec fold';
-  const sm=document.createElement('summary'); sm.textContent='精确数值 · 左 / 上 / 右 / 下'; ex.append(sm);
+  const sm2=document.createElement('summary'); sm2.textContent='精确数值 · 左 / 上 / 右 / 下'; ex.append(sm2);
   [[0,'左','crop.0'],[1,'上','crop.1'],[2,'右','crop.2'],[3,'下','crop.3']].forEach(([i,n,path])=>
     ex.append(slider(path,n+'边界',0,1,.005,'%',i<2?0:1)));
   p.append(ex);
+  cropTiltRefs={badge,big0,big1,quick:quickBtns,quickVals,
+    modes:modeBtns,state:ds,angleChips,angleVals,angleHint};
 }
 function applyAspect(id){
   if(id==='free')return;
@@ -14544,7 +15454,10 @@ const GUIDE_CHAPTERS=[
  {id:'start',t:'01 · 快速上手',k:'导入 换照片 拖入 实况 HEIC MOV 演示图 导出 保存',
   b:'点右上角「＋ 换照片」或把图片直接拖进画面，也可用 Ctrl/⌘+O。JPG / PNG / WebP / HEIC 均可，照片只在本机处理、不上传。'
    +'<br>导入 iOS 实况照片时，请<b>同时选中同名的 .HEIC 与 .MOV</b>；只给一张图按普通照片处理。'
-   +'<br>调好之后从顶栏「导出 ▾」选照片 / GIF / 视频 / 配对素材，或按 Ctrl/⌘+S 直接出图。'},
+   +'<br>调好之后从顶栏「导出 ▾」选照片 / GIF / 视频 / 配对素材，或按 Ctrl/⌘+S 直接出图。'
+   +'<br><b>大照片也跟手</b>：导入时只降采样一次生成共享分析图，原图完整保留供导出；6000×4000 的照片首帧约 70ms 出画面，拖动调色盘不会逐像素重算。'
+   +'<br><b>第一次打开</b>会看到一张自带的演示图，方便先试手感；一旦导入过自己的照片，之后再启动就不会再显示它，'
+   +'而是换成一张写着「选择一张照片开始」的中性占位画面（点「继续上次的编辑」仍会换回上次那张真照片）。'},
  {id:'pad',t:'02 · 主调色盘与20 种模式',k:'调色盘 二维盘 白点 Tone Color 强度 颜色 影调 肤色锁 语义 模式 鲜艳 vivid 经典 电影 黑白 折叠 分组',
   b:'方盘横轴 <b>Color</b>（色温偏置 + 色度）、纵轴 <b>Tone</b>（暗部深度 + 对比斜率），下方强度条控套用量，顶部实时显示数值。'
    +'<br>与普通滤镜不同，它先在端侧生成低分辨率 <b>matte</b>（皮肤 / 天空 / 头发 / 亮部四通道），再对不同区域做不等权映射：'
@@ -14622,10 +15535,20 @@ const GUIDE_CHAPTERS=[
    +'<br>「曲线」：RGB 与单通道曲线 + 色调分离；「分色」：8 个色相独立调色相 / 饱和 / 明度。'
    +'<br>「光效」：去雾、柔光、胶片红光晕、漏光、高级暗角与透视矫正。'
    +'<br>「调整」按光效 / 颜色 / 细节 / 效果 / 影调分类，含自动色阶、自动白平衡、白平衡吸管与「一键智能增强」。'},
- {id:'crop',t:'12 · 裁剪与构图',k:'裁剪 拖框 可视化 手柄 比例 旋转 翻转 填满 适应 缩放 25% 800%',
+   {id:'crop',t:'12 · 裁剪、透视倾斜与构图',k:'裁剪 拖框 可视化 手柄 比例 透视倾斜 左右倾斜 上下倾斜 斜切 梯形 keystone 度数 旋转 任意角度 拉直 翻转 镜像 构图 缩放 位移 填满',
   b:'切到「裁剪」后，画面直接变成<b>完整原图 + 裁剪框</b>：拖四个金色角点改大小、拖边改单侧、'
    +'拖框内部移动、框外按住重新框选、双击重置，<b>不用再调四个数值滑杆</b>。'
-   +'比例 chip 可锁 1:1 / 4:3 / 16:9 等，旋转与翻转会同步到裁剪画面，框始终按原始照片方向记忆。'
+       +'裁剪页首屏是<b>「透视倾斜」</b>：两根独立的度数滑杆 —— <b>↔ 左右倾斜</b> 与 <b>↕ 上下倾斜</b>，'
+    +'各 −45°~+45°、0.1° 步进，左右滑动就把照片推斜；上面是两轴大号读数，下面有 7 个快捷度数（对两轴一起生效，0° = 双轴归零）。'
+    +'「▱ 斜切倾斜」把整张图推成平行四边形，「▱ 梯形透视」则做成上窄下宽 / 左高右矮，适合校正建筑与翻拍。'
+    +'点「↔↕ 在照片上拖调倾斜」后，<b>横向拖 = 左右倾斜、纵向拖 = 上下倾斜</b>（6px≈1°），再点一次回到裁剪框。'
+    +'倾斜与旋转是两回事：这里推的是<b>图的形状</b>，折叠里的「任意角度拉直」转的是<b>整张图的方向</b>。'
+    +'两者都在<b>物理等比例空间</b>计算，横图不会被拉歪；变换后自动按 1/(1+|sLR|+|sUD|) 放大裁切填满，'
+    +'<b>四个角不露黑边</b>，导出尺寸不变。'
+    +'「90° 步进与翻转」五个大按钮仍在；「构图微调」折叠里可再缩放 / 水平 / 垂直平移重新取景。'
+    +'裁剪编辑器底图用透视网格贴图实时渲染，裁剪框始终是正矩形、作用在倾斜之后的画面上，所见即所得。'
+    +'所有方向变换无损、不改动原图文件。全局搜索「倾斜」「透视」「斜切」「梯形」可直达，'
+    +'命令面板里还有双轴归零 / ±10° / 切换梯形。'
    +'需要逐像素对齐时，展开「精确数值」仍可用滑杆。'
    +'<br>其它页面支持滚轮 / 双指捏合 / 双击 / ±按钮缩放，范围 <b>25%–800%</b>，点百分比数字回到 100%；'
    +'缩放条最右切「填满 / 适应」只是预览方式，导出仍是完整照片。编辑栏把手可拖动调大小、点一下收起全屏看图。'},
@@ -14657,7 +15580,7 @@ const GUIDE_CHAPTERS=[
   +'<br><b>「一键保存所有参数」</b>（滤镜页 / 我的空间 / 全局搜索）：点击即把滤镜层、每层独立盘、12 色调、20 种盘模式、'
   +'基础调整、HSL、曲线、分级、分色、通道混合、光效、蒙版形状、光场、虚化、画框与色调迁移目标整套存成一款滤镜；'
   +'明确不带文字贴纸、涂抹笔迹、裁剪与导出规格。套用时是整套参数而非叠一层滤镜，完全非破坏、可撤销。'
-+'<br><b>自动保存</b>：每次编辑后约 1 秒自动把【照片原始字节 + 完整编辑状态 + 缩略图】写进本机 IndexedDB；退出或切后台会再补一次落盘。重新打开时会弹卡询问「是否编辑上次的照片」，可选继续编辑 / 重新开始 / 稍后，也能在「自动保存」页设为直接恢复或彻底关闭。演示图不入档；浏览器不允许 IndexedDB 时会降级为「只存参数 + 缩略图」，恢复时明确要求重新选照片，不会假装成功。'
++'<br><b>自动保存</b>：每次编辑后约 1 秒自动把【照片原始字节 + 完整编辑状态 + 缩略图】写进本机 IndexedDB；退出或切后台会再补一次落盘。重新打开时会弹卡询问「是否编辑上次的照片」，可选继续编辑 / 重新开始 / 稍后，也能在「自动保存」页设为直接恢复或彻底关闭。演示图与待载入占位都不入档；<b>演示图只在第一次启动出现</b>，之后启动是中性占位画面，点「重新开始 / 稍后」也不会退回到测试图。浏览器不允许 IndexedDB 时会降级为「只存参数 + 缩略图」，恢复时明确要求重新选照片，不会假装成功。'
  +'<br><b>隐私</b>：纯前端运行，默认不发起任何网络请求；唯一的例外是你主动点「检查更新」（或开启自动检查）时读取 GitHub 的公开版本元数据，照片与编辑数据始终不发送。自动保存只写本机；清除浏览器数据即清空本地记录。快照不跨设备同步，四端各自独立。'},
  {id:'bokeh',t:'17 · 背景虚化与主体检测',k:'虚化 背景 主体 人物 物品 检测 散景 光圈 景深 一键',
   b:'「更多 → 虚化」页点<b>✦ 一键检测主体并虚化背景</b>，会先在低分辨率画面上判断是<b>人物还是物品</b>：'
@@ -14731,8 +15654,9 @@ const GUIDE_CHAPTERS=[
    +'<br><b>④ 三种结论</b>：线上更新 → 「发现新版本」；一致 → 「已是最新版本」；本地更超前 → 「本地版本更新」'
    +'（通常说明你手上这份还没上传 / 还没打 tag）。查不到版本号时如实列出原因，不会假装成功。'
    +'<br><b>⑤ 自动检查</b>默认关闭；开启后每次启动延迟 2 秒发一次快速检查，只有确实发现新版本才提示一次，其余完全静默。'
-   +'<br><b>⑥ 发布新版本</b>：把这版 HTML 传到仓库（web/index.html 等几处同源副本），再打一个形如 <code>v1.0.12</code> 的 Release tag，'
+   +'<br><b>⑥ 发布新版本</b>：把这版 HTML 传到仓库（web/index.html 等几处同源副本），再打一个形如 <code>v1.0.17</code> 的 Release tag，'
    +'页面里的版本 meta 与 tag 就会一起生效。想让限流时也能比对，可在根目录放一个 <code>version.json</code>。'
+   +'<br><b>⑦ 卡顿时先看诊断页</b>：「运行状态诊断」里有实时帧率、帧耗时 p50/p95、超过 50ms 的长任务次数、异常数与 WebGL 上下文丢失 / 恢复次数，点「⧉ 复制诊断信息」可把整段发给作者。这些都是本机数据，不上传。'
    +'<br><b>隐私</b>：请求不带 Cookie / Referrer / 自定义头，不发送照片、编辑参数或本机存档；远端文本只用于显示，'
    +'绝不插入页面或执行；外链只放行 https 的 GitHub 域名。检查更新不会自动下载或替换文件。'
    +'<br>GitHub 匿名接口限流 60 次/小时，达到上限会自动降级到 raw 文件通道，并在结果里显示剩余次数。'},
@@ -14871,6 +15795,18 @@ function openSubPage(id,anchor){
   app.classList.add('sp-open');
   if(anchor) setTimeout(()=>spScrollTo(anchor),80);
 }
+/* 换照片后：区域工作台 / 我的空间 / 图像信息 / 诊断 / 历史 等页面
+   若正开着，重建内容与缩略图，避免上一张照片的预览留在屏幕上。 */
+const PHOTO_SENSITIVE_PAGES=['zones','mine','info','diag','history','update','tools','browse','filters','templates','export'];
+window.addEventListener('iris-photo-changed',()=>{
+  if(!spCurrent||!PHOTO_SENSITIVE_PAGES.includes(spCurrent)) return;
+  try{
+    const body=$('#spBody'), top=body.scrollTop;
+    const meta=SUBPAGES[spCurrent]||(spCurrent==='pages'?PAGE_HUB:null);
+    if(!meta||typeof meta.render!=='function') return;
+    body.innerHTML=''; meta.render(body); body.scrollTop=top;
+  }catch(e){}
+});
 function spScrollTo(id){
   const body=$('#spBody'), el=body.querySelector('#spc-'+id);
   if(!el) return;
@@ -15428,7 +16364,7 @@ const AB_CHAPTERS=[
 <div class="ab-grid">
  <div class="ab-item"><b>◉ 色彩系统</b><small>iPhone 式二维调色盘（Tone × Color + 强度，盘面随照片主色变化）、12 种独立色调、每层滤镜各自的调色盘、433 款分类滤镜、78 套模板、语义保肤渲染、<b>区域工作台（matte 可视化 + 四区独立调色 + 一键生成蒙版 / 虚化）</b>、色彩迁移（Lab 均值方差 → 16³ 3D LUT）、HSL 分色、曲线、三色轮、通道混合与 .cube LUT。</small></div>
  <div class="ab-item"><b>◐ 局部与空间</b><small>涂抹式局部蒙版（直接刷出选区，可擦除 / 撤销 / 伪彩预览，形状渐变保留为可选）、背景虚化（一键检测人物或物品 + 涂抹选取主体或虚化区域 + 六种模糊）、光场计算（重聚焦、视差微动、方向重打光）、涂抹式马赛克 / 柔焦 / 动态 / 径向模糊，最多 6 块区域、可调范围与羽化。</small></div>
- <div class="ab-item"><b>▣ 构图与元素</b><small>可视化拖拽裁剪（角点、边框、比例锁、精确数值兜底）、文字 / 贴纸 / 形状 / 涂鸦（可拖动、缩放、旋转、改字体颜色描边）、留白画框、旋转翻转与透视矫正。</small></div>
+ <div class="ab-item"><b>▣ 构图与元素</b><small>可视化拖拽裁剪（角点、边框、比例锁、精确数值兜底）、裁剪页首屏的<b>左右 / 上下透视倾斜</b>（两根 −45°~+45° 度数滑杆、斜切与梯形两种模式、照片上横拖纵拖、自动裁切填满不露黑角）、折叠里的任意角度拉直、90° 步进与水平 / 垂直翻转（无损、导出按旋转后尺寸）、构图缩放与位移、文字 / 贴纸 / 形状 / 涂鸦（可拖动、缩放、旋转、改字体颜色描边）、留白画框、旋转翻转与透视矫正。</small></div>
  <div class="ab-item"><b>▷ 动态与输出</b><small>iOS 实况照片逐帧编辑与选封面、不限时长视频（默认原格式 / 原画质 / 不压缩 / 无变化，最高 60fps）、GIF 动图、PNG / JPG / WebP、原始视频零重编码直出、实况配对素材与全格式 ZIP 打包。</small></div>
  <div class="ab-item"><b>⌕ 效率</b><small>全局搜索（工具 / 滤镜 / 参数 / 模板 / 操作一处直达）、12 个一键快捷、23 章说明书 + 18 章技术实现、23 个独立二级页面（收拢进「页面中心」分组浏览）、本机自动保存与恢复、撤销重做、参数复制与 JSON 存档、自定义滤镜与我的色调、20 种主盘模式、「我的空间」历史图片与一键保存整套参数，以及多片段「视频工作台」。</small></div>
  <div class="ab-item"><b>◇ 体验</b><small>移动端大图优先、编辑栏可拖动可收起、25%–800% 缩放、按住看原图与可拖动分屏线、直方图三模式、轻动画（尊重系统「减少动画」）、统一细线图标、桌面与手机自适应。</small></div>
@@ -15458,7 +16394,7 @@ const AB_CHAPTERS=[
  <div class="ab-item"><b>照片不外传</b><small>照片、视频、每一帧都只存在于内存、Canvas 与 WebGL 纹理中。编辑过程默认不发起任何网络请求，没有上传接口、没有账号、没有埋点、没有第三方统计。</small></div>
  <div class="ab-item"><b>唯一的联网行为</b><small>只有你主动点「检查更新」（或在设置里开启自动检查）时，才会读取 api.github.com / raw.githubusercontent.com 上的公开版本元数据。请求不带 Cookie 与 Referrer，不发送照片、编辑参数或本机存档，也不下载或执行远端代码；默认状态与断网时完全离线。</small></div>
  <div class="ab-item"><b>导出是本地下载</b><small>PNG / JPG / WebP / GIF / MP4 / WebM / ZIP 全部通过浏览器本地 Blob 生成并下载，不经过任何服务器中转。</small></div>
- <div class="ab-item"><b>本地存档与自动保存</b><small>自定义滤镜、我的色调、收藏、界面偏好在 localStorage；照片原始字节、完整编辑状态与缩略图写进本机 IndexedDB（浏览器不允许时降级为「只存参数」并明确提示）。重新打开时会询问「是否编辑上次的照片」，也可设为直接恢复或关闭。演示图不入档；「自动保存」页可一键清除。清理站点数据即全部抹掉。</small></div>
+ <div class="ab-item"><b>本地存档与自动保存</b><small>自定义滤镜、我的色调、收藏、界面偏好在 localStorage；照片原始字节、完整编辑状态与缩略图写进本机 IndexedDB（浏览器不允许时降级为「只存参数」并明确提示）。重新打开时会询问「是否编辑上次的照片」，也可设为直接恢复或关闭。演示图与待载入占位都不入档；「自动保存」页可一键清除。演示图只在第一次启动出现，之后不会再把测试图放回画面。清理站点数据即全部抹掉。</small></div>
  <div class="ab-item"><b>外观偏好</b><small>主题、界面版本、圆角与动效只写一个 JSON 键到 localStorage，不含照片、不含编辑参数；「外观与主题」页可一键还原，清除站点数据也会回到默认。</small></div>
  <div class="ab-item"><b>导出记录</b><small>只记录文件名 / 格式 / 大小 / 时间等元数据，不保存成品文件；可在「导出记录」页关闭或清空。</small></div>
  <div class="ab-item"><b>关于「在线访问」</b><small>部署到静态托管时，托管方只是把这个 HTML 文件发给浏览器。和所有网站一样，托管服务会有常规访问日志（如 IP），但<b>画面内容与编辑数据始终不离开设备</b>；直接双击本地文件使用，默认完全离线，只有主动检查更新才会联网。</small></div>
@@ -15477,7 +16413,7 @@ const AB_CHAPTERS=[
  <div class="ab-step"><b>工程化与收敛</b>色彩迁移、23 章说明书、18 章技术实现、22 个二级页面与「页面中心」分组浏览、自动保存与恢复、界面精简与移动端重排。</div>
  <div class="ab-step"><b>现在 · 近乎最终</b>作者与关于页、细节修复、稳定性优先。</div>
 </div>
- <p style="margin-top:14px">当前内嵌版本 <b>1.0.13</b>（构建 2026-11-19，Release Candidate）。页面头部写有版本 meta，可在独立「检查更新」页与 GitHub 上发布的最新 Release 对比；每次打开都会先看到一张最多 3 秒的启动页，随后才进入编辑界面；<b>默认不联网</b>，只有主动点击才会读取公开版本信息。</p>
+ <p style="margin-top:14px">当前内嵌版本 <b>1.0.17</b>（构建 2026-11-12，Release Candidate）。页面头部写有版本 meta，可在独立「检查更新」页与 GitHub 上发布的最新 Release 对比；每次打开都会先看到一张最多 3 秒的启动页，随后才进入编辑界面；<b>默认不联网</b>，只有主动点击才会读取公开版本信息。</p>
  <div class="sp-row"><button data-goupdate="1">⟳ 检查更新</button></div>`},
 {id:'limits',n:'07',eyebrow:'BOUNDARIES',t:'已知边界 · 如实说明',html:`
 <div class="ab-grid">
@@ -15622,7 +16558,7 @@ const TECH_CHAPTERS=[
 <p><b>④ 数据层</b>：433 款滤镜、78 套模板、HSV 分色表、23 章说明书、10 章关于、18 章技术文章，全都是字面量数组。新增一款滤镜就是往数组里加一个对象；模板则是「滤镜层 + 分色调盘 + 语义主盘 + 基础参数 + 画框」的组合描述，<b>不是把参数复制一遍</b>。</p>
 <p><b>⑤ 着色器</b>：VS / FS 是模板字符串，其中几段用代码生成后插入占位符（下一章详述）。</p>
 <p><b>⑥ 运行时</b>：<code>state</code> 单一状态树 + <code>render()</code> 单一渲染入口 + pointer 事件分发。</p>
-<p><b>⑦ 外围</b>：导出、独立页面系统 <code>SUBPAGES</code>、全局搜索 <code>CMD</code>、启动逻辑 <code>uploadImage(demoImage())</code>。</p>
+<p><b>⑦ 外围</b>：导出、独立页面系统 <code>SUBPAGES</code>、全局搜索 <code>CMD</code>、启动逻辑（首次 <code>uploadImage(demoImage())</code>，之后改中性占位 <code>uploadImage(placeholderImage())</code>，避免导入过照片后重启又冒出测试图）。</p>
 <div class="tech-note">整个文件没有打包器，所以「模块」靠的是命名与注释分区，而不是 import。这也是为什么每段的开头都有一块块注释横幅 —— 它们就是这个文件里的目录。</div>`},
 
 {id:'pipeline',n:'03',eyebrow:'PIPELINE',t:'渲染管线 · 一帧像素走过的路',k:'渲染管线 shader 逐帧 顺序 采样 滤镜 调色盘 LUT 合成 导出 一致',html:`
@@ -15633,7 +16569,7 @@ const TECH_CHAPTERS=[
  <span>HSL / 曲线 / 三色轮 / LUT</span><span>局部蒙版与涂抹效果</span>
  <span>背景虚化 / 光场</span><span>暗角 / 颗粒</span><span>分屏 / 原图短路</span>
 </div>
-<p><b>采样与几何</b>：<code>src(uv)</code> 先把屏幕坐标映射到照片坐标，处理裁剪框、旋转、翻转与「填满 / 适应」两种预览方式。这一步保证预览缩放（25%–800%）只影响取景，<b>不降低主图分辨率</b>。</p>
+<p><b>采样与几何</b>：<code>src(uv)</code> 先把屏幕坐标映射到照片坐标，处理裁剪框、90° 步进旋转（<code>u_rot</code>）、翻转与「填满 / 适应」两种预览方式；旋转后的导出尺寸由 <code>exportSize()</code> 交换宽高，所以横图转竖不会掉分辨率。这一步保证预览缩放（25%–800%）只影响取景，<b>不降低主图分辨率</b>。</p>
 <p><b>全局调整</b>：曝光、对比、高光阴影、色温、饱和度、清晰度、去雾、暗角、颗粒等，按一组 uniform 依次作用在 <code>c</code>（当前颜色）上。顺序很重要：先亮度与影调，再颜色，最后颗粒与暗角，否则暗角会被后续对比度拉坏。</p>
 <p><b>滤镜层</b>：四层各自有 <code>preset_id</code> 与强度，层与层之间做加权混合；每层还挂着自己那套 12 色调调色盘参数。这是「拆掉 iPhone 原生绑定」的核心：滤镜不再是只能整体开关的一张 LUT。</p>
 <p><b>调色盘与语义</b>：12 个色调槽各自持有 (tone, color, intensity)，再叠加一张语义主盘。皮肤区走独立约束，非皮肤区吃满用户值（第 08、09 章）。</p>
@@ -15719,7 +16655,7 @@ function mutate(fn){
 <p>换照片时调用 <code>resetEditsForNewPhoto()</code>：滤镜层、调色盘、语义盘、文字贴纸、裁剪、局部效果、虚化、撤销历史全部清零，只保留与照片无关的偏好（导出规格、分割精度、笔刷大小）。这个 bug 修过一次 —— 上一张的整套编辑会悄悄套到新照片上。</p>
 <p>持久化分三处：自定义滤镜、我的色调、收藏、最近使用、界面偏好与恢复设置、历史书签在 <code>localStorage</code>；参数复制 / 粘贴与 JSON 导出导入是纯文本；<b>照片原始字节、完整状态与缩略图</b>写进本机 <code>IndexedDB</code>（v1，三个 store：snapshot / exports / bookmarks）。</p>
 <p>自动保存的挂钩点只有四个：<code>mutate()</code> 后 900ms 防抖、<code>uploadImage()</code> 后 350ms、<code>afterHistory()</code>、以及 <code>pagehide / beforeunload / visibilitychange</code> 时兜底 flush。Web 端的 beforeunload 无法等待异步 IDB 事务完成，所以<b>常规防抖才是主力</b>，退出兜底只是尽量补一次。桌面与移动外壳各自在退出 / 切后台时再调一次 <code>IrisAutosave.flush()</code>。</p>
-<p>恢复不是直接覆盖：启动读 meta，按设置弹「继续上次的照片 / 重新开始 / 稍后」卡片，或设为自动恢复。恢复时 <code>suspend</code> 先挂起保存，避免把「照片已换、参数还没套上」的中间态写回快照；实况视频 ≤ 24MB 随存，超过则如实标注未随存。IndexedDB 不可用时降级为「只存参数 + 缩略图」，等用户重新选照片再套用参数，绝不假装恢复成功。</p>
+<p>恢复不是直接覆盖：启动读 meta，按设置弹「继续上次的照片 / 重新开始 / 稍后」卡片，或设为自动恢复。询问卡背后是中性占位画面而不是演示图；「重新开始 / 稍后 / 恢复失败」都会把画面切回占位，换照片事件还会重建已打开页面里的预览与统计。恢复时 <code>suspend</code> 先挂起保存，避免把「照片已换、参数还没套上」的中间态写回快照；实况视频 ≤ 24MB 随存，超过则如实标注未随存。IndexedDB 不可用时降级为「只存参数 + 缩略图」，等用户重新选照片再套用参数，绝不假装恢复成功。</p>
 <p class="ab-dim">注意：这些存储全在<b>本机</b>，不是服务器；桌面 / 移动 / 网页各自独立，快照不跨端同步。清除站点数据或「清除上次的编辑」即可抹掉。</p>`},
 
 {id:'plate',n:'08',eyebrow:'PLATE',t:'二维调色盘 · 两根轴到底在改什么',k:'Tone Color 二维盘 强度 语义 保肤 偏色 加性亮度 色温 肤色流形 12 色调',html:`
@@ -15866,8 +16802,16 @@ c = mix(shifted, clampToSkin(shifted, src), skinMask * u_semLock);</pre>
  <li><b>帧内布局缓存</b>：一个像素坐标换算可能在同帧触发多次 <code>getBoundingClientRect()</code>，每次都强制同步布局。<code>stageRect()</code> 每帧失效一次、帧内复用，实测 12 次换算只做 <b>1 次</b>布局读取、11 次命中；滚动、resize、切页时主动失效。</li>
  <li><b>直方图让帧</b>：<code>renderSmall</code> 里的 <code>readPixels</code> 会同步等 GPU，连续拖动时每 260ms 一次就足以顿一下。现在拖动帧直接跳过并顺延，停手由恢复计时器补算；标签页隐藏也不算。</li>
  <li><b>缩略图参数缓存</b>：单款滤镜的 <code>effective(name, 1)</code> 是常量，按「名称 + 强度」存进 <code>EFF_SOLO</code>，浏览 433 款滤镜不再反复叠加 30 项参数。</li>
+ <li><b>倾斜不是旋转，2D 预览怎么跟上 WebGL</b>：斜切 <code>q=(x+sLR·y, y+sUD·x)</code> 与梯形 <code>q=(x/(1+2sUD·y), y/(1+2sLR·x))</code> 都在物理等比例空间完成，系数 <code>s=tan(d°)/2</code>；采样范围再乘 <code>fill=(1−|sLR·sUD|)/(1+|sLR|+|sUD|)</code> 放大裁切填满，四角不露黑边。Crop 编辑器是 2D 画布、无法直接跑单应变换，所以改成<b>透视网格贴图</b>：用 <code>irisInvGeom(u,v)</code> 逐行复刻 <code>mapSrc()</code>（flip → 旧 persp → 90° → 任意角度 → 倾斜），把输出网格四角反算到源图 UV，再把每个四边形拆成两个三角形解 2×3 仿射并 clip 后 <code>drawImage</code>。拖动时 N=6、松手 N=12，结果带 key 缓存；倾斜为 0 时整段跳过，烘焙图退化为原图。<b>预览与导出因此共用同一套几何</b>，连历史遗留的 90°+任意角度顺序差异也一并修正了。</li>
+ <li><b>任意角度为什么不变形</b>：<code>mapSrc()</code> 里的 <code>r</code> 是「图片矩形归一化坐标」，x 对应宽、y 对应高，两者尺度不同，直接套旋转矩阵会把横图拉歪。现在先 <code>q=vec2(r.x*u_imgAspect, r.y)</code> 变到物理等比例空间，用 <code>u_angle</code> 旋转，再除回去。旋转后要让输出矩形完全落在旋转后的照片里（不露黑角），采样范围缩小 <code>k=|cos a|+|sin a|·max(ar,1/ar)</code> 倍；正方形 45° 得到 √2，横图更大。<code>u_angleScale = 1/(k·构图缩放)</code> 与 <code>u_framePan</code> 一起传进去。角度为 0、缩放为 1、位移为 0 时整段是恒等变换，新增 uniform 全部取中性值，逐像素等于旧版。裁剪编辑器是 2D 画布，另用一张缓存的「旋转烘焙图」作正矩形底图，让裁剪框始终正立、且 crop 与 shader 一样作用在旋转之后的画面上。</li>
+ <li><b>大照片一次降采样、处处复用</b>：6000×4000 的照片，浏览器把整张原图缩放一次就要 100ms 以上，旧版主色调分析与语义分割各缩一次，再叠加缩略图和导出前的 PNG 重编码，导入瞬间能堵住半秒到几秒。现在 <code>irisAnalysisAsync()</code> 用 <code>createImageBitmap(..., resizeWidth/resizeHeight)</code> 在解码线程生成一张最长边 1024 的共享小图（不支持时同步兜底），<code>analyzePhotoTone</code> / <code>analyzeSemantic</code> / <code>makeThumb</code> 都从它取像素；W/H 与 matte hash 仍按原图尺寸算，语义结果不变。<code>sourceToBlob</code> 优先返回原始 File 字节，自动保存零编码；首帧先 <code>render()</code> 出画面，分析、直方图、缩略图由 <code>irisScheduleAnalysis()</code> 分级到 rAF / 空闲，连续换照片用 token 取消过期任务。实测同步耗时 287ms → 73ms。</li>
+ <li><b>纹理上限保护</b>：超过 <code>MAX_TEXTURE_SIZE</code> 时 <code>texImage2D</code> 会失败、画面变黑。现在预览改传按比例缩到上限内的纹理，<code>draw()</code> 在导出尺寸大于预览纹理（或显式 <code>fullRes</code>）时临时上传完整原图，下一次预览帧再换回轻量纹理 —— 预览流畅、导出仍是原始分辨率。</li>
  <li><b>自动保存不再重编码原图</b>：以前每次防抖落盘都把整张照片 <code>drawImage</code> + <code>toBlob('image/png')</code> 一遍，大图会卡住主线程几百毫秒。现在按「原图对象引用 + 实况视频标识」缓存字节与缩略图，只有换照片才重编码；之后每次保存只序列化几 KB 状态。实测连续 5 次保存只编码 1 次，状态依然逐次更新。</li>
  <li><b>小处收紧</b>：<code>bindTextures()</code> 抽掉主画布与缩略图的重复绑定；滑杆 <code>upd()</code> 值没变就不写 DOM；诊断页新增实时帧率与缓存命中面板，流畅度变得可观测。</li>
+ <li><b>烘焙图零分配（v1.0.17）</b>：透视网格贴图每改一次度数都曾 <code>new</code> 一张 900×675 canvas（约 2.4MB），40 步拖动就是近 100MB 垃圾；每个三角还各建 3 个临时数组。现在 <code>BAKE_POOL[N]</code> 复用同一张画布只 <code>clear</code> 不重建，<code>BAKE_CACHE[6]</code> / <code>BAKE_CACHE[12]</code> 各自独立命中（拖动用 560px、松手用 900px，互不踢掉对方），<code>_quadD / _quadS / _triE / _invOut</code> 全部预分配，<code>irisInvGeom(u,v,out)</code> 支持写入复用数组 —— 帧内零分配。同参数连续调用直接返回同一 canvas。</li>
+ <li><b>面板重建是最大热点</b>：画像里 <code>buildPanel</code> 平均 58ms、峰值 92ms，主要来自 <code>innerHTML=''</code> 全量销毁 + 13 类行逐个 <code>getComputedStyle</code> 溢出测量 + 重播入场动画。倾斜这类操作只改几个数字，于是抽出 <code>refreshCropTiltUI()</code>：复用现有 <code>refs</code> 走 <code>syncUI()</code>，只更新两轴读数、快捷 chip 的 active、模式按钮、状态行与角度 hint；<code>syncPanelFit</code> 的 overflow-x 按「选择器 + 类名」在单次测量内缓存，每类最多抽查 12 个元素。</li>
+ <li><b>异常不能让 rAF 链断掉</b>：<code>paintFrame</code> 以前一旦抛异常，浏览器不会再排下一帧，界面看起来就是「卡死」。现在顶层 <code>try/catch/finally</code> 只跳过出错的那一帧，记进 <code>IrisStability</code> 并自动补排一帧；<code>finally</code> 里记录帧耗时。全局 <code>error</code> / <code>unhandledrejection</code> 与 <code>PerformanceObserver('longtask')</code> 只观测不吞异常、不弹窗、不上传，数据留在内存供诊断页「一键复制」。<code>webglcontextlost</code> 里 <code>preventDefault()</code> 保留恢复机会，<code>webglcontextrestored</code> 清空 <code>U</code>（旧 uniform location 已失效）与值缓存、标记纹理脏并重新绘制。</li>
+ <li><b>小缓冲也复用</b>：<code>renderSmall</code> 每张缩略图都 <code>new Uint8Array(76*76*4)</code> + <code>flipRows</code> 再 new 一个 <code>Uint8ClampedArray</code>，433 张就是近 80MB 垃圾与 GC 抖动。现在两者按尺寸复用（<code>putImageData</code> / <code>toDataURL</code> 都是同步消费，安全）；FBO 或上下文出问题时返回全零缓冲而非 <code>null</code>，让直方图与色调指纹的调用点不会因为读 <code>px.length</code> 而连带崩溃。</li>
  <li><b>撤销历史改差分存储</b>：以前每步都把整份 <code>state</code> 序列化成字符串（含笔迹、元素、蒙版、图层），60 步就是 60 份完整副本。现在 <code>irisDiff / irisApply</code> 只记录「相对上一步变化了的叶子路径」，undo / redo 共用一个 <code>{f, b, m}</code> step（正向、反向、摘要）；<code>irisEqual</code> 做深度相等，数组里装数组（笔迹坐标点）内容相同就不误记；<code>irisApply</code> 对对象值深拷贝，避免历史 step 与当前 state 共享引用被后续编辑污染。</li>
  <li><b>书签与自动保存快照</b>改成「相对默认状态的差分」打包（<code>packState / unpackState</code>），带版本标记并兼容旧版完整 JSON；历史页新增占用面板与「压缩旧书签」「清空撤销历史」。实测单份状态 4479 B → 733 B（<b>−84%</b>），13 步历史 2116 B，60 步上限 6931 B（旧方案约 269 KB）。</li>
  <li><b>裁剪会话</b>：拖动过程不逐步写历史，点「完成裁剪」才一次性提交一步，「取消」连中间步一起回滚；切走工具自动完成。既减少历史占用，也让「什么时候算裁完」变得明确。</li>
@@ -16105,6 +17049,14 @@ const IrisAutosave=(()=>{
   async function sourceToBlob(src){
     if(!src) return null;
     if(src instanceof Blob) return src;           // 原始 File：保留原字节与格式
+    /* 大照片导入后 LIVE.srcFile 就是原始 File，直接复用，
+       不再全分辨率 drawImage + toBlob('image/png') 重编码（96MB 分配 + 数百毫秒）。
+       HEIC / AVIF 等解码依赖格式不固定，仍走 canvas 转成通用 PNG 再存。 */
+    try{
+      const f=(typeof LIVE!=='undefined'&&LIVE.srcFile)||null;
+      if(f&&src===(typeof LIVE!=='undefined'&&LIVE.still)&&f.size<=AS_LIMIT_IMG&&
+         /^(image\/(jpeg|png|webp|gif|bmp))$/i.test(f.type||'')) return f;
+    }catch(e){}
     const w=src.naturalWidth||src.width||src.videoWidth||0;
     const h=src.naturalHeight||src.height||src.videoHeight||0;
     if(!w||!h) return null;
@@ -16118,12 +17070,13 @@ const IrisAutosave=(()=>{
   }
   function makeThumb(src){
     try{
-      const w=src&&(src.naturalWidth||src.width||src.videoWidth)||imgW||1;
-      const h=src&&(src.naturalHeight||src.height||src.videoHeight)||imgH||1;
+      const s0=(typeof LIVE!=='undefined'&&LIVE.analysis&&src===LIVE.still)?LIVE.analysis:src;
+      const w=s0&&(s0.naturalWidth||s0.width||s0.videoWidth)||imgW||1;
+      const h=s0&&(s0.naturalHeight||s0.height||s0.videoHeight)||imgH||1;
       const s=Math.min(1,260/Math.max(w,h));
       const c=document.createElement('canvas');
       c.width=Math.max(1,Math.round(w*s)); c.height=Math.max(1,Math.round(h*s));
-      c.getContext('2d').drawImage(src,0,0,c.width,c.height);
+      c.getContext('2d').drawImage(s0,0,0,c.width,c.height);
       return c.toDataURL('image/jpeg',.62);
     }catch(e){ return ''; }
   }
@@ -16251,8 +17204,10 @@ const IrisAutosave=(()=>{
   async function galleryAll(){
     try{
       const a=(await idbAll('gallery'))||[];
-      return a.sort((x,y)=>(y.updatedAt||y.at)-(x.updatedAt||x.at));
-    }catch(e){ return (lsGet('iris_gallery_fallback',[])||[]); }
+      return a.filter(r=>!r.demo && r.name!=='演示图' && r.name!=='未载入照片')
+              .sort((x,y)=>(y.updatedAt||y.at)-(x.updatedAt||x.at));
+    }catch(e){ return (lsGet('iris_gallery_fallback',[])||[])
+      .filter(r=>!r.demo && r.name!=='演示图' && r.name!=='未载入照片'); }
   }
   async function galleryRemove(id){
     try{ await idb('gallery',st=>st.delete(id),'readwrite'); }catch(e){}
@@ -16269,6 +17224,7 @@ const IrisAutosave=(()=>{
     try{
       if(rec.img){
         const blob=new Blob([rec.img],{type:rec.imgType||'image/png'});
+        LIVE.srcFile=blob;
         const url=URL.createObjectURL(blob);
         try{
           const im=await new Promise((res,rej)=>{
@@ -16520,6 +17476,7 @@ const IrisAutosave=(()=>{
       const full=(m&&m.img)?m:await readFull();
       if(full&&full.img){
         const blob=new Blob([full.img],{type:full.imgType||'image/png'});
+        LIVE.srcFile=blob;
         const url=URL.createObjectURL(blob);
         try{
           const im=await new Promise((res,rej)=>{
@@ -16545,6 +17502,7 @@ const IrisAutosave=(()=>{
         /* 降级：没有原图，先记住参数，等用户重新选照片 */
         pendingState=m.state||null;
         if(typeof toast==='function') toast('本机未保存原图，请选择照片后自动套用上次的编辑');
+        if(typeof resetToPlaceholder==='function') resetToPlaceholder();
         const card=document.getElementById('drop');
         if(card) card.classList.remove('hidden');
         if(typeof $==='function'){ const f=$('#file'); if(f) setTimeout(()=>f.click(),260); }
@@ -16552,6 +17510,7 @@ const IrisAutosave=(()=>{
     }catch(e){
       console.warn('[IrisAutosave] 恢复失败',e);
       if(typeof toast==='function') toast('恢复失败：'+(e.message||e));
+      if(typeof resetToPlaceholder==='function') resetToPlaceholder();
     }finally{ suspend=false; schedule(400); }
   }
 
@@ -16581,8 +17540,12 @@ const IrisAutosave=(()=>{
     el.querySelectorAll('[data-a]').forEach(b=>b.onclick=()=>{
       const a=b.dataset.a;
       if(a==='yes') restore(m);
-      else if(a==='new'){ clearSnapshot(); if(typeof toast==='function') toast('已清除上次的编辑'); }
-      else if(a==='later'){ hideCard(); if(typeof toast==='function') toast('可在「自动保存」页随时恢复'); }
+      else if(a==='new'){ clearSnapshot(); hideCard();
+        if(typeof resetToPlaceholder==='function') resetToPlaceholder();
+        if(typeof toast==='function') toast('已清除上次的编辑 · 选择一张照片开始'); }
+      else if(a==='later'){ hideCard();
+        if(typeof resetToPlaceholder==='function') resetToPlaceholder();
+        if(typeof toast==='function') toast('可在「自动保存」页随时恢复'); }
       else if(a==='always'){ setMode('auto'); restore(m); }
     });
     document.body.appendChild(el); card=el;
@@ -16763,7 +17726,7 @@ function renderAutosavePage(body){
         '平台        ' + d.platform+'\n'+
         '本机存储    ' + (d.dbOK?'IndexedDB 可用':('降级：'+d.dbReason))+'\n'+
         '上次快照    ' + (d.snapshot?(d.snapshot.name+' · '+d.snapshot.dims+' · '+IrisAutosave.fmtSize(d.snapshot.bytes)+(d.snapshot.degraded?' · 仅参数':' · 含原图')):'无')+'\n'+
-        '当前照片    ' + (d.demo?'演示图（不入档）':d.imageSize)+'\n'+
+        '当前照片    ' + (d.demo?(d.name==='演示图'?'演示图（不入档）':'待载入占位（不入档）'):d.imageSize)+'\n'+
         '状态体积    ' + IrisAutosave.fmtSize(d.stateBytes)+'\n'+
         '导出记录    ' + d.exports+' 条　书签 '+d.bookmarks+' 个\n'+
         '存储配额    ' + IrisAutosave.fmtSize(d.usage)+' / '+(d.quota?IrisAutosave.fmtSize(d.quota):'未知');
@@ -16979,6 +17942,7 @@ function renderDiagnosticsPage(body){
   const perfBox=spEl('div',''); w.append(perfBox);
   function drawPerf(){
     const q=IrisPerf.snapshot();
+    const st=(window.IrisStability&&IrisStability.snapshot())||null;
     const tot=q.uniformUploads+q.uniformSkips;
     const rate=tot?Math.round(q.uniformSkips/tot*100):0;
     perfBox.innerHTML='';
@@ -16994,7 +17958,11 @@ function renderDiagnosticsPage(body){
       ['布局读取',q.layoutReads+' 次 / 命中 '+q.layoutHits,'帧内坐标换算共享一次布局读取'],
       ['直方图让帧',q.histSkips,'拖动时跳过同步 readPixels'],
       ['缩略图缓存',q.effHits+' 次命中','单款滤镜参数只算一次'],
-      ['自动保存',q.saveEncodes+' 次编码 / '+q.saveReuses+' 次复用','原图只在换照片时重新编码']
+      ['自动保存',q.saveEncodes+' 次编码 / '+q.saveReuses+' 次复用','原图只在换照片时重新编码'],
+      ['帧耗时 p50 / p95',st?(st.frameP50+' / '+st.frameP95+' ms'):'—','最近 240 帧，p95 持续偏高说明该降负载了'],
+      ['长任务',st?(st.longTasks+' 次 · 共 '+st.longMs+' ms · 最长 '+st.longMax+' ms'):'—','超过 50ms 的主线程任务，卡顿的直接来源'],
+      ['异常 / 未处理拒绝',st?(st.errors+' / '+st.rejections):'—','只记录在本机内存，不上传'],
+      ['WebGL 上下文',st?(st.contextLost+' 次丢失 / '+st.contextRestored+' 次恢复'):'—','丢失后自动失效缓存并重画']
     ];
     const tb=document.createElement('tbody');
     rows.forEach(([a,b,c])=>{ const tr=document.createElement('tr');
@@ -17019,11 +17987,14 @@ function renderDiagnosticsPage(body){
   async function draw(){
     const d=await IrisAutosave.diag(), q=IrisPerf.snapshot();
     stat.innerHTML='';
+    const st2=(window.IrisStability&&IrisStability.snapshot())||null;
     [[d.platform.split(' · ')[0],'运行平台'],[d.units??'—','纹理单元'],
      [(q.fps||'—')+' FPS','实时帧率'],
      [q.uniformSkips,'缓存命中'],
-     [d.stateBytes?IrisAutosave.fmtSize(d.stateBytes):'—','状态体积'],
-     [d.history,'历史步数'],[d.snapshot?'有':'无','自动保存']]
+     [st2?(st2.frameP95+' ms'):'—','帧耗时 p95'],
+     [st2?st2.longTasks:'—','长任务'],
+     [st2?(st2.errors+st2.rejections):'—','异常'],
+     [d.snapshot?'有':'无','自动保存']]
     .forEach(([v,t])=>{ const x=spEl('div',''); x.innerHTML='<b>'+v+'</b><small>'+t+'</small>'; stat.append(x); });
     const text=
       'Iris 调色盘 · 运行状态诊断\n'+
@@ -17033,9 +18004,15 @@ function renderDiagnosticsPage(body){
       '着色器      '+(d.shader?'编译链接成功':'未就绪')+'\n'+
       '纹理单元    '+d.units+'\n'+
       'IndexedDB   '+(d.dbOK?'可用':('降级 / '+d.dbReason))+'\n'+
-      '图像        '+(d.demo?'演示图':d.imageSize)+' · '+(d.imageReady?'已载入':'未载入')+'\n'+
+      '图像        '+(d.demo?(d.name==='演示图'?'演示图':'待载入占位'):d.imageSize)+' · '+(d.imageReady?'已载入':'未载入')+'\n'+
       '状态体积    '+IrisAutosave.fmtSize(d.stateBytes)+'\n'+
       '撤销 / 重做 '+d.history+' / '+d.redo+'\n'+
+      (st2?('帧耗时        p50 '+st2.frameP50+' ms / p95 '+st2.frameP95+' ms / 最慢 '+st2.frameMax+' ms\n'+
+            '长任务        '+st2.longTasks+' 次 · 共 '+st2.longMs+' ms · 最长 '+st2.longMax+' ms\n'+
+            '异常          '+st2.errors+' 次错误 / '+st2.rejections+' 次未处理拒绝'+
+            (st2.lastError&&st2.lastError!=='—'?(' · 最近：'+st2.lastError):'')+'\n'+
+            '上下文        '+st2.contextLost+' 次丢失 / '+st2.contextRestored+' 次恢复\n'+
+            '运行时长      '+st2.uptime+' 秒\n'):'')+
       '快照        '+(d.snapshot?(d.snapshot.name+' · '+IrisAutosave.fmtTime(d.snapshot.at)+(d.snapshot.degraded?'（仅参数）':'（含原图）')):'无')+'\n'+
       '导出记录    '+d.exports+' 条　书签 '+d.bookmarks+' 个\n'+
       '本机用量    '+IrisAutosave.fmtSize(d.usage)+' / '+(d.quota?IrisAutosave.fmtSize(d.quota):'未知')+'\n'+
@@ -17086,7 +18063,12 @@ const AS_CHANGELOG=[
  {v:'v1.0.5',t:'视频工作台',d:'多片段时间线、关键帧调色、四种转场与六种运镜、五套成片模板；导出改为手工推帧 + 画面签名跳过重绘，静止段几乎零 CPU，预览与缩略图分批让帧；四端同源。'},
  {v:'v1.0.6',t:'视频风格库',d:'视频工作台接入完整色彩引擎：433 款滤镜、78 套模板、20 种盘模式可作为片段风格 A/B；新增可拖二维盘与盘动画、11 项关键帧参数、风格帧预生成导出；四端同源。'},
  {v:'v1.0.7',t:'一键滤镜',d:'预览正下方新增常驻滤镜速贴条：分类 + 搜索 + 缩略图横排，点一下就整段套用，也可拖到时间线片段；修复改滤镜后预览不重绘、只换终点导致半段渐显两个真 bug；签名改用轻量标签避免每帧序列化整份编辑状态；四端同源。'},
- {v:'v1.0.12',t:'分级 Pro · matte v4 · 区域工作台 Pro · 当前版本',d:'三件事一起做：① 分级页从 3 个挤在一起的小色轮换成一个 240px 大色轮 + 阴影 / 中间调 / 高光三档切换 + 色相 / 浓度 / 亮度精调 + 三档色卡 + 8 套一键片色调 + 档位联动；② 语义引擎升到 v4，GPU 仍是 RGBA 四通道，CPU 侧新增植被 / 水体 / 主体显著性 / 边缘四张软图，加边缘引导精修与最大连通块，可用通道从 5 个扩到 10 个；③ 区域工作台整页重做：统计进度条、10 通道预览、四区直接调色、在预览图上涂抹精修后一键写入蒙版 / 虚化、精度档与重算、组合式一键动作。两个界面全部换成圆角卡片与柔和光影，9 套主题与 Nova 一致；四端同源。'},
+ {v:'v1.0.17',t:'全面代码优化 · 流畅与稳定运行 · 当前版本',d:'不加任何新功能，按真实性能画像逐项收紧。测得<b>裁剪页整面板重建</b>是最大卡顿源（平均 58ms、峰值 92ms），于是把拖完倾斜、快捷度数、切换斜切/梯形、90° 翻转后的 <code>buildPanel(true)</code> 换成<b>只刷新变化的几个节点</b>的局部刷新；<code>syncPanelFit</code> 的逐元素 <code>getComputedStyle</code> 改成按类缓存、每类最多抽查 12 个。倾斜烘焙图改成 <b>canvas 按网格级别复用 + 双级缓存</b>（拖动 560px / 静止 900px、6 与 12 互不踢缓存），所有坐标数组预分配复用 —— 40 步拖动不再产生近 100MB 垃圾。缩略图的 <code>readPixels</code> / 行翻转缓冲也改为复用，异常时返回全零缓冲而不是 null，避免调用点直接读 <code>px.length</code> 把整页带崩。叠加层尺寸由 ResizeObserver 缓存，静止帧零布局读取。<br><b>稳定性</b>：新增全局异常与未处理拒绝记录、长任务观测、帧耗时 p50/p95；<code>paintFrame</code> 顶层兜底让单帧异常不再打断 rAF 链（以前会永久卡住画面）；WebGL <code>contextlost</code> 阻止默认销毁、恢复后整体失效 uniform 与纹理缓存再重画。诊断页新增 4 组稳定性指标，一键复制就能带上。全部既有回归复跑通过。'},
+ {v:'v1.0.16',t:'真正的左右 / 上下倾斜',d:'上一版又理解偏了一次：把「调度数的倾斜」做成了整图旋转拉直。这版把<b>透视倾斜</b>做成裁剪页首屏的主角 —— 两根独立度数滑杆（−45°~+45°、0.1° 步进）分别控制<b>↔ 左右倾斜</b>与<b>↕ 上下倾斜</b>，可切「斜切」（推成平行四边形）与「梯形透视」（上窄下宽 / 左高右矮），还有 7 个快捷度数、双轴归零、以及在照片上横拖 / 纵拖的手势。变换在物理等比例空间完成，自动按 1/(1+|sLR|+|sUD|) 放大裁切填满、四角不露黑边；零位时整段恒等，逐像素等于旧版。裁剪编辑器底图改成<b>透视网格贴图</b>，用逐行复刻 shader 的逆映射做分片仿射，预览与导出共用同一套几何（含 90° 步进、翻转、任意角度、构图位移），历史遗留的顺序差异也一并修正。任意角度拉直降级为折叠、完整保留；光效页那套旧的百分比梯形滑杆撤掉，只留一个跳转卡，避免两处数值打架。倾斜进入撤销、自动保存、刷新恢复，换照片自动归零。'},
+ {v:'v1.0.15',t:'真正的任意角度拉直',d:'上一版把 90° 步进按钮提到了首屏，但这不是要的「调度数」。现在裁剪页的主角是一根 <b>−45°~+45°、0.1° 步进</b>的倾斜角度滑杆：左右滑动即可拉直，还有 −45/−15/−5/0/+5/+15/+45 快捷角度、以及「在照片上左右拖调角度」手势（6px≈1°）。着色器在<b>物理等比例空间</b>旋转（先乘宽高比、转完再除回去），不会把横图拉变形；旋转后按 <code>k=|cos a|+|sin a|·max(ar,1/ar)</code> 自动放大裁切填满，<b>不露黑角</b>。「构图微调」里再给缩放与水平 / 垂直位移，重新决定保留哪一块。90° 步进、水平 / 垂直翻转、裁剪框全部保留且叠加生效，零位时所有新增 uniform 都是恒等值，逐像素等于旧版。裁剪编辑器改用旋转烘焙后的正矩形底图，框不再跟着歪。角度与构图进入撤销、自动保存、恢复链路，换照片自动归零。'},
+ {v:'v1.0.14',t:'大照片加载提速 · 裁剪页旋转重做',d:'两件事。<b>① 加载大照片不再卡</b>：实测 6000×4000 导入，同步耗时从 287ms 降到 73ms。旧版「主色调分析」和「语义分割」各自把整张原图缩放一次，自动保存还要把原图全分辨率重编码成 PNG；现在只降采样一次生成共享分析小图（优先 createImageBitmap 在解码线程完成，主线程不阻塞），色调 / matte / 缩略图都从它取像素，matte 的分辨率与 hash 仍按原图尺寸算，结果一字不差。自动保存直接复用原始文件字节，<b>零重编码</b>；首帧先出画面，分析与直方图分级到后续帧和空闲。另外加了 GPU 纹理上限保护：超过 MAX_TEXTURE_SIZE 的照片用轻量预览纹理，导出前自动换回完整原图，导出仍是原始分辨率、不再黑屏。<b>② 旋转其实一直在裁剪页</b>，只是四个按钮挤在第三行小字里几乎发现不了；现在提到首屏做成「照片方向」大控件：角度徽章 + 左转 / 右转 90° / 水平翻转 / 垂直翻转 / 复位五个大按钮 + 实时显示旋转后的导出尺寸，窄侧栏和手机自动换行不溢出；命令面板搜「旋转」「右转」「复位方向」也能直接执行。旋转无损，导出按旋转后尺寸出图。'},
+ {v:'v1.0.13',t:'导入照片后不再残留测试图',d:'修掉一个跨启动的体验 bug：演示图原本在每次启动都无条件加载，恢复卡片弹出、点「重新开始 / 稍后」或恢复失败时，画面会停在那张测试图上，看起来像导入的照片没换掉。现在演示图只在<b>本机从未导入过照片、也没有任何存档</b>的第一次启动出现；之后启动一律用中性深色占位画面（只写「选择一张照片开始」，不带色卡与示例文字，同样不入档）。继续编辑仍换回上次真照片；「重新开始 / 稍后 / 恢复失败 / 降级」都切回占位而不是测试图。另外：导入时广播换照片事件，已打开的区域工作台 / 我的空间 / 图像信息等页面即时重建预览与统计；历史图片过滤掉任何演示图条目；顶栏不再把占位误标成「演示图」。四端同源。'},
+ {v:'v1.0.12',t:'分级 Pro · matte v4 · 区域工作台 Pro',d:'三件事一起做：① 分级页从 3 个挤在一起的小色轮换成一个 240px 大色轮 + 阴影 / 中间调 / 高光三档切换 + 色相 / 浓度 / 亮度精调 + 三档色卡 + 8 套一键片色调 + 档位联动；② 语义引擎升到 v4，GPU 仍是 RGBA 四通道，CPU 侧新增植被 / 水体 / 主体显著性 / 边缘四张软图，加边缘引导精修与最大连通块，可用通道从 5 个扩到 10 个；③ 区域工作台整页重做：统计进度条、10 通道预览、四区直接调色、在预览图上涂抹精修后一键写入蒙版 / 虚化、精度档与重算、组合式一键动作。两个界面全部换成圆角卡片与柔和光影，9 套主题与 Nova 一致；四端同源。'},
  {v:'v1.0.11',t:'启动加载页',d:'每次打开 / 刷新 / 从后台返回都先显示一张启动页：12 段低饱和虹彩环缓慢旋转、中心白点脉冲、品牌与英文 tagline 依次淡入、细进度条走完，底部写明「本地渲染 · 照片不出设备」与自动读取的版本号。跟随 9 套主题配色，浅色主题自动翻成浅底深字；纯视觉覆盖层不拦截任何点击与拖拽，动效关闭或系统「减少动画」时自动切成短版。生命周期独立于主程序，硬性上限 3 秒（实测约 2.6~2.7 秒消失），切到后台立即收起；四端同源。'},
  {v:'v1.0.10',t:'顶栏悬浮留白',d:'澄清用户的「顶部 tab 贴边」指的是顶栏那一整条（搜索 / ⋯ 更多 / 换照片 / 导出），不是底部 5 个工具。原版界面此前是 top:0;left:0;right:0 的全宽贴边条，按钮离视口上边缘仅 7~9px；现在四边留出空隙、变成悬浮卡片，按钮离边缘约 20px，⋯ 菜单改为浮在卡片下方。外观页新增「顶栏留白」开关（悬浮 / 贴边），默认悬浮、偏好存本机；Nova 本来就是悬浮胶囊不受影响。浅色与玻璃主题、工具在顶栏模式、手机安全区一并验证；四端同源。'},
  {v:'v1.0.9',t:'工具栏位置回到底部',d:'纠正上一版把 5 个工具切换搬进顶栏的误读：默认恢复为「编辑区底部」的最初布局，顶栏重新变回一行；外观与主题页新增「工具栏位置」开关，喜欢顶栏布局的可随时切回，偏好存本机、刷新保留；顺手修正「更多」弹出菜单在两种位置下的定位基准。视频工作台、时间线拖拽、片段调色盘与滤镜叠加全部保留；四端同源。'},
@@ -18769,6 +19751,60 @@ function cmdActions(){
     }},
     {name:'自动色阶',desc:'按画面像素统计自动优化明暗',key:'auto levels 自动',hint:'',icon:'◐',run:autoLevels},
     {name:'自动白平衡',desc:'按画面像素统计自动校正色温',key:'auto white balance 白平衡',hint:'',icon:'◑',run:autoWB},
+    {name:'透视倾斜 · 打开左右上下倾斜',desc:'把照片推成斜的平行四边形 / 梯形：两根度数滑杆分别控制左右与上下，也可在照片上直接拖',
+     key:'倾斜 透视 斜切 梯形 左右倾斜 上下倾斜 skew keystone 校正 建筑 翻拍 度数 构图',hint:'',icon:'▱',
+     run:()=>{ gotoTool('crop'); toast('在「透视倾斜」里左右滑两根滑杆，或点「在照片上拖调倾斜」'); }},
+    {name:'透视倾斜 · 双轴归零',desc:'左右 / 上下倾斜都清回 0°',
+     key:'倾斜 归零 复位 清零 透视 斜切',hint:'',icon:'↺',
+     run:()=>{ mutate(()=>{state.tilt=[0,0];}); buildPanel(true); requestRender(); toast('倾斜已归零'); }},
+    {name:'透视倾斜 · 左倾 −10°',desc:'两轴一起左倾 −10°（可反复点累积）',
+     key:'倾斜 左倾 减 透视 斜切',hint:'',icon:'↶',
+     run:()=>{ const t=irisTilt(); mutate(()=>{state.tilt=[clamp(t[0]-10,-45,45),clamp(t[1]-10,-45,45)];});
+       buildPanel(true); requestRender(); toast('倾斜 '+irisTiltText(0)+' / '+irisTiltText(1)); }},
+    {name:'透视倾斜 · 右倾 +10°',desc:'两轴一起右倾 +10°',
+     key:'倾斜 右倾 加 透视 斜切',hint:'',icon:'↷',
+     run:()=>{ const t=irisTilt(); mutate(()=>{state.tilt=[clamp(t[0]+10,-45,45),clamp(t[1]+10,-45,45)];});
+       buildPanel(true); requestRender(); toast('倾斜 '+irisTiltText(0)+' / '+irisTiltText(1)); }},
+    {name:'透视倾斜 · 切换梯形透视',desc:'斜切（平行四边形）与梯形透视（上窄下宽 / 左高右矮）互换',
+     key:'倾斜 梯形 透视 斜切 模式 keystone',hint:'',icon:'▱',
+     run:()=>{ mutate(()=>{state.tiltMode=state.tiltMode==='keystone'?'skew':'keystone';});
+       buildPanel(true); requestRender(); toast(state.tiltMode==='skew'?'斜切倾斜':'梯形透视'); }},
+    {name:'拉直 · 打开倾斜角度',desc:'任意度数旋转：左右滑滑杆、或在照片上左右拖，旋转后自动裁切填满不露黑角',
+     key:'拉直 角度 倾斜 度数 旋转 任意角度 straighten 水平线 校正 构图',hint:'',icon:'↻',
+     run:()=>{ gotoTool('crop'); toast('在「倾斜角度」滑杆左右滑动，或点「在照片上左右拖调角度」'); }},
+    {name:'拉直 · 角度归零',desc:'把任意倾斜角度清回 0°，保留 90° 步进与翻转',
+     key:'角度 归零 复位 拉直 倾斜 清零',hint:'',icon:'↺',
+     run:()=>{ mutate(()=>{state.angle=0;}); buildPanel(true); requestRender(); toast('倾斜角度已归零'); }},
+    {name:'拉直 · 右倾 +5°',desc:'微调任意角度（可与 −5° 反复点，步进 5°）',
+     key:'角度 右倾 加5 旋转 拉直',hint:'',icon:'↻',
+     run:()=>{ mutate(()=>{state.angle=clamp(+(state.angle||0)+5,-45,45);});
+       buildPanel(true); requestRender(); toast('倾斜角度 '+irisAngleText()); }},
+    {name:'拉直 · 左倾 −5°',desc:'微调任意角度（步进 5°）',
+     key:'角度 左倾 减5 旋转 拉直',hint:'',icon:'↶',
+     run:()=>{ mutate(()=>{state.angle=clamp(+(state.angle||0)-5,-45,45);});
+       buildPanel(true); requestRender(); toast('倾斜角度 '+irisAngleText()); }},
+    {name:'构图微调 · 缩放 / 位移',desc:'旋转自动裁切填满之后，再放大或平移重新取景',
+     key:'构图 缩放 位移 取景 平移 拉直 重新构图',hint:'',icon:'◫',
+     run:()=>{ gotoTool('crop'); toast('展开「构图微调」可缩放 / 水平 / 垂直位移'); }},
+    {name:'构图微调 · 重置',desc:'构图缩放回 1×、位移回中心',
+     key:'构图 重置 缩放 位移 归零',hint:'',icon:'↺',
+     run:()=>{ mutate(()=>{state.frameZoom=1;state.framePan=[0,0];});
+       buildPanel(true); requestRender(); toast('构图已重置'); }},
+    {name:'照片右转 90°',desc:'无损旋转照片，导出按旋转后尺寸出图（裁剪页「照片方向」可继续调整）',
+     key:'旋转 照片 右转 90 度 方向 rotate 横竖 竖屏',hint:'',icon:'↻',
+     run:()=>{ mutate(()=>{state.rot=(((state.rot||0)+1)%4+4)%4;});
+       buildPanel(true); requestRender(); toast('照片已右转 90° · '+exportSize().join(' × ')+' px'); }},
+    {name:'照片左转 90°',desc:'无损旋转照片，导出按旋转后尺寸出图',
+     key:'旋转 照片 左转 90 度 方向 rotate',hint:'',icon:'↶',
+     run:()=>{ mutate(()=>{state.rot=(((state.rot||0)+3)%4+4)%4;});
+       buildPanel(true); requestRender(); toast('照片已左转 90° · '+exportSize().join(' × ')+' px'); }},
+    {name:'复位照片方向',desc:'清除旋转与水平 / 垂直翻转，回到原始方向',
+     key:'复位 方向 旋转 翻转 还原 rotate reset',hint:'',icon:'↺',
+     run:()=>{ mutate(()=>{state.rot=0;state.flipX=1;state.flipY=1;});
+       buildPanel(true); requestRender(); toast('照片方向已复位'); }},
+    {name:'裁剪与照片方向',desc:'可视化拖框裁剪 · 90° 旋转 · 水平 / 垂直翻转 · 比例锁',
+     key:'裁剪 旋转 翻转 方向 crop rotate 拉直 构图',hint:'',icon:'▣',
+     run:()=>{ gotoTool('crop'); toast('在「照片方向」里旋转或翻转照片'); }},
     {name:'分屏对比',desc:'开启 / 关闭左右分屏对比',key:'split 对比',hint:'R',icon:'◫',run:()=>{mutate(()=>{state.splitOn=!state.splitOn;buildPanel();});}},
     {name:'播放 / 暂停实况',desc:'播放实况片段，编辑逐帧生效',key:'live play 播放',hint:'L',icon:'●',run:()=>{LIVE.playing?livePause():livePlay();}},
     {name:'切换填满 / 适应',desc:'切换照片在画面里的预览方式',key:'fit cover 填满 适应',hint:'\\',icon:'⤢',run:()=>$('#zMode').click()},
@@ -19059,7 +20095,9 @@ applyMobileUI();
 initSubPages();
 buildTools(); buildPanel(); updateFitBtn();
 try{ const v=localStorage.getItem(dockKey()); if(v) setDock(parseFloat(v),false); }catch(e){}
-new ResizeObserver(()=>render()).observe(stage);
+new ResizeObserver(()=>{ invalidateOvSize(); render(); }).observe(stage);
+new ResizeObserver(()=>invalidateOvSize()).observe(ov);
+window.addEventListener('resize',()=>{ invalidateOvSize(); invalidateStageRect(); });
 /* 拖动右侧栏改变宽度时重新判断是否需要纵向布局 */
 new ResizeObserver(()=>syncPanelFit(false)).observe($('#panel'));
 render(); drawHistogram();
