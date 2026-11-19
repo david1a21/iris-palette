@@ -4,11 +4,10 @@ import CoreMedia
 import CoreImage
 import Darwin
 
-/// 把一段普通视频重新封装成「实况照片可用的 MOV」：
-///   1. 视频逐帧重绘到静态帧的像素尺寸（长宽比一致，必要时居中裁切）
+/// 把一段普通视频变成「实况照片可用的 MOV」：
+///   1. 画幅对齐静态帧的长宽比（居中裁切，长边封顶），这才是 PhotoKit 判 InvalidResource 的主因
 ///   2. 资产级 metadata：com.apple.quicktime.content.identifier
 ///   3. metadata 轨道：com.apple.quicktime.still-image-time，放在片子中间
-/// 这是 Photos 配对校验认的三样东西。
 enum LivePhotoMovie {
 
     static func makeIdentifier() -> String {
@@ -18,16 +17,98 @@ enum LivePhotoMovie {
 
     static func wrap(video: URL, identifier: String, targetSize: CGSize,
                      completion: @escaping (URL?) -> Void) {
+        guard targetSize.width > 0, targetSize.height > 0 else { completion(nil); return }
+        normalize(video: video, targetSize: targetSize) { normalized in
+            guard let normalized = normalized else { completion(nil); return }
+            addMetadata(video: normalized, identifier: identifier, completion: completion)
+        }
+    }
+
+    // MARK: - 画幅对齐
+
+    private static func normalize(video: URL, targetSize: CGSize,
+                                  completion: @escaping (URL?) -> Void) {
+        let asset = AVURLAsset(url: video)
+        guard let vTrack = asset.tracks(withMediaType: .video).first else { completion(nil); return }
+
+        let transform0 = vTrack.preferredTransform
+        let disp = CGRect(origin: .zero, size: vTrack.naturalSize).applying(transform0)
+        let dw = abs(disp.width), dh = abs(disp.height)
+        guard dw > 0, dh > 0 else { completion(nil); return }
+
+        let tw = CGFloat(Int(targetSize.width.rounded()))
+        let th = CGFloat(Int(targetSize.height.rounded()))
+        let targetAspect = tw / th
+        let currentAspect = dw / dh
+
+        // 画幅已经一致就不用再动它，纯搬运即可。
+        if abs(targetAspect - currentAspect) < 0.02 {
+            completion(video)
+            return
+        }
+
+        guard let comp = AVMutableComposition(),
+              let cTrack = comp.addMutableTrack(withMediaType: .video,
+                                                preferredTrackID: kCMPersistentTrackID_Invalid) else {
+            completion(nil); return
+        }
+        let range = CMTimeRange(start: .zero, duration: asset.duration)
+        try? cTrack.insertTimeRange(range, of: vTrack, at: .zero)
+
+        let instruction = AVMutableVideoCompositionInstruction()
+        instruction.timeRange = range
+        let layer = AVMutableVideoCompositionLayerInstruction(assetTrack: cTrack)
+
+        let scale = max(tw / dw, th / dh)
+        var transform = transform0.concatenating(CGAffineTransform(scaleX: scale, y: scale))
+        let scaled = CGRect(origin: .zero, size: vTrack.naturalSize).applying(transform)
+        let tx = (tw - scaled.width) / 2 - scaled.minX
+        let ty = (th - scaled.height) / 2 - scaled.minY
+        transform = transform.concatenating(CGAffineTransform(translationX: tx, y: ty))
+        layer.setTransform(transform, at: .zero)
+        instruction.layerInstructions = [layer]
+
+        let vc = AVMutableVideoComposition()
+        vc.renderSize = CGSize(width: tw, height: th)
+        vc.frameDuration = CMTime(value: 1, timescale: 30)
+        vc.instructions = [instruction]
+
+        let out = FileManager.default.temporaryDirectory
+            .appendingPathComponent("iris-live-norm-\(UUID().uuidString).mov")
+        try? FileManager.default.removeItem(at: out)
+        guard let exporter = AVAssetExportSession(asset: comp,
+                                                  presetName: AVAssetExportPresetHighestQuality) else {
+            completion(nil); return
+        }
+        exporter.outputURL = out
+        exporter.outputFileType = .mov
+        exporter.videoComposition = vc
+        exporter.shouldOptimizeForNetworkUse = false
+
+        exporter.exportAsynchronously {
+            _ = exporter          // 必须强持有到导出结束
+            if exporter.status == .completed, exporter.error == nil {
+                completion(out)
+            } else {
+                let fallback = video
+                _ = fallback
+                completion(nil)
+            }
+        }
+    }
+
+    // MARK: - 补 metadata 并重新封容器
+
+    private static func addMetadata(video: URL, identifier: String,
+                                    completion: @escaping (URL?) -> Void) {
         let asset = AVURLAsset(url: video)
         guard let vTrack = asset.tracks(withMediaType: .video).first,
-              targetSize.width > 0, targetSize.height > 0,
               let stillFD = stillTimeFormatDescription() else {
             completion(nil); return
         }
 
-        let width = Int(targetSize.width.rounded())
-        let height = Int(targetSize.height.rounded())
-        let out = video.deletingPathExtension().appendingPathExtension("mov")
+        let out = FileManager.default.temporaryDirectory
+            .appendingPathComponent("iris-live-wrap-\(UUID().uuidString).mov")
         try? FileManager.default.removeItem(at: out)
 
         guard let reader = try? AVAssetReader(asset: asset),
@@ -35,7 +116,6 @@ enum LivePhotoMovie {
             completion(nil); return
         }
 
-        // 不做任何解码/重绘：原样搬运压缩样本，内存占用几乎为零。
         let vOut = AVAssetReaderTrackOutput(track: vTrack, outputSettings: nil)
         vOut.alwaysCopiesSampleData = false
         guard reader.canAdd(vOut) else { completion(nil); return }
@@ -68,7 +148,7 @@ enum LivePhotoMovie {
         var finishedVideo = false
 
         vIn.requestMediaDataWhenReady(on: queue) { [reader, writer] in
-            _ = (reader, writer)   // 必须强持有，否则函数返回后 reader 被释放，copyNextSampleBuffer 会抛异常
+            _ = (reader, writer)
             while vIn.isReadyForMoreMediaData {
                 if reader.status == .failed || reader.status == .cancelled || reader.status == .completed {
                     failed = true
@@ -107,6 +187,8 @@ enum LivePhotoMovie {
         }
         queue.asyncAfter(deadline: .now() + 0.1) { finishIfReady() }
     }
+
+    // MARK: - still-image-time
 
     private static func stillTimeFormatDescription() -> CMFormatDescription? {
         let spec: [String: Any] = [
