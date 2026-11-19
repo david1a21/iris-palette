@@ -23,13 +23,13 @@ final class LiveExportCoordinator {
               window.webkit.messageHandlers.iris.postMessage({op:'liveFail', msg:'当前画面没有实况视频'});
               return;
             }
+            var vf = LIVE.vidFile;
+            if(!vf) throw new Error('没有找到导入的实况动态片段');
             var cover = await canvasToBlob(renderExportCanvas(), 'image/jpeg', 0.95);
-            var clip = await recordLiveClip();
-            if(!clip || clip.size < 256) throw new Error('动态片段为空，可能是录制被系统中断');
             var base = 'LivePhoto';
-            try{ base = LIVE.baseName || (LIVE.imgName ? liveBase(LIVE.imgName) : '') || 'LivePhoto'; }catch(e){}
-            var vext = ((clip.type||'').indexOf('mp4') >= 0) ? '.mp4'
-                     : ((clip.type||'').indexOf('quicktime') >= 0 ? '.mov' : '.mp4');
+            try{ base = LIVE.baseName || (LIVE.imgName ? liveBase(LIVE.imgName) : '') || liveBase(vf.name) || 'LivePhoto'; }catch(e){}
+            var vm = /\.([a-z0-9]+)$/i.exec(vf.name || '');
+            var vext = vm ? ('.' + vm[1].toLowerCase()) : '.mov';
             async function push(kind, name, mtype, blob){
               var H = window.webkit.messageHandlers.iris;
               H.postMessage({op:'liveBegin', kind:kind, name:name, mime:mtype, bytes:blob.size});
@@ -48,7 +48,7 @@ final class LiveExportCoordinator {
               H.postMessage({op:'liveEnd', kind:kind});
             }
             await push('photo', base + '.jpg', 'image/jpeg', cover);
-            await push('video', base + vext, clip.type || 'video/mp4', clip);
+            await push('video', base + vext, vf.type || 'video/quicktime', vf);
           }catch(e){
             try{ window.webkit.messageHandlers.iris.postMessage({op:'liveFail', msg:String(e && e.message || e)}); }catch(_){}
           }
