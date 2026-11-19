@@ -20,9 +20,20 @@ enum LivePhotoExport {
         let imageExts: Set<String> = ["jpg", "jpeg", "heic", "heif", "png", "webp"]
         let videoExts: Set<String> = ["mov", "mp4", "m4v"]
 
-        guard let image = entries.first(where: { imageExts.contains($0.ext) && $0.data.count > 1024 }),
-              let video = entries.first(where: { videoExts.contains($0.ext) && $0.data.count > 1024 })
-        else { return false }
+        let images = entries.filter { imageExts.contains($0.ext) && $0.data.count > 1024 }
+        let videos = entries.filter { videoExts.contains($0.ext) && $0.data.count > 1024 }
+
+        // 没有视频的包：可能是实况录制失败的兜底包（只有封面），存成静态图；
+        // 但「打包全格式」一次给三张图，那种要继续走原来的分享逻辑，不能误存。
+        if videos.isEmpty {
+            guard images.count == 1, let only = images.first else { return false }
+            let name = only.name.isEmpty ? "Iris.png" : only.name
+            let url = tempURL(name)
+            try? only.data.write(to: url)
+            saveStill(url, completion: completion)
+            return true
+        }
+        guard let image = images.first, let video = videos.first else { return false }
 
         // 照片：JPEG / HEIC 直接用；PNG、WebP 转成 JPEG（Live Photo 的静态资源只认这两种）
         let base = (image.name as NSString).deletingPathExtension
@@ -45,6 +56,20 @@ enum LivePhotoExport {
         save(photo: photoURL, video: videoURL, photoName: photoName,
              videoName: base + "." + video.ext, completion: completion)
         return true
+    }
+
+    private static func saveStill(_ url: URL, completion: ((Bool) -> Void)?) {
+        PHPhotoLibrary.requestAuthorization(for: .addOnly) { status in
+            guard status == .authorized || status == .limited else {
+                DispatchQueue.main.async { completion?(false) }
+                return
+            }
+            PHPhotoLibrary.shared().performChanges {
+                _ = PHAssetChangeRequest.creationRequestForAssetFromImage(atFileURL: url)
+            } completionHandler: { ok, _ in
+                DispatchQueue.main.async { completion?(ok) }
+            }
+        }
     }
 
     private static func save(photo: URL, video: URL, photoName: String, videoName: String,

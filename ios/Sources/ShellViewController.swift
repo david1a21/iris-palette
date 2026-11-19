@@ -145,9 +145,11 @@ final class ShellViewController: UIViewController, WKScriptMessageHandler, WKNav
         s.close()
         let url = s.fileURL
 
-        // 页面导出的「实况配对素材」是 ZIP：封面 + 视频，直接写成原生 Live Photo，
-        // 不再走「单独存图 + 单独存视频」或者让用户去快捷指令重新配对。
-        if s.mime.contains("zip"), LivePhotoExport.saveIfPair(zipURL: url) {
+        // 页面导出的「实况配对素材」是 ZIP：封面 + 视频，直接写成原生 Live Photo。
+        // 不靠 mime 判断——页面造包时可能不带类型，按文件头 PK\x03\x04 才稳。
+        if isZipFile(url), LivePhotoExport.saveIfPair(zipURL: url, completion: { [weak self] ok in
+            if !ok { self?.alert("实况保存失败", "相册可能拒绝了这条写入，试试重新导出一次。") }
+        }) {
             UIImpactFeedbackGenerator(style: .medium).impactOccurred()
             return
         }
@@ -157,6 +159,18 @@ final class ShellViewController: UIViewController, WKScriptMessageHandler, WKNav
         if isImage || isVideo { saveToPhotos(url, isVideo: isVideo) }
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
         share(url)
+    }
+
+    private func isZipFile(_ url: URL) -> Bool {
+        guard let fh = try? FileHandle(forReadingFrom: url) else { return false }
+        defer { try? fh.close() }
+        return (fh.readData(ofLength: 4) == Data([0x50, 0x4b, 0x03, 0x04]))
+    }
+
+    private func alert(_ title: String, _ body: String) {
+        let ac = UIAlertController(title: title, message: body, preferredStyle: .alert)
+        ac.addAction(UIAlertAction(title: "好", style: .default))
+        present(ac, animated: true)
     }
 
     private func saveToPhotos(_ url: URL, isVideo: Bool) {

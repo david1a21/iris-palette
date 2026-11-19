@@ -48,7 +48,9 @@
   }
 
   function allowed(name, blob) {
-    if (Date.now() - LAST_GESTURE > 1500) return false;
+    // 以前要求「1.5 秒内有过手势」，但实况配对要先录 6 秒才下载，
+    // 等文件出来时手势早过期了，导出会被静默吞掉。改成只要启动后有过一次真实手势即可。
+    if (LAST_GESTURE < BOOT_AT) return false;
     if (!blob || blob.size < 64) return false;
     var e = extOf(name);
     if (e && !OK_EXT[e]) return false;
@@ -92,11 +94,31 @@
     });
   }
 
+  function liveLoaded() {
+    var b = document.getElementById('liveBadge');
+    return !!(b && b.classList.contains('on'));
+  }
+
+  var PAIR_REDIRECT = 0;
+
   function intercept(link) {
     if (Date.now() - BOOT_AT < BOOT_GRACE) return false;
 
     var href = link.href || '';
     var name = link.getAttribute('download') || link.download || ('Iris_' + Date.now() + '.png');
+
+    /* 画面里已经载入实况时，「导出照片」出来的只会是静态图。
+       这里换成页面自己的「导出实况配对素材」，交给原生写成一张真正的 Live Photo。 */
+    var ex = extOf(name);
+    if (ex && /^(png|jpg|jpeg|webp)$/.test(ex) && liveLoaded() && Date.now() > PAIR_REDIRECT) {
+      var pairBtn = document.querySelector('#exportMenu [data-act="pair"]');
+      if (pairBtn) {
+        PAIR_REDIRECT = Date.now() + 20000;
+        try { pairBtn.click(); } catch (e) {}
+        try { if (typeof toast === 'function') toast('实况照片：已改为导出实况'); } catch (e) {}
+        return true;
+      }
+    }
 
     var blob = blobs.get(href);
     if (blob) {
