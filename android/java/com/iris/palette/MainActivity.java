@@ -1,6 +1,7 @@
 package com.iris.palette;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
 import android.content.ContentValues;
 import android.content.Intent;
@@ -433,7 +434,22 @@ public class MainActivity extends Activity {
                 try (FileOutputStream out = new FileOutputStream(new File(dir, "meta.json"))) {
                     out.write(meta.toString().getBytes("UTF-8"));
                 }
-                Log.i("IrisHot", "已缓存新页面，下次启动生效");
+                Log.i("IrisHot", "已缓存新页面");
+                final String ver = o.optString("version");
+                final File cached = page;
+                ui.post(() -> {
+                    if (isFinishing() || isDestroyed()) return;
+                    new AlertDialog.Builder(MainActivity.this)
+                            .setTitle("发现新版本页面")
+                            .setMessage("已下载 " + (ver.isEmpty() ? "新页面" : ver)
+                                    + "，是否立即加载？\n现在加载会重开当前页面。")
+                            .setPositiveButton("立即加载", (d, w) -> {
+                                activePageFile = cached;
+                                web.loadUrl(START_URL);
+                            })
+                            .setNegativeButton("下次启动", null)
+                            .show();
+                });
             } catch (Exception e) {
                 Log.w("IrisHot", "检查失败，继续用当前页面：" + e.getMessage());
             }

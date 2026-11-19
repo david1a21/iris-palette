@@ -478,7 +478,25 @@ async function refreshHotUpdate() {
     fs.writeFileSync(path.join(PAGE_CACHE_DIR, 'meta.json'), JSON.stringify({
       version: manifest.version || '', sha256: sha, size: buf.length,
     }));
-    console.log(`[hot-update] 已缓存 ${manifest.version || sha.slice(0, 8)}，下次启动生效`);
+    console.log(`[hot-update] 已缓存 ${manifest.version || sha.slice(0, 8)}`);
+    // 问一句要不要现在换：换的话直接把协议指向新页面并重开一次
+    const cachedPath = path.join(PAGE_CACHE_DIR, 'index.html');
+    if (manifest.sha256 !== sha256File(ACTIVE_PAGE) && mainWin && !mainWin.isDestroyed()) {
+      const { response } = await dialog.showMessageBox(mainWin, {
+        type: 'question',
+        title: '发现新版本页面',
+        message: `已下载 ${manifest.version || '新页面'}，是否立即加载？`,
+        detail: '现在加载会重开当前页面；选择“下次启动”则保持现状。',
+        buttons: ['立即加载', '下次启动'],
+        defaultId: 0,
+        cancelId: 1,
+        noLink: true,
+      });
+      if (response === 0) {
+        ACTIVE_PAGE = cachedPath;
+        mainWin.loadURL('iris://app/index.html');
+      }
+    }
   } catch (e) {
     console.log('[hot-update] 检查失败，继续用当前页面：', e && e.message);
   }

@@ -13,6 +13,7 @@ final class ShellViewController: UIViewController, WKScriptMessageHandler, WKNav
     private weak var edgePan: UIScreenEdgePanGestureRecognizer?
     private var liveBridge: LivePhotoBridge?
     private let liveExporter = LiveExportCoordinator()
+    private var loadedPageSHA: String?          /* 当前正在显示的页面哈希，用于判断热更新是否真的换了内容 */
 
     override var preferredStatusBarStyle: UIStatusBarStyle { .lightContent }
     override var prefersHomeIndicatorAutoHidden: Bool { false }
@@ -67,9 +68,13 @@ final class ShellViewController: UIViewController, WKScriptMessageHandler, WKNav
         let launchPage = HotUpdate.pageForLaunch()
             ?? Bundle.main.url(forResource: "index", withExtension: "html")
         if let page = launchPage {
+            loadedPageSHA = HotUpdate.sha256(of: page)
             web.loadFileURL(page, allowingReadAccessTo: page.deletingLastPathComponent())
         }
-        HotUpdate.checkInBackground()
+        // 后台发现新版页面时，问用户要不要立刻换上；不选就下次启动生效。
+        HotUpdate.checkInBackground { [weak self] version in
+            self?.offerHotUpdate(version)
+        }
     }
 
     /// 安全区变化（旋转、状态栏出现/消失、灵动岛机型切换）时，约束会自己重算；
@@ -185,6 +190,24 @@ final class ShellViewController: UIViewController, WKScriptMessageHandler, WKNav
         guard let fh = try? FileHandle(forReadingFrom: url) else { return false }
         defer { try? fh.close() }
         return (fh.readData(ofLength: 4) == Data([0x50, 0x4b, 0x03, 0x04]))
+    }
+
+    /// 热更新确认：只有缓存页与当前已加载页确实不同才问。
+    private func offerHotUpdate(_ version: String) {
+        guard let cached = HotUpdate.pageForLaunch(),
+              HotUpdate.sha256(of: cached) != loadedPageSHA,
+              presentedViewController == nil else { return }
+        let sheet = UIAlertController(
+            title: "发现新版本页面",
+            message: "已下载 \(version.isEmpty ? "新页面" : version)，是否立即加载？\n现在加载会重开当前页面。",
+            preferredStyle: .alert)
+        sheet.addAction(UIAlertAction(title: "立即加载", style: .default) { [weak self] _ in
+            guard let self = self else { return }
+            self.loadedPageSHA = HotUpdate.sha256(of: cached)
+            self.web.loadFileURL(cached, allowingReadAccessTo: cached.deletingLastPathComponent())
+        })
+        sheet.addAction(UIAlertAction(title: "下次启动", style: .cancel))
+        present(sheet, animated: true)
     }
 
     private func alert(_ title: String, _ body: String) {

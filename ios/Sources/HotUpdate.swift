@@ -21,6 +21,11 @@ enum HotUpdate {
         SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
     }
 
+    static func sha256(of url: URL) -> String? {
+        guard let data = try? Data(contentsOf: url) else { return nil }
+        return sha256(data)
+    }
+
     /// 启动时要加载的页面：缓存有效就用缓存，否则回落到包内。
     static func pageForLaunch() -> URL? {
         guard let dir = cacheDir else { return nil }
@@ -41,7 +46,7 @@ enum HotUpdate {
     }
 
     /// 后台静默检查：下载 → 校验 → 原子替换，下次启动生效。失败一律忽略。
-    static func checkInBackground() {
+    static func checkInBackground(completion: ((String) -> Void)? = nil) {
         var request = URLRequest(url: manifestURL)
         request.cachePolicy = .reloadIgnoringLocalCacheData
         URLSession.shared.dataTask(with: request) { data, _, _ in
@@ -76,7 +81,11 @@ enum HotUpdate {
                     if let metaData = try? JSONSerialization.data(withJSONObject: meta) {
                         try metaData.write(to: dir.appendingPathComponent("meta.json"), options: .atomic)
                     }
-                    NSLog("[hot-update] 已缓存新页面，下次启动生效")
+                    NSLog("[hot-update] 已缓存新页面")
+                    if let completion = completion {
+                        let version = dict["version"] as? String ?? ""
+                        DispatchQueue.main.async { completion(version) }
+                    }
                 } catch {
                     NSLog("[hot-update] 落盘失败：%@", error.localizedDescription)
                 }
