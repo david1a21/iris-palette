@@ -102,6 +102,7 @@ enum LivePhotoMovie {
                 CVPixelBufferPoolCreatePixelBuffer(nil, pool, &dstPB)
                 guard let dst = dstPB else { failed = true; vIn.markAsFinished(); return }
 
+                autoreleasepool {
                 let src = CIImage(cvPixelBuffer: srcPB)
                 let scale = max(CGFloat(width) / src.extent.width, CGFloat(height) / src.extent.height)
                 let scaled = src.transformed(by: CGAffineTransform(scaleX: scale, y: scale))
@@ -117,6 +118,7 @@ enum LivePhotoMovie {
 
                 let pts = CMSampleBufferGetPresentationTimeStamp(sb)
                 if !adaptor.append(dst, withPresentationTime: pts) { failed = true; vIn.markAsFinished(); return }
+                }
             }
         }
 

@@ -156,10 +156,17 @@ enum LivePhotoExport {
         }
     }
 
+    /// 动态只按静态帧的长宽比重绘，长边封顶 1440 —— 和 iPhone 自己拍的实况一致
+    /// （静帧 4032×3024、动态 1440×1080）。按原图尺寸全量重编码会把内存顶爆。
     private static func pixelSize(_ url: URL) -> CGSize {
         guard let src = CGImageSourceCreateWithURL(url as CFURL, nil),
               let img = CGImageSourceCreateImageAtIndex(src, 0, nil) else { return .zero }
-        return CGSize(width: img.width, height: img.height)
+        let w = CGFloat(img.width), h = CGFloat(img.height)
+        let long = max(w, h)
+        let cap: CGFloat = 1440
+        guard long > cap, long > 0 else { return CGSize(width: w, height: h) }
+        let scale = cap / long
+        return CGSize(width: (w * scale).rounded(), height: (h * scale).rounded())
     }
 
     /// 实况的静态帧必须带着与视频相同的 asset identifier，否则配对会被判 InvalidResource（3302）。
