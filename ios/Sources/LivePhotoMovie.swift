@@ -47,8 +47,8 @@ enum LivePhotoMovie {
             return
         }
 
-        guard let comp = AVMutableComposition(),
-              let cTrack = comp.addMutableTrack(withMediaType: .video,
+        let comp = AVMutableComposition()
+        guard let cTrack = comp.addMutableTrack(withMediaType: .video,
                                                 preferredTrackID: kCMPersistentTrackID_Invalid) else {
             completion(nil); return
         }
