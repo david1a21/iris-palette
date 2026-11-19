@@ -99,7 +99,25 @@
     return !!(b && b.classList.contains('on'));
   }
 
-  var PAIR_REDIRECT = 0;
+  function exportLiveNative() {
+    try { if (typeof toast === 'function') toast('正在生成实况照片…'); } catch (e) {}
+    send({ op: 'exportLive' });
+  }
+
+  /* 页面的「导出实况配对素材」原本会造一个 ZIP 让用户去快捷指令重新配对。
+     这里直接在捕获阶段拦下来，改走原生一次性写入，不再产生配对包。 */
+  document.addEventListener('click', function (ev) {
+    var el = ev.target;
+    while (el && el !== document) {
+      if (el.getAttribute && el.getAttribute('data-act') === 'pair') {
+        ev.preventDefault();
+        ev.stopPropagation();
+        exportLiveNative();
+        return;
+      }
+      el = el.parentElement;
+    }
+  }, true);
 
   function intercept(link) {
     if (Date.now() - BOOT_AT < BOOT_GRACE) return false;
@@ -110,14 +128,9 @@
     /* 画面里已经载入实况时，「导出照片」出来的只会是静态图。
        这里换成页面自己的「导出实况配对素材」，交给原生写成一张真正的 Live Photo。 */
     var ex = extOf(name);
-    if (ex && /^(png|jpg|jpeg|webp)$/.test(ex) && liveLoaded() && Date.now() > PAIR_REDIRECT) {
-      var pairBtn = document.querySelector('#exportMenu [data-act="pair"]');
-      if (pairBtn) {
-        PAIR_REDIRECT = Date.now() + 20000;
-        try { pairBtn.click(); } catch (e) {}
-        try { if (typeof toast === 'function') toast('实况照片：已改为导出实况'); } catch (e) {}
-        return true;
-      }
+    if (ex && /^(png|jpg|jpeg|webp)$/.test(ex) && liveLoaded()) {
+      exportLiveNative();
+      return true;
     }
 
     var blob = blobs.get(href);

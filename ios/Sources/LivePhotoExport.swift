@@ -58,6 +58,15 @@ enum LivePhotoExport {
         return true
     }
 
+    static func saveFiles(photo: URL, video: URL, photoName: String, videoName: String,
+                          completion: ((Bool) -> Void)?) {
+        save(photo: photo, video: video, photoName: photoName, videoName: videoName, completion: completion)
+    }
+
+    static func saveStillForFallback(_ url: URL) {
+        saveStill(url, completion: nil)
+    }
+
     private static func saveStill(_ url: URL, completion: ((Bool) -> Void)?) {
         PHPhotoLibrary.requestAuthorization(for: .addOnly) { status in
             guard status == .authorized || status == .limited else {

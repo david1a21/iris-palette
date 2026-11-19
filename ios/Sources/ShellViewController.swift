@@ -12,6 +12,7 @@ final class ShellViewController: UIViewController, WKScriptMessageHandler, WKNav
     private var session: SaveSession?
     private weak var edgePan: UIScreenEdgePanGestureRecognizer?
     private var liveBridge: LivePhotoBridge?
+    private let liveExporter = LiveExportCoordinator()
 
     override var preferredStatusBarStyle: UIStatusBarStyle { .lightContent }
     override var prefersHomeIndicatorAutoHidden: Bool { false }
@@ -59,6 +60,8 @@ final class ShellViewController: UIViewController, WKScriptMessageHandler, WKNav
         ])
         installEdgeSwipe()
         liveBridge = LivePhotoBridge()
+        liveExporter.webView = web
+        liveExporter.onAlert = { [weak self] title, body in self?.alert(title, body) }
 
         guard let page = Bundle.main.url(forResource: "index", withExtension: "html") else { return }
         web.loadFileURL(page, allowingReadAccessTo: page.deletingLastPathComponent())
@@ -134,6 +137,16 @@ final class ShellViewController: UIViewController, WKScriptMessageHandler, WKNav
             finish()
         case "pickPhotos":
             liveBridge?.present(from: self, webView: web)
+        case "exportLive":
+            liveExporter.start()
+        case "liveBegin":
+            liveExporter.begin(body)
+        case "liveChunk":
+            liveExporter.append(body)
+        case "liveEnd":
+            liveExporter.end(body)
+        case "liveFail":
+            alert("实况导出失败", (body["msg"] as? String) ?? "未知错误")
         default:
             break
         }
