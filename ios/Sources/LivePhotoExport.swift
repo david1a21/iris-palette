@@ -2,6 +2,8 @@ import Foundation
 import Photos
 import UIKit
 import AVFoundation
+import ImageIO
+import UniformTypeIdentifiers
 
 /// 把页面导出的「实况配对素材 ZIP」（封面 + 视频）写成相册里的原生 Live Photo。
 ///
@@ -93,6 +95,9 @@ enum LivePhotoExport {
                 DispatchQueue.main.async { completion?(false) }
                 return
             }
+            // iOS 26 起，实况配对里的静态帧如果是 JPEG，会被 PhotoKit 判成 InvalidResource（3302）。
+            // 统一转成 HEIC 再写；转不出来才退回原来的 JPEG。
+            let (photoToUse, photoNameToUse) = preparePhoto(photo, originalName: photoName)
             // 相册对「配对视频」只认 QuickTime 容器，MediaRecorder 出来的 mp4 先转一层。
             ensureMov(video: video, originalName: videoName) { mov, movName, err in
                 guard let mov = mov else {
@@ -103,8 +108,8 @@ enum LivePhotoExport {
                 PHPhotoLibrary.shared().performChanges({
                     let req = PHAssetCreationRequest.forAsset()
                     let po = PHAssetResourceCreationOptions()
-                    po.originalFilename = photoName
-                    req.addResource(with: .photo, fileURL: photo, options: po)
+                    po.originalFilename = photoNameToUse
+                    req.addResource(with: .photo, fileURL: photoToUse, options: po)
                     let vo = PHAssetResourceCreationOptions()
                     vo.originalFilename = movName
                     req.addResource(with: .pairedVideo, fileURL: mov, options: vo)
@@ -114,6 +119,24 @@ enum LivePhotoExport {
                 }
             }
         }
+    }
+
+    /// 把静态帧压成 HEIC。实况照片的 still 资源按 HEIC 提交才稳。
+    private static func preparePhoto(_ url: URL, originalName: String) -> (URL, String) {
+        guard let ui = UIImage(contentsOfFile: url.path),
+              let cg = ui.cgImage else { return (url, originalName) }
+        let name = (originalName as NSString).deletingPathExtension + ".heic"
+        let out = tempURL(name)
+        try? FileManager.default.removeItem(at: out)
+        guard let dest = CGImageDestinationCreateWithURL(out as CFURL, UTType.heic.identifier as CFString, 1, nil) else {
+            return (url, originalName)
+        }
+        let opts: [CFString: Any] = [kCGImageDestinationLossyCompressionQuality: 0.9]
+        CGImageDestinationAddImage(dest, cg, opts as CFDictionary)
+        guard CGImageDestinationFinalize(dest), (try? Data(contentsOf: out).count) ?? 0 > 1024 else {
+            return (url, originalName)
+        }
+        return (out, name)
     }
 
     private static func ensureMov(video: URL, originalName: String,
