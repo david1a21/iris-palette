@@ -10,9 +10,9 @@ import Darwin
 ///   3. metadata 轨道：com.apple.quicktime.still-image-time，放在片子中间
 enum LivePhotoMovie {
 
+    /// 系统实况里这个标识其实是 UUID 形态的字符串，随手拼 22 位字母数字并不合法。
     static func makeIdentifier() -> String {
-        let chars = Array("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789")
-        return String((0..<22).map { _ in chars[Int.random(in: 0..<chars.count)] })
+        UUID().uuidString
     }
 
     static func wrap(video: URL, identifier: String, targetSize: CGSize,

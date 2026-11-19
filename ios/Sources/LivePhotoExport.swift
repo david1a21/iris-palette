@@ -103,8 +103,13 @@ enum LivePhotoExport {
             let originalId = assetIdentifier(for: video)
             let identifier: String
             if videoIsRecorded {
-                identifier = LivePhotoMovie.makeIdentifier()
-                lastContext = "动态为逐帧录制，已生成新标识"
+                if let oid = originalId, !oid.isEmpty {
+                    identifier = oid
+                    lastContext = "动态为逐帧录制，沿用原片标识"
+                } else {
+                    identifier = LivePhotoMovie.makeIdentifier()
+                    lastContext = "动态为逐帧录制，已生成新标识"
+                }
             } else if let oid = originalId, !oid.isEmpty {
                 identifier = oid
                 lastContext = "已沿用原片实况标识"
@@ -116,6 +121,25 @@ enum LivePhotoExport {
             // iOS 26 起，实况配对里的静态帧如果是 JPEG，会被 PhotoKit 判成 InvalidResource（3302）。
             // 统一转成 HEIC，并写入与视频一致的 asset identifier。
             let (photoToUse, photoNameToUse) = preparePhoto(photo, originalName: photoName, identifier: identifier)
+
+            func preflight(_ videoURL: URL) -> String {
+                var text = "预检未知"
+                let sem = DispatchSemaphore(value: 0)
+                PHLivePhoto.request(withResourceFileURLs: [photoToUse, videoURL],
+                                    placeholderImage: nil,
+                                    targetSize: .zero,
+                                    contentMode: .aspectFit) { lp, info in
+                    if lp != nil {
+                        text = "预检通过"
+                    } else {
+                        let err = info[PHLivePhotoInfoErrorKey] as? String ?? "无错误描述"
+                        text = "预检失败：\(err)"
+                    }
+                    sem.signal()
+                }
+                _ = sem.wait(timeout: .now() + 5)
+                return text
+            }
 
             func addToLibrary(_ videoURL: URL, _ vName: String) {
                 PHPhotoLibrary.shared().performChanges({
@@ -142,7 +166,7 @@ enum LivePhotoExport {
                         return
                     }
                     let still = rawPixelSize(photoToUse)
-                    lastContext = "静帧 \(Int(still.width))×\(Int(still.height))｜\(movieInfo(out))｜新标识"
+                    lastContext = "静帧 \(Int(still.width))×\(Int(still.height))｜\(movieInfo(out))｜\(preflight(out))"
                     addToLibrary(out, (videoName as NSString).deletingPathExtension + ".mov")
                 }
             } else {
