@@ -134,7 +134,8 @@ enum LivePhotoExport {
 
             if videoIsRecorded {
                 // 录制出来的片子没有 still-image-time 轨道，必须用 AVFoundation 重新封装。
-                LivePhotoMovie.wrap(video: video, identifier: identifier) { out in
+                LivePhotoMovie.wrap(video: video, identifier: identifier,
+                                    targetSize: pixelSize(photoToUse)) { out in
                     guard let out = out else {
                         lastError = "动态片段重新封装失败（缺视频轨道或写入器出错）"
                         DispatchQueue.main.async { completion?(false) }
@@ -153,6 +154,12 @@ enum LivePhotoExport {
                 }
             }
         }
+    }
+
+    private static func pixelSize(_ url: URL) -> CGSize {
+        guard let src = CGImageSourceCreateWithURL(url as CFURL, nil),
+              let img = CGImageSourceCreateImageAtIndex(src, 0, nil) else { return .zero }
+        return CGSize(width: img.width, height: img.height)
     }
 
     /// 实况的静态帧必须带着与视频相同的 asset identifier，否则配对会被判 InvalidResource（3302）。
