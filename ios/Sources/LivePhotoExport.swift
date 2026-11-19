@@ -141,6 +141,8 @@ enum LivePhotoExport {
                         DispatchQueue.main.async { completion?(false) }
                         return
                     }
+                    let still = rawPixelSize(photoToUse)
+                    lastContext = "静帧 \(Int(still.width))×\(Int(still.height))｜\(movieInfo(out))｜新标识"
                     addToLibrary(out, (videoName as NSString).deletingPathExtension + ".mov")
                 }
             } else {
@@ -158,6 +160,26 @@ enum LivePhotoExport {
 
     /// 动态只按静态帧的长宽比重绘，长边封顶 1440 —— 和 iPhone 自己拍的实况一致
     /// （静帧 4032×3024、动态 1440×1080）。按原图尺寸全量重编码会把内存顶爆。
+    private static func rawPixelSize(_ url: URL) -> CGSize {
+        guard let src = CGImageSourceCreateWithURL(url as CFURL, nil),
+              let props = CGImageSourceCopyPropertiesAtIndex(src, 0, nil) as? [String: Any],
+              let w = props[kCGImagePropertyPixelWidth as String] as? Int,
+              let h = props[kCGImagePropertyPixelHeight as String] as? Int else { return .zero }
+        return CGSize(width: w, height: h)
+    }
+
+    private static func movieInfo(_ url: URL) -> String {
+        let a = AVURLAsset(url: url)
+        let tracks = a.tracks
+        var desc = "轨道 \(tracks.count)"
+        if let v = tracks.first(where: { $0.mediaType == .video }) {
+            let d = v.naturalSize.applying(v.preferredTransform)
+            desc += "｜动态 \(Int(abs(d.width)))×\(Int(abs(d.height)))"
+            desc += "｜时长 \(String(format: "%.2f", CMTimeGetSeconds(a.duration)))s"
+        }
+        return desc
+    }
+
     private static func pixelSize(_ url: URL) -> CGSize {
         guard let src = CGImageSourceCreateWithURL(url as CFURL, nil),
               let props = CGImageSourceCopyPropertiesAtIndex(src, 0, nil) as? [String: Any],
