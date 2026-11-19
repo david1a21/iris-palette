@@ -131,8 +131,8 @@ final class LivePhotoBridge: NSObject, PHPickerViewControllerDelegate {
     private static func write(_ resource: PHAssetResource, name: String, done: @escaping (URL?) -> Void) {
         let url = tempURL(name)
         try? FileManager.default.removeItem(at: url)
-        let opts = PHAssetResourceCreationOptions()
-        opts.originalFilename = name
+        let opts = PHAssetResourceRequestOptions()
+        opts.isNetworkAccessAllowed = true      // iCloud 里的原片也允许下载
         PHAssetResourceManager.default().writeData(for: resource, toFile: url, options: opts) { err in
             DispatchQueue.main.async { done(err == nil ? url : nil) }
         }
