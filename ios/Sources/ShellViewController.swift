@@ -159,6 +159,12 @@ final class ShellViewController: UIViewController, WKScriptMessageHandler, WKNav
             liveExporter.append(body)
         case "liveEnd":
             liveExporter.end(body)
+        case "liveFramesBegin":
+            liveExporter.beginFrames(body)
+        case "liveFrame":
+            liveExporter.appendFrame(body)
+        case "liveFramesCancel":
+            liveExporter.cancelFrames()
         case "liveFail":
             alert("实况导出失败", (body["msg"] as? String) ?? "未知错误")
         case "liveNote":
