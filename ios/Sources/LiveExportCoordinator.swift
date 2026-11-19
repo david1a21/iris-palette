@@ -91,7 +91,8 @@ final class LiveExportCoordinator {
             if !ok {
                 LivePhotoExport.saveStillForFallback(p)
                 let detail = LivePhotoExport.lastError
-                self?.onAlert?("实况保存失败", "封面已单独存成照片。原因：\(detail)")
+                let ctx = LivePhotoExport.lastContext
+                self?.onAlert?("实况保存失败", "封面已单独存成照片。原因：\(detail)（\(ctx)）")
             }
         }
     }

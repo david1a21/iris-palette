@@ -15,6 +15,7 @@ enum LivePhotoExport {
 
     /// 最近一次失败的原因，供壳层把真实报错弹给用户/写日志。
     private(set) static var lastError: String = ""
+    private(set) static var lastContext: String = ""
 
     /// 识别成功并开始写相册时返回 true；不是配对包就返回 false 走原来的保存逻辑。
     @discardableResult
@@ -97,7 +98,9 @@ enum LivePhotoExport {
             }
             // iOS 26 起，实况配对里的静态帧如果是 JPEG，会被 PhotoKit 判成 InvalidResource（3302）。
             // 统一转成 HEIC 再写；转不出来才退回原来的 JPEG。
-            let (photoToUse, photoNameToUse) = preparePhoto(photo, originalName: photoName)
+            let assetId = assetIdentifier(for: video)
+            lastContext = assetId == nil ? "原片未携带实况标识" : "已沿用原片实况标识"
+            let (photoToUse, photoNameToUse) = preparePhoto(photo, originalName: photoName, identifier: assetId)
             // 相册对「配对视频」只认 QuickTime 容器，MediaRecorder 出来的 mp4 先转一层。
             ensureMov(video: video, originalName: videoName) { mov, movName, err in
                 guard let mov = mov else {
@@ -121,8 +124,22 @@ enum LivePhotoExport {
         }
     }
 
-    /// 把静态帧压成 HEIC。实况照片的 still 资源按 HEIC 提交才稳。
-    private static func preparePhoto(_ url: URL, originalName: String) -> (URL, String) {
+    /// 实况的静态帧必须带着与视频相同的 asset identifier，否则配对会被判 InvalidResource（3302）。
+    private static func assetIdentifier(for video: URL) -> String? {
+        let asset = AVURLAsset(url: video)
+        for item in asset.metadata(forFormat: .quickTimeMetadata) {
+            if item.identifier == .quickTimeMetadataContentIdentifier,
+               let s = item.stringValue, !s.isEmpty { return s }
+        }
+        for item in asset.commonMetadata {
+            if item.identifier == .quickTimeMetadataContentIdentifier,
+               let s = item.stringValue, !s.isEmpty { return s }
+        }
+        return nil
+    }
+
+    /// 把静态帧压成 HEIC，并写入 MakerApple 17（asset identifier）。实况照片的 still 资源按 HEIC 提交才稳。
+    private static func preparePhoto(_ url: URL, originalName: String, identifier: String?) -> (URL, String) {
         guard let ui = UIImage(contentsOfFile: url.path),
               let cg = ui.cgImage else { return (url, originalName) }
         let name = (originalName as NSString).deletingPathExtension + ".heic"
@@ -131,8 +148,12 @@ enum LivePhotoExport {
         guard let dest = CGImageDestinationCreateWithURL(out as CFURL, UTType.heic.identifier as CFString, 1, nil) else {
             return (url, originalName)
         }
-        let opts: [CFString: Any] = [kCGImageDestinationLossyCompressionQuality: 0.9]
-        CGImageDestinationAddImage(dest, cg, opts as CFDictionary)
+        let props = NSMutableDictionary()
+        props[kCGImageDestinationLossyCompressionQuality] = 0.9
+        if let identifier = identifier, !identifier.isEmpty {
+            props[kCGImagePropertyMakerAppleDictionary] = ["17": identifier]
+        }
+        CGImageDestinationAddImage(dest, cg, props)
         guard CGImageDestinationFinalize(dest), (try? Data(contentsOf: out).count) ?? 0 > 1024 else {
             return (url, originalName)
         }
