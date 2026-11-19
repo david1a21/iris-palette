@@ -113,6 +113,56 @@
     return false;
   }
 
+  /* ---------- 3.5) 实况照片：选图改走原生 PHPicker ----------
+     页面点「＋ 换照片」本质是 input#file.click()。这里拦下来交给原生：
+     原生从相簿里取「照片 + 配对视频」两段资源，按同名送回来，
+     页面自己就会认成一组实况。普通照片 / 视频也走同一条路。          */
+  var _inputClick = HTMLInputElement.prototype.click;
+  HTMLInputElement.prototype.click = function () {
+    try {
+      if (this.id === 'file' && Date.now() - LAST_GESTURE < 1500) {
+        send({ op: 'pickPhotos' });
+        return;
+      }
+    } catch (e) {}
+    return _inputClick.apply(this, arguments);
+  };
+
+  /* 原生分块送来的实况素材：按文件名攒齐后拼成 File，塞进 input#file */
+  var LIVE_FILES = {}, LIVE_ANNOUNCED = 0, LIVE_ENDED = 0;
+
+  function attachLiveFiles() {
+    var input = document.getElementById('file');
+    if (!input) return;
+    var dt = new DataTransfer();
+    Object.keys(LIVE_FILES).forEach(function (name) {
+      var e = LIVE_FILES[name];
+      var bin = atob(e.parts.join(''));
+      var u8 = new Uint8Array(bin.length);
+      for (var i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+      dt.items.add(new File([u8], name, { type: e.mime || '' }));
+    });
+    LIVE_FILES = {}; LIVE_ANNOUNCED = 0; LIVE_ENDED = 0;
+    if (!dt.files.length) return;
+    input.files = dt.files;
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+
+  window.__irisLiveFile = function (name, mime, total) {
+    LIVE_FILES[name] = { mime: mime, total: total, parts: new Array(total), got: 0 };
+    LIVE_ANNOUNCED += 1;
+  };
+  window.__irisLiveChunk = function (name, idx, b64) {
+    var e = LIVE_FILES[name];
+    if (!e) return;
+    e.parts[idx] = b64;
+  };
+  window.__irisLiveFileEnd = function (name) {
+    if (!LIVE_FILES[name]) return;
+    LIVE_ENDED += 1;
+    if (LIVE_ENDED >= LIVE_ANNOUNCED) attachLiveFiles();
+  };
+
   var _click = HTMLAnchorElement.prototype.click;
   HTMLAnchorElement.prototype.click = function () {
     try {

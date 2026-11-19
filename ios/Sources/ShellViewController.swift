@@ -11,6 +11,7 @@ final class ShellViewController: UIViewController, WKScriptMessageHandler, WKNav
     private var web: WKWebView!
     private var session: SaveSession?
     private weak var edgePan: UIScreenEdgePanGestureRecognizer?
+    private var liveBridge: LivePhotoBridge?
 
     override var preferredStatusBarStyle: UIStatusBarStyle { .lightContent }
     override var prefersHomeIndicatorAutoHidden: Bool { false }
@@ -57,6 +58,7 @@ final class ShellViewController: UIViewController, WKScriptMessageHandler, WKNav
             web.bottomAnchor.constraint(equalTo: view.bottomAnchor),
         ])
         installEdgeSwipe()
+        liveBridge = LivePhotoBridge()
 
         guard let page = Bundle.main.url(forResource: "index", withExtension: "html") else { return }
         web.loadFileURL(page, allowingReadAccessTo: page.deletingLastPathComponent())
@@ -130,6 +132,8 @@ final class ShellViewController: UIViewController, WKScriptMessageHandler, WKNav
             if let b64 = body["b64"] as? String { session?.append(base64: b64) }
         case "end":
             finish()
+        case "pickPhotos":
+            liveBridge?.present(from: self, webView: web)
         default:
             break
         }
@@ -140,6 +144,13 @@ final class ShellViewController: UIViewController, WKScriptMessageHandler, WKNav
         session = nil
         s.close()
         let url = s.fileURL
+
+        // 页面导出的「实况配对素材」是 ZIP：封面 + 视频，直接写成原生 Live Photo，
+        // 不再走「单独存图 + 单独存视频」或者让用户去快捷指令重新配对。
+        if s.mime.contains("zip"), LivePhotoExport.saveIfPair(zipURL: url) {
+            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+            return
+        }
 
         let isImage = s.mime.hasPrefix("image/")
         let isVideo = s.mime.hasPrefix("video/")
