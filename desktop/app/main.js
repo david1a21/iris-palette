@@ -10,9 +10,16 @@ const path = require('node:path');
 const fs = require('node:fs');
 const fsp = require('node:fs/promises');
 const { pathToFileURL, fileURLToPath } = require('node:url');
+const crypto = require('node:crypto');
 
 const APP_DIR = __dirname;
 const ASSETS_DIR = path.join(APP_DIR, 'assets');
+/* ---------- 页面热更新 ----------
+   包内的 assets/index.html 只是“出厂版本”；运行时会先看 userData/page 里有没有
+   校验通过的新版页面，有就用它。这样改页面不需要重打包，只有原生壳逻辑改动才重编译。 */
+const HOT_MANIFEST_URL = 'https://raw.githubusercontent.com/david1a21/iris-palette/main/web/hot-update.json';
+const PAGE_CACHE_DIR = path.join(app.getPath('userData'), 'page');
+let ACTIVE_PAGE = path.join(ASSETS_DIR, 'index.html');
 const IS_MAC = process.platform === 'darwin';
 const IS_WIN = process.platform === 'win32';
 
@@ -407,14 +414,88 @@ function buildMenu() {
   Menu.setApplicationMenu(Menu.buildFromTemplate(template));
 }
 
+
+// ---------- 热更新：内容哈希判定 ----------
+function sha256File(file) {
+  try {
+    return crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
+  } catch {
+    return null;
+  }
+}
+
+function cachedPage() {
+  try {
+    const metaPath = path.join(PAGE_CACHE_DIR, 'meta.json');
+    const pagePath = path.join(PAGE_CACHE_DIR, 'index.html');
+    if (!fs.existsSync(metaPath) || !fs.existsSync(pagePath)) return null;
+    const meta = JSON.parse(fs.readFileSync(metaPath, 'utf8'));
+    const sha = sha256File(pagePath);
+    if (!sha || sha !== meta.sha256) return null;
+    return { pagePath, sha256: sha, version: meta.version || '' };
+  } catch {
+    return null;
+  }
+}
+
+async function resolveActivePage() {
+  const cached = cachedPage();
+  const bundledSha = sha256File(path.join(ASSETS_DIR, 'index.html'));
+  if (cached && cached.sha256 !== bundledSha) {
+    ACTIVE_PAGE = cached.pagePath;
+  } else {
+    ACTIVE_PAGE = path.join(ASSETS_DIR, 'index.html');
+  }
+}
+
+/* 后台静默检查：下载 -> 校验 -> 原子替换，下次启动生效。任何一步失败都当没发生。 */
+async function refreshHotUpdate() {
+  try {
+    const res = await net.fetch(HOT_MANIFEST_URL, { cache: 'no-store' });
+    if (!res.ok) return;
+    const manifest = await res.json();
+    if (!manifest || !manifest.sha256 || !manifest.url) return;
+    const bundledSha = sha256File(path.join(ASSETS_DIR, 'index.html'));
+    const cached = cachedPage();
+    if (manifest.sha256 === bundledSha) {
+      // 远端就是出厂版本，清掉过期缓存，避免旧页面常驻
+      if (cached) {
+        fs.rmSync(PAGE_CACHE_DIR, { recursive: true, force: true });
+        ACTIVE_PAGE = path.join(ASSETS_DIR, 'index.html');
+      }
+      return;
+    }
+    if (cached && cached.sha256 === manifest.sha256) return;
+    const pageRes = await net.fetch(manifest.url, { cache: 'no-store' });
+    if (!pageRes.ok) return;
+    const buf = Buffer.from(await pageRes.arrayBuffer());
+    const sha = crypto.createHash('sha256').update(buf).digest('hex');
+    if (sha !== manifest.sha256) return;
+    fs.mkdirSync(PAGE_CACHE_DIR, { recursive: true });
+    const tmp = path.join(PAGE_CACHE_DIR, 'index.html.tmp');
+    fs.writeFileSync(tmp, buf);
+    fs.renameSync(tmp, path.join(PAGE_CACHE_DIR, 'index.html'));
+    fs.writeFileSync(path.join(PAGE_CACHE_DIR, 'meta.json'), JSON.stringify({
+      version: manifest.version || '', sha256: sha, size: buf.length,
+    }));
+    console.log(`[hot-update] 已缓存 ${manifest.version || sha.slice(0, 8)}，下次启动生效`);
+  } catch (e) {
+    console.log('[hot-update] 检查失败，继续用当前页面：', e && e.message);
+  }
+}
+
 // ---------- 生命周期 ----------
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
+  await resolveActivePage();
   protocol.handle('iris', async (req) => {
     const url = new URL(req.url);
     if (url.hostname !== 'app') return new Response('Not Found', { status: 404 });
     const rel = decodeURIComponent(url.pathname).replace(/^\/+/, '') || 'index.html';
-    const full = path.join(ASSETS_DIR, path.normalize(rel));
-    if (!full.startsWith(ASSETS_DIR)) return new Response('Bad Request', { status: 400 });
+    const full = rel === 'index.html'
+      ? ACTIVE_PAGE
+      : path.join(ASSETS_DIR, path.normalize(rel));
+    const base = full === ACTIVE_PAGE ? path.dirname(ACTIVE_PAGE) : ASSETS_DIR;
+    if (!full.startsWith(base)) return new Response('Bad Request', { status: 400 });
     try {
       return await net.fetch(pathToFileURL(full).toString());
     } catch {
@@ -425,6 +506,7 @@ app.whenReady().then(() => {
   installDownloadFallback();
   buildMenu();
   createWindow();
+  refreshHotUpdate();
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();

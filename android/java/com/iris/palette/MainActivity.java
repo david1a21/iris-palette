@@ -37,14 +37,20 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.json.JSONObject;
+
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.security.MessageDigest;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -76,6 +82,7 @@ public class MainActivity extends Activity {
     private View savedCard;
     private long lastBackAt = 0L;
     private boolean usedFileFallback = false;
+    private File activePageFile = null;   /* 热更新页面：有则替代 assets/index.html */
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -117,11 +124,13 @@ public class MainActivity extends Activity {
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         setContentView(root);
 
+        applyCachedPage();
         if (savedInstanceState != null) {
             web.restoreState(savedInstanceState);
         } else {
             web.loadUrl(START_URL);
         }
+        startHotCheck();
     }
 
     /** 只有用户想拿走的成品才允许落盘：图片、视频、打包、配置。 */
@@ -326,13 +335,150 @@ public class MainActivity extends Activity {
         return "application/octet-stream";
     }
 
+
+    /* ================= 页面热更新（内容哈希判定） ================= */
+    private static final String HOT_MANIFEST = "https://raw.githubusercontent.com/david1a21/iris-palette/main/web/hot-update.json";
+
+    private static String sha256Of(InputStream in) {
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            byte[] buf = new byte[8192];
+            int n;
+            while ((n = in.read(buf)) > 0) md.update(buf, 0, n);
+            StringBuilder sb = new StringBuilder();
+            for (byte b : md.digest()) sb.append(String.format("%02x", b));
+            return sb.toString();
+        } catch (Exception e) {
+            return null;
+        } finally {
+            try { in.close(); } catch (Exception ignored) {}
+        }
+    }
+
+    private static String sha256Of(File f) {
+        try { return sha256Of(new FileInputStream(f)); } catch (Exception e) { return null; }
+    }
+
+    private static String readText(File f) {
+        try (BufferedReader r = new BufferedReader(new InputStreamReader(new FileInputStream(f), "UTF-8"))) {
+            StringBuilder sb = new StringBuilder();
+            String line;
+            while ((line = r.readLine()) != null) sb.append(line);
+            return sb.toString();
+        } catch (Exception e) { return null; }
+    }
+
+    private File pageDir() {
+        return new File(getFilesDir(), "page");
+    }
+
+    private void applyCachedPage() {
+        try {
+            File dir = pageDir();
+            File page = new File(dir, "index.html");
+            File meta = new File(dir, "meta.json");
+            if (!page.exists() || !meta.exists()) return;
+            JSONObject o = new JSONObject(readText(meta));
+            String expected = o.optString("sha256");
+            if (expected.isEmpty() || !expected.equals(sha256Of(page))) return;
+            activePageFile = page;
+            Log.i("IrisHot", "使用热更新页面：" + o.optString("version"));
+        } catch (Exception e) {
+            Log.w("IrisHot", "缓存页面无效：" + e.getMessage());
+        }
+    }
+
+    private void startHotCheck() {
+        new Thread(() -> {
+            try {
+                HttpURLConnection c = (HttpURLConnection) new URL(HOT_MANIFEST).openConnection();
+                c.setConnectTimeout(8000);
+                c.setReadTimeout(8000);
+                c.setRequestProperty("Cache-Control", "no-store");
+                if (c.getResponseCode() != 200) return;
+                String json = readTextStream(c.getInputStream());
+                c.disconnect();
+                if (json == null) return;
+                JSONObject o = new JSONObject(json);
+                String remote = o.optString("sha256");
+                String url = o.optString("url");
+                if (remote.isEmpty() || url.isEmpty()) return;
+
+                String bundled = sha256Of(getAssets().open("index.html"));
+                File dir = pageDir();
+                File page = new File(dir, "index.html");
+                if (remote.equals(bundled)) return;
+                if (page.exists() && remote.equals(sha256Of(page))) return;
+
+                HttpURLConnection pc = (HttpURLConnection) new URL(url).openConnection();
+                pc.setConnectTimeout(15000);
+                pc.setReadTimeout(30000);
+                if (pc.getResponseCode() != 200) return;
+                byte[] data = readAllBytes(pc.getInputStream());
+                pc.disconnect();
+                if (data == null) return;
+                if (!remote.equals(sha256Bytes(data))) {
+                    Log.w("IrisHot", "下载页面哈希不匹配，丢弃");
+                    return;
+                }
+                if (!dir.exists() && !dir.mkdirs()) return;
+                File tmp = new File(dir, "index.html.tmp");
+                try (FileOutputStream out = new FileOutputStream(tmp)) { out.write(data); }
+                if (page.exists() && !page.delete()) return;
+                if (!tmp.renameTo(page)) return;
+                JSONObject meta = new JSONObject();
+                meta.put("version", o.optString("version"));
+                meta.put("sha256", remote);
+                meta.put("size", data.length);
+                try (FileOutputStream out = new FileOutputStream(new File(dir, "meta.json"))) {
+                    out.write(meta.toString().getBytes("UTF-8"));
+                }
+                Log.i("IrisHot", "已缓存新页面，下次启动生效");
+            } catch (Exception e) {
+                Log.w("IrisHot", "检查失败，继续用当前页面：" + e.getMessage());
+            }
+        }, "iris-hot-update").start();
+    }
+
+    private static String readTextStream(InputStream in) {
+        try (InputStreamReader r = new InputStreamReader(in, "UTF-8")) {
+            StringBuilder sb = new StringBuilder();
+            char[] buf = new char[4096];
+            int n;
+            while ((n = r.read(buf)) > 0) sb.append(buf, 0, n);
+            return sb.toString();
+        } catch (Exception e) { return null; }
+    }
+
+    private static byte[] readAllBytes(InputStream in) {
+        try (InputStream input = in) {
+            java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+            byte[] buf = new byte[8192];
+            int n;
+            while ((n = input.read(buf)) > 0) out.write(buf, 0, n);
+            return out.toByteArray();
+        } catch (Exception e) { return null; }
+    }
+
+    private static String sha256Bytes(byte[] data) {
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            md.update(data);
+            StringBuilder sb = new StringBuilder();
+            for (byte b : md.digest()) sb.append(String.format("%02x", b));
+            return sb.toString();
+        } catch (Exception e) { return null; }
+    }
+
     private WebResourceResponse assetResponse(Uri uri) {
         String path = uri.getPath();
         if (path == null || path.isEmpty() || "/".equals(path)) path = "/index.html";
         String name = path.startsWith("/") ? path.substring(1) : path;
         String mime = mimeOf(name);
         try {
-            InputStream in = getAssets().open(name);
+            InputStream in = (name.equals("index.html") && activePageFile != null)
+                    ? new FileInputStream(activePageFile)
+                    : getAssets().open(name);
             String charset = mime.startsWith("text/") || mime.contains("javascript") || mime.contains("json")
                     ? "utf-8" : null;
             WebResourceResponse r = new WebResourceResponse(mime, charset, in);

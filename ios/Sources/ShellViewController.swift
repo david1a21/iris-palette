@@ -63,8 +63,13 @@ final class ShellViewController: UIViewController, WKScriptMessageHandler, WKNav
         liveExporter.webView = web
         liveExporter.onAlert = { [weak self] title, body in self?.alert(title, body) }
 
-        guard let page = Bundle.main.url(forResource: "index", withExtension: "html") else { return }
-        web.loadFileURL(page, allowingReadAccessTo: page.deletingLastPathComponent())
+        // 有校验通过的热更新页面就先用它，没有就回落到包内出厂版本。
+        let launchPage = HotUpdate.pageForLaunch()
+            ?? Bundle.main.url(forResource: "index", withExtension: "html")
+        if let page = launchPage {
+            web.loadFileURL(page, allowingReadAccessTo: page.deletingLastPathComponent())
+        }
+        HotUpdate.checkInBackground()
     }
 
     /// 安全区变化（旋转、状态栏出现/消失、灵动岛机型切换）时，约束会自己重算；
