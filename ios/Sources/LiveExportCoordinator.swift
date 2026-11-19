@@ -90,7 +90,8 @@ final class LiveExportCoordinator {
             self?.onSaved?(ok)
             if !ok {
                 LivePhotoExport.saveStillForFallback(p)
-                self?.onAlert?("实况保存失败", "已把封面单独存成照片；动态部分可能是系统不认的视频编码。")
+                let detail = LivePhotoExport.lastError
+                self?.onAlert?("实况保存失败", "封面已单独存成照片。原因：\(detail)")
             }
         }
     }

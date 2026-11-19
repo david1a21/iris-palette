@@ -11,6 +11,9 @@ import AVFoundation
 /// 系统就会把它认成一张真正的实况照片，用户不用再去快捷指令里重新配对。
 enum LivePhotoExport {
 
+    /// 最近一次失败的原因，供壳层把真实报错弹给用户/写日志。
+    private(set) static var lastError: String = ""
+
     /// 识别成功并开始写相册时返回 true；不是配对包就返回 false 走原来的保存逻辑。
     @discardableResult
     static func saveIfPair(zipURL: URL, completion: ((Bool) -> Void)? = nil) -> Bool {
@@ -86,12 +89,14 @@ enum LivePhotoExport {
                              completion: ((Bool) -> Void)?) {
         PHPhotoLibrary.requestAuthorization(for: .addOnly) { status in
             guard status == .authorized || status == .limited else {
+                lastError = "没有相册写入权限（当前状态 \(status.rawValue)）"
                 DispatchQueue.main.async { completion?(false) }
                 return
             }
             // 相册对「配对视频」只认 QuickTime 容器，MediaRecorder 出来的 mp4 先转一层。
-            ensureMov(video: video, originalName: videoName) { mov, movName in
+            ensureMov(video: video, originalName: videoName) { mov, movName, err in
                 guard let mov = mov else {
+                    lastError = err ?? "视频转容器失败"
                     DispatchQueue.main.async { completion?(false) }
                     return
                 }
@@ -103,7 +108,8 @@ enum LivePhotoExport {
                     let vo = PHAssetResourceCreationOptions()
                     vo.originalFilename = movName
                     req.addResource(with: .pairedVideo, fileURL: mov, options: vo)
-                }) { ok, _ in
+                }) { ok, error in
+                    if !ok { lastError = error?.localizedDescription ?? "相册拒绝了这条资源" }
                     DispatchQueue.main.async { completion?(ok) }
                 }
             }
@@ -111,28 +117,40 @@ enum LivePhotoExport {
     }
 
     private static func ensureMov(video: URL, originalName: String,
-                                  completion: @escaping (URL?, String) -> Void) {
+                                  completion: @escaping (URL?, String, String?) -> Void) {
         if video.pathExtension.lowercased() == "mov" {
-            completion(video, originalName)
+            completion(video, originalName, nil)
             return
         }
         let asset = AVURLAsset(url: video)
-        guard asset.tracks(withMediaType: .video).count > 0,
-              let session = AVAssetExportSession(asset: asset, presetName: AVAssetExportPresetPassthrough) else {
-            completion(nil, originalName)
+        guard asset.tracks(withMediaType: .video).count > 0 else {
+            completion(nil, originalName, "录到的片段里没有视频轨道")
             return
         }
         let out = video.deletingPathExtension().appendingPathExtension("mov")
-        try? FileManager.default.removeItem(at: out)
-        session.outputURL = out
-        session.outputFileType = .mov
-        session.exportAsynchronously {
-            DispatchQueue.main.async {
-                if session.status == .completed {
-                    completion(out, (originalName as NSString).deletingPathExtension + ".mov")
-                } else {
-                    completion(nil, originalName)
+        let movName = (originalName as NSString).deletingPathExtension + ".mov"
+
+        func run(_ preset: String, then: @escaping (String?) -> Void) {
+            guard let session = AVAssetExportSession(asset: asset, presetName: preset) else {
+                then("系统不支持 \(preset) 导出"); return
+            }
+            try? FileManager.default.removeItem(at: out)
+            session.outputURL = out
+            session.outputFileType = .mov
+            session.exportAsynchronously {
+                DispatchQueue.main.async {
+                    if session.status == .completed {
+                        completion(out, movName, nil)
+                    } else {
+                        then(session.error?.localizedDescription ?? "导出状态 \(session.status.rawValue)")
+                    }
                 }
+            }
+        }
+        // 先试直通（不重编码），不行再用最高质量强制转成 H.264。
+        run(AVAssetExportPresetPassthrough) { firstErr in
+            run(AVAssetExportPresetHighestQuality) { secondErr in
+                completion(nil, originalName, "直通失败：\(firstErr ?? "-")；转码失败：\(secondErr ?? "-")")
             }
         }
     }
