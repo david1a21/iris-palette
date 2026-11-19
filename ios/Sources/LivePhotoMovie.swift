@@ -35,36 +35,16 @@ enum LivePhotoMovie {
             completion(nil); return
         }
 
-        let vOut = AVAssetReaderTrackOutput(
-            track: vTrack,
-            outputSettings: [kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA]
-        )
+        // 不做任何解码/重绘：原样搬运压缩样本，内存占用几乎为零。
+        let vOut = AVAssetReaderTrackOutput(track: vTrack, outputSettings: nil)
         vOut.alwaysCopiesSampleData = false
         guard reader.canAdd(vOut) else { completion(nil); return }
         reader.add(vOut)
 
-        let settings: [String: Any] = [
-            AVVideoCodecKey: AVVideoCodecType.h264,
-            AVVideoWidthKey: width,
-            AVVideoHeightKey: height,
-            AVVideoCompressionPropertiesKey: [
-                AVVideoAverageBitRateKey: max(2_000_000, width * height * 5),
-                AVVideoProfileLevelKey: AVVideoProfileLevelH264HighAutoLevel
-            ]
-        ]
-        let vIn = AVAssetWriterInput(mediaType: .video, outputSettings: settings)
+        let vIn = AVAssetWriterInput(mediaType: .video, outputSettings: nil)
         vIn.expectsMediaDataInRealTime = false
         guard writer.canAdd(vIn) else { completion(nil); return }
         writer.add(vIn)
-
-        let adaptor = AVAssetWriterInputPixelBufferAdaptor(
-            assetWriterInput: vIn,
-            sourcePixelBufferAttributes: [
-                kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA,
-                kCVPixelBufferWidthKey as String: width,
-                kCVPixelBufferHeightKey as String: height
-            ]
-        )
 
         let mIn = AVAssetWriterInput(mediaType: .metadata, outputSettings: nil, sourceFormatHint: stillFD)
         mIn.expectsMediaDataInRealTime = false
@@ -83,8 +63,6 @@ enum LivePhotoMovie {
             writer.cancelWriting(); completion(nil); return
         }
 
-        let context = CIContext(options: [.workingColorSpace: CGColorSpaceCreateDeviceRGB()])
-        let dstRect = CGRect(x: 0, y: 0, width: width, height: height)
         let queue = DispatchQueue(label: "iris.live.movie")
         var failed = false
         var finishedVideo = false
@@ -96,29 +74,7 @@ enum LivePhotoMovie {
                     vIn.markAsFinished()
                     return
                 }
-                guard let pool = adaptor.pixelBufferPool,
-                      let srcPB = CMSampleBufferGetImageBuffer(sb) else { continue }
-                var dstPB: CVPixelBuffer?
-                CVPixelBufferPoolCreatePixelBuffer(nil, pool, &dstPB)
-                guard let dst = dstPB else { failed = true; vIn.markAsFinished(); return }
-
-                autoreleasepool {
-                let src = CIImage(cvPixelBuffer: srcPB)
-                let scale = max(CGFloat(width) / src.extent.width, CGFloat(height) / src.extent.height)
-                let scaled = src.transformed(by: CGAffineTransform(scaleX: scale, y: scale))
-                let crop = CGRect(
-                    x: (scaled.extent.width - CGFloat(width)) / 2,
-                    y: (scaled.extent.height - CGFloat(height)) / 2,
-                    width: CGFloat(width), height: CGFloat(height)
-                )
-                let cropped = scaled
-                    .cropped(to: crop)
-                    .transformed(by: CGAffineTransform(translationX: -crop.origin.x, y: -crop.origin.y))
-                context.render(cropped, to: dst, bounds: dstRect, colorSpace: CGColorSpaceCreateDeviceRGB())
-
-                let pts = CMSampleBufferGetPresentationTimeStamp(sb)
-                if !adaptor.append(dst, withPresentationTime: pts) { failed = true; vIn.markAsFinished(); return }
-                }
+                if !vIn.append(sb) { failed = true; vIn.markAsFinished(); return }
             }
         }
 

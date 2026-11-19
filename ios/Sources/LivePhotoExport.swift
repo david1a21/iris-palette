@@ -160,8 +160,10 @@ enum LivePhotoExport {
     /// （静帧 4032×3024、动态 1440×1080）。按原图尺寸全量重编码会把内存顶爆。
     private static func pixelSize(_ url: URL) -> CGSize {
         guard let src = CGImageSourceCreateWithURL(url as CFURL, nil),
-              let img = CGImageSourceCreateImageAtIndex(src, 0, nil) else { return .zero }
-        let w = CGFloat(img.width), h = CGFloat(img.height)
+              let props = CGImageSourceCopyPropertiesAtIndex(src, 0, nil) as? [String: Any],
+              let rawW = props[kCGImagePropertyPixelWidth as String] as? Int,
+              let rawH = props[kCGImagePropertyPixelHeight as String] as? Int else { return .zero }
+        let w = CGFloat(rawW), h = CGFloat(rawH)
         let long = max(w, h)
         let cap: CGFloat = 1440
         guard long > cap, long > 0 else { return CGSize(width: w, height: h) }
