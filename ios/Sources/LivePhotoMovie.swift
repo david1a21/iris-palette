@@ -137,7 +137,7 @@ enum LivePhotoMovie {
         // 标识按 mdta key/keySpace 写，和真实实况 MOV 一致。
         let idItem = AVMutableMetadataItem()
         idItem.key = "com.apple.quicktime.content.identifier" as NSString
-        idItem.keySpace = AVMutableMetadataItem.KeySpace("mdta")
+        idItem.keySpace = AVMetadataKeySpace.quickTimeMetadata
         idItem.value = identifier as NSString
         idItem.dataType = kCMMetadataBaseDataType_UTF8 as String
         writer.metadata = [idItem]
@@ -173,7 +173,7 @@ enum LivePhotoMovie {
         let mid = CMTimeMultiplyByFloat64(asset.duration, multiplier: 0.5)
         let stillItem = AVMutableMetadataItem()
         stillItem.key = "com.apple.quicktime.still-image-time" as NSString
-        stillItem.keySpace = AVMutableMetadataItem.KeySpace("mdta")
+        stillItem.keySpace = AVMetadataKeySpace.quickTimeMetadata
         stillItem.value = NSNumber(value: 0)
         stillItem.dataType = kCMMetadataBaseDataType_SInt8 as String
         let group = AVTimedMetadataGroup(
