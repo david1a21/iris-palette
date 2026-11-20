@@ -58,9 +58,19 @@ final class LiveExportCoordinator {
             var dur = Math.max(.2, Math.min(4, LIVE.duration || v.duration || 1.5));
             var fps = 30;
             var n = Math.max(2, Math.min(120, Math.round(dur * fps)));
-            var dm = exportDims();
-            var k = Math.min(1, 1440 / Math.max(dm[0], dm[1]));
-            var W = Math.max(2, Math.round(dm[0] * k)), Hh = Math.max(2, Math.round(dm[1] * k));
+            /* v1.0.35：动态轨尺寸从「封面画布的真实像素」推（页面 liveTargetDims），
+               不再用 exportDims —— 后者可能带画框 / 被预览尺寸影响，导致封面与动态轨比例不同，
+               系统播放时按封面矩形拉伸视频 → 画面被压扁。 */
+            var W, Hh;
+            try{
+              var td = liveTargetDims();
+              W = td[0]; Hh = td[1];
+            }catch(e0){
+              var dm = exportDims();
+              var k = Math.min(1, 1440 / Math.max(dm[0], dm[1]));
+              W = Math.max(2, Math.round(dm[0] * k));
+              Hh = Math.max(2, Math.round(dm[1] * k));
+            }
             H.postMessage({op:'liveFramesBegin', n:n, w:W, h:Hh, fps:fps});
             try{ v.pause(); }catch(e){}
             LIVE.recording = true; LIVE.recordDims = [W, Hh]; LIVE.playing = true;
@@ -79,7 +89,13 @@ final class LiveExportCoordinator {
                 try{ paintFrame(); }catch(e){}
                 // 立刻把 WebGL 画布同步拷到 2D 画布，再从 2D 画布编码：
                 // 避免 WebGL 缓冲区在合成后被清空导致抓到黑帧。
-                try{ scratch.getContext('2d').drawImage(canvas, 0, 0, W, Hh); }catch(e){}
+                /* v1.0.35：等比裁切绘制。以前是 drawImage(canvas,0,0,W,Hh) 硬拉伸，
+                   预览画布比例（视口比例）与照片比例不同时，逐帧画面就被压扁。 */
+                try{
+                  var sctx = scratch.getContext('2d');
+                  if(typeof liveDrawFitted === 'function') liveDrawFitted(sctx, canvas, W, Hh);
+                  else sctx.drawImage(canvas, 0, 0, W, Hh);
+                }catch(e){}
                 var blob = await new Promise(function(r){ scratch.toBlob(r, 'image/jpeg', 0.92); });
                 if(!blob) throw new Error('frame encode failed');
                 H.postMessage({op:'liveFrame', i:i, b64: await b64(blob)});
@@ -97,7 +113,7 @@ final class LiveExportCoordinator {
             if (typeof LIVE === 'undefined' || !LIVE.pair) { fail('当前画面没有实况视频'); return; }
             var vf = LIVE.vidFile;
             if(!vf) throw new Error('没有找到导入的实况动态片段');
-            var cover = await canvasToBlob(renderExportCanvas(), 'image/jpeg', 0.95);
+            var cover = await canvasToBlob(typeof liveCoverCanvas === 'function' ? liveCoverCanvas() : renderExportCanvas(), 'image/jpeg', 0.95);
             var base = 'LivePhoto';
             try{ base = LIVE.baseName || (LIVE.imgName ? liveBase(LIVE.imgName) : '') || liveBase(vf.name) || 'LivePhoto'; }catch(e){}
             await push('photo', base + '.jpg', 'image/jpeg', cover, 'image');
