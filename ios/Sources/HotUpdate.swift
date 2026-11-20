@@ -49,7 +49,23 @@ enum HotUpdate {
     }
 
     /// 启动时加载：只认已接受的页面；没有就回落到包内。
+    ///
+    /// 但有一条前置规则：App 换过包，包内页面就是这次的新“出厂版”，
+    /// 旧缓存必须作废——否则会出现「装的是 1.0.30、看到的还是上一版页面」。
     static func pageForLaunch() -> URL? {
+        let stamp = (Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String) ?? ""
+        let key = "IrisBundleBuild"
+        if UserDefaults.standard.string(forKey: key) != stamp {
+            UserDefaults.standard.set(stamp, forKey: key)
+            if let root = rootDir {
+                try? FileManager.default.removeItem(at: root.appendingPathComponent("index.html"))
+                try? FileManager.default.removeItem(at: root.appendingPathComponent("meta.json"))
+            }
+            if let a = approvedDir { try? FileManager.default.removeItem(at: a) }
+            if let p = pendingDir { try? FileManager.default.removeItem(at: p) }
+            NSLog("[hot-update] App 升到 build %@，旧页面缓存已清空", stamp)
+            return nil
+        }
         if let page = readSlot(approvedDir) { return page }
         // 兼容旧版单槽缓存
         if let root = rootDir {

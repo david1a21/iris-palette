@@ -475,7 +475,29 @@ function pendingPage() {
   return readSlot(PENDING_DIR);
 }
 
+/* App 升级后包内页面才是这一版的新出厂页：旧缓存作废，避免
+   「装了新版本、打开还是上一版界面」。 */
+function resetPageCacheOnAppUpdate() {
+  try {
+    const stampPath = path.join(PAGE_CACHE_DIR, 'bundle-version');
+    const now = String(app.getVersion() || '');
+    const old = fs.existsSync(stampPath) ? fs.readFileSync(stampPath, 'utf8').trim() : '';
+    if (old === now) return;
+    fs.mkdirSync(PAGE_CACHE_DIR, { recursive: true });
+    fs.writeFileSync(stampPath, now);
+    dropDir(APPROVED_DIR);
+    dropDir(PENDING_DIR);
+    for (const f of ['index.html', 'meta.json']) {
+      try { fs.unlinkSync(path.join(PAGE_CACHE_DIR, f)); } catch { /* 旧槽可能不存在 */ }
+    }
+    console.log('[hot-update] App 已升级到 ' + now + '，旧页面缓存已清空');
+  } catch (e) {
+    console.warn('[hot-update] 版本戳写入失败：', e && e.message);
+  }
+}
+
 function resolveActivePage() {
+  resetPageCacheOnAppUpdate();
   const approved = approvedPage();
   ACTIVE_PAGE = approved ? approved.pagePath : path.join(ASSETS_DIR, 'index.html');
 }

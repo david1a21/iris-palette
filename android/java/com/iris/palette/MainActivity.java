@@ -404,6 +404,24 @@ public class MainActivity extends Activity {
     }
 
     private void applyCachedPage() {
+        /* App 换过包就等于换了「出厂页面」：旧缓存一律作废，
+           否则会出现「装的是新版本、看到的还是上一版页面」。 */
+        int code = 0;
+        try {
+            code = getPackageManager().getPackageInfo(getPackageName(), 0).versionCode;
+        } catch (Exception ignored) { }
+        int saved = getSharedPreferences("iris_hot", MODE_PRIVATE).getInt("bundleCode", -1);
+        if (saved != code) {
+            getSharedPreferences("iris_hot", MODE_PRIVATE).edit().putInt("bundleCode", code).apply();
+            deleteTree(approvedDir());
+            deleteTree(pendingDir());
+            try {
+                new File(pageRoot(), "index.html").delete();
+                new File(pageRoot(), "meta.json").delete();
+            } catch (Throwable ignored) { }
+            Log.i("IrisHot", "包已更新（code " + code + "），旧页面缓存清空");
+            return;
+        }
         if (validSlot(approvedDir())) {
             activePageFile = new File(approvedDir(), "index.html");
             Log.i("IrisHot", "使用已确认页面：" + slotVersion(approvedDir()));
