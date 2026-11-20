@@ -15,6 +15,7 @@ const api = {
   saveChunk: (token, bytes) => ipcRenderer.invoke('iris:save:chunk', token, bytes),
   saveEnd: (token) => ipcRenderer.invoke('iris:save:end', token),
   reveal: (p) => ipcRenderer.invoke('iris:reveal', p),
+  cloud: (id, method, url, auth, body) => ipcRenderer.invoke('iris:cloud', id, method, url, auth, body),
   appInfo: () => ipcRenderer.invoke('iris:app:info'),
   onMenu: (cb) => ipcRenderer.on('iris:menu', (_e, d) => cb(d)),
   onOpenFiles: (cb) => ipcRenderer.on('iris:open-files', (_e, paths) => cb(paths)),

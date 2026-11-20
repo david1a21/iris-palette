@@ -778,6 +778,62 @@ public class MainActivity extends Activity {
             closeAndDiscard();
         }
 
+        /* ================= 坚果云 WebDAV 代理 =================
+           页面里 fetch 会被 CORS 掐断（坚果云不回 Access-Control-Allow-Origin），
+           所以 HTTP 全部在这里代发，结果用 window.__irisCloudResult 回传页面。 */
+        @JavascriptInterface
+        public void cloud(final String id, final String method, final String url,
+                          final String auth, final String bodyB64) {
+            new Thread(() -> {
+                int status = 0;
+                String b64 = "";
+                boolean ok = false;
+                HttpURLConnection conn = null;
+                try {
+                    conn = (HttpURLConnection) new URL(url).openConnection();
+                    conn.setRequestMethod(method == null || method.isEmpty() ? "GET" : method);
+                    conn.setConnectTimeout(15000);
+                    conn.setReadTimeout(30000);
+                    conn.setInstanceFollowRedirects(true);
+                    conn.setRequestProperty("Authorization", "Basic " + (auth == null ? "" : auth));
+                    conn.setRequestProperty("User-Agent", "Iris/1.0 (Android)");
+                    if (bodyB64 != null && !bodyB64.isEmpty() && !"GET".equalsIgnoreCase(method)) {
+                        byte[] data = Base64.decode(bodyB64, Base64.DEFAULT);
+                        conn.setDoOutput(true);
+                        conn.setFixedLengthStreamingMode(data.length);
+                        OutputStream os = conn.getOutputStream();
+                        os.write(data);
+                        os.flush();
+                        os.close();
+                    }
+                    status = conn.getResponseCode();
+                    ok = status > 0;
+                    InputStream in = status >= 400 ? conn.getErrorStream() : conn.getInputStream();
+                    if (in != null) {
+                        java.io.ByteArrayOutputStream bos = new java.io.ByteArrayOutputStream();
+                        byte[] buf = new byte[8192];
+                        int n;
+                        while ((n = in.read(buf)) > 0) bos.write(buf, 0, n);
+                        in.close();
+                        b64 = Base64.encodeToString(bos.toByteArray(), Base64.NO_WRAP);
+                    }
+                } catch (Throwable t) {
+                    Log.w(TAG, "cloud request failed: " + t);
+                } finally {
+                    if (conn != null) conn.disconnect();
+                }
+                final int fStatus = status;
+                final String fB64 = b64;
+                final boolean fOk = ok;
+                ui.post(() -> {
+                    String js = "window.__irisCloudResult&&window.__irisCloudResult("
+                            + JSONObject.quote(id) + "," + (fOk ? "true" : "false") + ","
+                            + fStatus + "," + JSONObject.quote(fB64) + ")";
+                    try { web.evaluateJavascript(js, null); } catch (Throwable ignored) { }
+                });
+            }, "iris-cloud").start();
+        }
+
         private void closeAndDiscard() {
             try { if (os != null) os.close(); } catch (Throwable ignored) { }
             os = null;

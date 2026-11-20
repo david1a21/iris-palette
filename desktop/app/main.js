@@ -287,6 +287,27 @@ ipcMain.handle('iris:save:end', async (_e, token) => {
   return { path: s.path, dir: path.dirname(s.path), size };
 });
 
+/* 坚果云 WebDAV 代理：主进程没有 CORS，页面里的 fetch 会被
+   坚果云的缺省响应头卡住，所以统一走这里代发。 */
+ipcMain.handle('iris:cloud', async (_e, id, method, url, auth, bodyB64) => {
+  try {
+    const headers = { 'User-Agent': 'Iris/1.0 (desktop)' };
+    if (auth) headers.Authorization = 'Basic ' + auth;
+    if (bodyB64) headers['Content-Type'] = 'application/octet-stream';
+    const res = await fetch(url, {
+      method: (method || 'GET').toUpperCase(),
+      headers,
+      body: bodyB64 ? Buffer.from(bodyB64, 'base64') : undefined,
+      redirect: 'follow',
+    });
+    const buf = Buffer.from(await res.arrayBuffer());
+    return { status: res.status, b64: buf.toString('base64') };
+  } catch (err) {
+    console.error('[iris] cloud failed', err && err.message);
+    return { status: 0, b64: '', error: String((err && err.message) || err) };
+  }
+});
+
 ipcMain.handle('iris:reveal', (_e, p) => {
   if (!p) return false;
   shell.showItemInFolder(p);
