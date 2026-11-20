@@ -73,7 +73,12 @@ final class LiveExportCoordinator {
             }
             H.postMessage({op:'liveFramesBegin', n:n, w:W, h:Hh, fps:fps});
             try{ v.pause(); }catch(e){}
+            /* 析帧时关掉原图对比，否则抓到的帧会是未经处理的原片 */
+            try{ comparing = false; }catch(e){}
             LIVE.recording = true; LIVE.recordDims = [W, Hh]; LIVE.playing = true;
+            /* v1.0.36：录制 / 合成的每一帧都由主画布按目标尺寸全分辨率渲染，
+               不再从几百像素的预览画布放大 —— 否则 1440 的轨道里全是插值马赛克。 */
+            LIVE.exportRender = {w:W, h:Hh};
             var scratch = document.createElement('canvas'); scratch.width = W; scratch.height = Hh;
             function seek(t){
               return new Promise(function(res){
@@ -86,6 +91,8 @@ final class LiveExportCoordinator {
             try{
               for(var i=0;i<n;i++){
                 await seek(Math.min(i / fps, Math.max(0, dur - 0.001)));
+                /* 强制上传这一帧：paintFrame 里按录制帧率做了上传节流，seek 后必须重置 */
+                LIVE.lastUpload = 0;
                 try{ paintFrame(); }catch(e){}
                 // 立刻把 WebGL 画布同步拷到 2D 画布，再从 2D 画布编码：
                 // 避免 WebGL 缓冲区在合成后被清空导致抓到黑帧。
@@ -102,9 +109,11 @@ final class LiveExportCoordinator {
               }
             }catch(e){
               try{ H.postMessage({op:'liveFramesCancel'}); }catch(_){}
+              LIVE.exportRender = null;
               LIVE.playing = false; LIVE.recording = false; LIVE.recordDims = null;
-              return false;
+              try{ render(); }catch(e){} return false;
             }
+            LIVE.exportRender = null;
             LIVE.playing = false; LIVE.recording = false; LIVE.recordDims = null;
             try{ render(); }catch(e){}
             return true;

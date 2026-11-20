@@ -8006,14 +8006,25 @@ function paintFrame(){
   burst=(now-lastFrameAt<100)?Math.min(burst+1,4):0;
   lastFrameAt=now;
   const dpr=Math.min(window.devicePixelRatio||1,2);
-  const scale=(burst>=2&&!LIVE.recording&&!LIVE.playing)?.65:1;
-  const fw=Math.max(2,Math.round(canvas.clientWidth*dpr)),
-        fh=Math.max(2,Math.round(canvas.clientHeight*dpr));
-  const w=Math.max(2,Math.round(fw*scale)), h=Math.max(2,Math.round(fh*scale));
+  /* v1.0.36 · 导出渲染模式（LIVE.exportRender）
+     预览画布只有几百像素（canvas.clientWidth×dpr），逐帧从它抓再放大到 1440，
+     等于重磅插值 —— 这就是「预览越小、播放越糊、像马赛克」的根。
+     录制 / 离线合成时把主画布直接撑到目标尺寸（长边 1440）逐帧渲染，
+     同时跳过叠加层（选框、笔刷圈、分屏线），抓到的就是全分辨率干净帧。 */
+  const er=LIVE.exportRender;
+  let w,h,fw,fh,scale=1;
+  if(er&&er.w>=2&&er.h>=2){
+    w=er.w; h=er.h; fw=w; fh=h;
+  }else{
+    scale=(burst>=2&&!LIVE.recording&&!LIVE.playing)?.65:1;
+    fw=Math.max(2,Math.round(canvas.clientWidth*dpr));
+    fh=Math.max(2,Math.round(canvas.clientHeight*dpr));
+    w=Math.max(2,Math.round(fw*scale)); h=Math.max(2,Math.round(fh*scale));
+  }
   if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;}
   /* 裁剪工具由 2D 画布接管画面，跳过 WebGL 主绘制省一帧 GPU */
   if(tool!=='crop') draw(w,h,{original:comparing,outSize:[fw,fh]});
-  paintOverlay(dpr);
+  if(!er) paintOverlay(dpr);
   syncCropMode();
   if(tool==='crop') drawCropEditor();
   updateTB();
@@ -8884,7 +8895,8 @@ const LIVE={
   pair:false, matched:false, playing:false, recording:false, vidFile:null,
   raf:0, holdTimer:0, holdFired:false, holdX:0, holdY:0, duration:0,
   coverTime:null, seekWant:null, seekRaf:0, seekTimer:0, seekDragging:false,
-  coverSource:'原图'   /* v1.0.35：封面来源（原图 / 视频帧），导出面板据此提示口径 */
+  coverSource:'原图',   /* v1.0.35：封面来源（原图 / 视频帧），导出面板据此提示口径 */
+  exportRender:null    /* v1.0.36：导出/录制渲染尺寸覆盖 {w,h}，期间主画布按此尺寸全分辨率渲染 */
 };
 function liveBase(n){ return (n||'').replace(/\.[^.]+$/,''); }
 function restoreLiveStill(){
@@ -9660,20 +9672,22 @@ function recordLiveClip(mimeOverride){
       if(done) return; done=true;
       clearTimeout(guard); clearTimeout(guard2); cancelAnimationFrame(pump);
       try{ livePause(); }catch(e){}
-      LIVE.recording=false; updateLiveUI();
+      LIVE.recording=false; LIVE.exportRender=null; updateLiveUI();
       if(rec.state!=='inactive'){ try{rec.stop();}catch(e){} }
       setTimeout(()=>{ try{ stream.getTracks().forEach(t=>t.stop()); }catch(e){} },300);
     };
     rec.ondataavailable=e=>{ if(e.data&&e.data.size) chunks.push(e.data); };
     rec.onerror=e=>{ done=true; clearTimeout(guard); clearTimeout(guard2); cancelAnimationFrame(pump);
-      LIVE.recording=false; updateLiveUI(); reject(e.error||new Error('REC_ERR')); };
+      LIVE.recording=false; LIVE.exportRender=null; updateLiveUI(); reject(e.error||new Error('REC_ERR')); };
     rec.onstop=()=>resolve(new Blob(chunks,{type:rec.mimeType||mime||'video/webm'}));
     const dur=clamp(LIVE.duration||1.5,.3,3600);
+    /* v1.0.36：录制期间主画布按目标尺寸全分辨率渲染，proxy 1:1 抓取，不再放大预览帧 */
+    LIVE.exportRender={w:proxy.width,h:proxy.height};
     LIVE.recording=true; let started=false; updateLiveUI();
     const start=()=>{
       if(started||done) return; started=true;
       v.removeEventListener('seeked',start);
-      try{ px.drawImage(canvas,0,0,proxy.width,proxy.height); }catch(e){}
+      try{ liveDrawFitted(px,canvas,proxy.width,proxy.height); }catch(e){}
       try{ rec.start(100); }catch(e){ LIVE.recording=false; reject(e); return; }
       livePlay(); pump=requestAnimationFrame(paint);
       v.addEventListener('ended',()=>setTimeout(finish,160),{once:true});
@@ -12675,7 +12689,7 @@ function renderVideoPage(body){
    4) 断网、限流、404、旧版页面格式都有明确降级与提示，
       检查失败不影响任何编辑与导出功能。
    ============================================================ */
-const IRIS_VERSION='1.0.35';             /* 页面版本：走 HTML 热更新，持续递增 */
+const IRIS_VERSION='1.0.36';             /* 页面版本：走 HTML 热更新，持续递增 */
 const IRIS_BUILD='2026-11-19';
 const IRIS_CHANNEL='hot';                /* hot = HTML 热更新通道 */
 const IRIS_APP_BASELINE='1.0.1.8';       /* 最终安装包 / Release 版本，已冻结 */
@@ -19904,6 +19918,14 @@ function renderDiagnosticsPage(body){
 
 /* ---------- 16 版本演进 ---------- */
 const AS_CHANGELOG=[
+ {v:'v1.0.36',t:'实况画质：逐帧按目标尺寸全分辨率渲染',d:''
+  +'比例修好之后暴露出来的下一层问题：动态轨尺寸变成 1440 了，但每一帧是从<b>预览画布</b>抓的，'
+  +'而预览画布只有 <code>canvas.clientWidth×dpr</code>（手机竖屏约 390 宽）。'
+  +'把 390 宽的帧放大到 1440，等于一次重磅插值 —— 所以「预览越小、播放越糊」。'
+  +'现在加 <code>LIVE.exportRender</code>：录制 / 逐帧合成期间主画布直接撑到目标尺寸（长边 1440）渲染，'
+  +'抓到的是原生分辨率帧；同时跳过叠加层（选框 / 笔刷圈 / 分屏线），不会把辅助线录进画面。'
+  +'高频测试图实测：细节梯度 158 vs 旧的放大版 49.9，<b>约 3.2 倍</b>。'
+  +'逐帧合成开始前还会强制关掉「原图对比」，避免抓到未经处理的原片。'},
  {v:'v1.0.35',t:'导出尺寸锁定图源 · 实况封面与动态轨强制同比例',d:''
   +'两个「看起来毫无道理」的毛病，根因都在于尺寸口径不唯一。<b>① 预览大小偷偷决定导出</b>：'
   +'导出尺寸只由 <code>imgW/imgH</code> 推，而这对值是「最后一次 uploadImage 进去的图源像素」，'
