@@ -6,7 +6,7 @@
 <title>Iris 调色盘 · 语义感知的在线照片编辑器</title>
 <meta name="theme-color" content="#0b0b0d">
 <!-- 版本元数据：检查更新时远端只需读取文件头部即可比对，不必下载整份页面 -->
-<meta name="iris-version" content="1.0.29">
+<meta name="iris-version" content="1.0.30">
 <meta name="iris-build" content="2026-11-19">
 <meta name="iris-repo" content="david1a21/iris-palette">
 <meta name="description" content="Iris 调色盘：语义感知的二维色彩控制器。Tone × Color 两轴、端侧区域分割与肤色锁，433 款滤镜、78 套模板，支持照片 / 视频 / GIF 导出，纯前端不上传。">
@@ -981,6 +981,12 @@ input[type=range]::-webkit-slider-thumb{width:16px;height:16px;margin-top:-6.5px
   box-shadow:0 0 0 3px rgba(var(--accent-rgb),.16)}
 .sem-badge span{overflow:hidden;text-overflow:ellipsis}
 .sem-badge:hover{border-color:var(--accent);color:var(--txt)}
+.cloud-form{display:grid;gap:7px;margin:9px 0}
+.cloud-row{display:flex;align-items:center;gap:8px}
+.cloud-row>span{flex:0 0 92px;font-size:11.5px;opacity:.72;line-height:1.3}
+.cloud-row>input{flex:1;min-width:0}
+.cloud-stat{margin:8px 0 0;font-size:11.5px;line-height:1.55;opacity:.78}
+.cloud-stat b{opacity:.95}
 @media(max-width:520px){ .sem-presets{grid-template-columns:repeat(4,1fr);gap:5px}
   .sem-presets button{font-size:9.5px;padding:8px 2px} }
 
@@ -5164,8 +5170,8 @@ function noteRecent(name){
   RECENT_FILTERS=[name,...RECENT_FILTERS.filter(n=>n!==name)].slice(0,10);
   try{ localStorage.setItem('plate_recent_filters',JSON.stringify(RECENT_FILTERS)); }catch(e){}
 }
-function saveUserFilters(){ try{ localStorage.setItem('plate_user_filters',JSON.stringify(USER_FILTERS)); }catch(e){} }
-function saveFavFilters(){ try{ localStorage.setItem('plate_fav_filters',JSON.stringify(FAV_FILTERS)); }catch(e){} }
+function saveUserFilters(){ try{ localStorage.setItem('plate_user_filters',JSON.stringify(USER_FILTERS)); }catch(e){} cloudAutoPush(); }
+function saveFavFilters(){ try{ localStorage.setItem('plate_fav_filters',JSON.stringify(FAV_FILTERS)); }catch(e){} cloudAutoPush(); }
 function refreshFilterGroups(){
   const gs=['★ 收藏','全部',...new Set(FILTERS.map(f=>f.group))];
   FILTER_GROUPS.length=0; gs.forEach(g=>FILTER_GROUPS.push(g));
@@ -12299,7 +12305,7 @@ function renderVideoPage(body){
    4) 断网、限流、404、旧版页面格式都有明确降级与提示，
       检查失败不影响任何编辑与导出功能。
    ============================================================ */
-const IRIS_VERSION='1.0.29';             /* 页面版本：走 HTML 热更新，持续递增 */
+const IRIS_VERSION='1.0.30';             /* 页面版本：走 HTML 热更新，持续递增 */
 const IRIS_BUILD='2026-11-19';
 const IRIS_CHANNEL='hot';                /* hot = HTML 热更新通道 */
 const IRIS_APP_BASELINE='1.0.1.8';       /* 最终安装包 / Release 版本，已冻结 */
@@ -16162,6 +16168,169 @@ function exportSize(){
   return [w,h];
 }
 
+/* ============================================================
+   坚果云（WebDAV）偏好同步
+   页面只负责拼 JSON，真正的 HTTP 交给三端原生壳代发：
+   dav.jianguoyun.com 不回 Access-Control-Allow-Origin，
+   浏览器与 WKWebView 直连必被 CORS 拦死，只能走原生通道。
+   ============================================================ */
+const IRIS_SYNC_KEYS=['plate_user_filters','plate_fav_filters','plate_recent_filters','plate_presets','iris_tones_v1','iris_skin','iris_bar','iris_tool_pos','plate_fit','plate_pad_tone'];
+const IRIS_CLOUD_CFG='iris_cloud_cfg', IRIS_CLOUD_BK='iris_cloud_backup';
+let cloudSeq=0, cloudWaits={}, cloudLast='', cloudTimer=null;
+
+function cloudCfg(){
+  const d={server:'https://dav.jianguoyun.com/dav/',user:'',pass:'',dir:'Iris',file:'iris-sync.json',auto:true};
+  try{ return Object.assign(d,JSON.parse(localStorage.getItem(IRIS_CLOUD_CFG)||'{}')); }catch(e){ return d; }
+}
+function cloudSaveCfg(c){ try{ localStorage.setItem(IRIS_CLOUD_CFG,JSON.stringify(c)); }catch(e){} }
+function b64enc(str){ const b=new TextEncoder().encode(str); let s=''; for(let i=0;i<b.length;i++) s+=String.fromCharCode(b[i]); return btoa(s); }
+function b64dec(s){ const bin=atob(s), u=new Uint8Array(bin.length); for(let i=0;i<bin.length;i++) u[i]=bin.charCodeAt(i); return new TextDecoder().decode(u); }
+function cloudProto(){
+  if(window.irisDesktop&&window.irisDesktop.cloud) return 'desktop';
+  if(window.IrisNative&&window.IrisNative.cloud) return 'android';
+  if(window.webkit&&window.webkit.messageHandlers&&window.webkit.messageHandlers.iris) return 'ios';
+  return '';
+}
+window.__irisCloudResult=function(id,ok,status,b64){
+  const w=cloudWaits[id]; if(!w) return; delete cloudWaits[id];
+  if(ok) w.ok({status:status||0,text:b64?b64dec(b64):''});
+  else w.fail(new Error('连接失败'+(status?(' · HTTP '+status):'')));
+};
+function cloudReq(method,url,auth,body){
+  return new Promise(function(resolve,reject){
+    const id='c'+(++cloudSeq);
+    const timer=setTimeout(function(){ if(cloudWaits[id]){ delete cloudWaits[id]; reject(new Error('坚果云 30 秒没响应')); } },30000);
+    cloudWaits[id]={ok:function(v){ clearTimeout(timer); resolve(v); },
+                    fail:function(e){ clearTimeout(timer); reject(e); }};
+    try{
+      const body64=body?b64enc(body):'';
+      if(window.irisDesktop&&window.irisDesktop.cloud){
+        window.irisDesktop.cloud(id,method,url,auth||'',body64)
+          .then(function(r){ window.__irisCloudResult(id,true,r&&r.status,r&&r.b64); })
+          .catch(function(){ window.__irisCloudResult(id,false,0,''); });
+      }else if(window.IrisNative&&window.IrisNative.cloud){
+        window.IrisNative.cloud(id,method,url,auth||'',body64);
+      }else if(window.webkit&&window.webkit.messageHandlers&&window.webkit.messageHandlers.iris){
+        window.webkit.messageHandlers.iris.postMessage({op:'cloud',id:id,method:method,url:url,authorization:auth||'',body:body64});
+      }else throw new Error('这个版本没有云端通道（网页版不支持）');
+    }catch(e){ delete cloudWaits[id]; clearTimeout(timer); reject(e); }
+  });
+}
+function cloudDirURL(){ const c=cloudCfg();
+  return c.server.replace(/\/+$/,'')+'/'+(c.dir||'Iris').split('/').filter(Boolean).map(encodeURIComponent).join('/'); }
+function cloudFileURL(){ const c=cloudCfg(); return cloudDirURL()+'/'+encodeURIComponent(c.file||'iris-sync.json'); }
+function cloudAuthB64(){ const c=cloudCfg(); return b64enc((c.user||'')+':'+(c.pass||'')); }
+function cloudReady(){
+  const c=cloudCfg();
+  if(!c.user||!c.pass){ toast('先填坚果云账号和应用密码'); return false; }
+  if(!cloudProto()){ toast('当前版本没有云端通道，请装新的安装包'); return false; }
+  return true;
+}
+async function cloudTest(){
+  if(!cloudReady()) return;
+  cloudLast='正在连接…'; buildPanel(true);
+  try{
+    const r=await cloudReq('GET',cloudFileURL(),cloudAuthB64(),'');
+    cloudLast=r.status===404?'连接正常 · 云端还没有同步文件（先上传一次）':('连接正常 · HTTP '+r.status);
+    toast('坚果云连接正常');
+  }catch(e){ cloudLast='连接失败：'+e.message; toast(cloudLast); }
+  buildPanel(true);
+}
+async function cloudPush(silent){
+  const c=cloudCfg();
+  if(!c.user||!c.pass||!cloudProto()){ if(!silent) cloudReady(); return false; }
+  const data={}; let chars=0;
+  IRIS_SYNC_KEYS.forEach(function(k){ const v=localStorage.getItem(k); if(v!=null){ data[k]=v; chars+=v.length; } });
+  const pack={app:'iris-palette',kind:'iris-sync',version:1,updatedAt:Date.now(),data:data};
+  if(!silent){ cloudLast='正在上传…'; buildPanel(true); }
+  try{
+    try{ await cloudReq('MKCOL',cloudDirURL(),cloudAuthB64(),''); }catch(e){}
+    const r=await cloudReq('PUT',cloudFileURL(),cloudAuthB64(),JSON.stringify(pack));
+    if(r.status>=400) throw new Error('HTTP '+r.status);
+    const at=new Date().toLocaleTimeString();
+    cloudLast=(silent?'自动上传完成 · ':'已上传 · ')+at+' · '+Math.round(chars/1024)+' KB';
+    if(!silent) toast(cloudLast);
+  }catch(e){
+    cloudLast='上传失败：'+e.message;
+    if(!silent) toast(cloudLast);
+  }
+  if(!silent) buildPanel(true);
+  return cloudLast.indexOf('失败')<0;
+}
+async function cloudPull(){
+  if(!cloudReady()) return;
+  if(!confirm('从坚果云恢复会覆盖本机的滤镜 / 收藏 / 色调 / 界面偏好，恢复后页面会自动重载。继续？')) return;
+  cloudLast='正在读取…'; buildPanel(true);
+  try{
+    const r=await cloudReq('GET',cloudFileURL(),cloudAuthB64(),'');
+    if(r.status===404) throw new Error('云端还没有同步文件，先上传一次');
+    if(r.status>=400) throw new Error('HTTP '+r.status);
+    const pack=JSON.parse(r.text);
+    if(pack.kind!=='iris-sync'||!pack.data) throw new Error('这个文件不是 Iris 同步包');
+    const bk={}; IRIS_SYNC_KEYS.forEach(function(k){ bk[k]=localStorage.getItem(k); });
+    try{ localStorage.setItem(IRIS_CLOUD_BK,JSON.stringify({at:Date.now(),data:bk})); }catch(e){}
+    let n=0;
+    IRIS_SYNC_KEYS.forEach(function(k){
+      if(Object.prototype.hasOwnProperty.call(pack.data,k)){ localStorage.setItem(k,pack.data[k]); n++; }
+    });
+    cloudLast='已恢复 '+n+' 项 · 正在重新载入…'; toast(cloudLast);
+    setTimeout(function(){ location.reload(); },900);
+  }catch(e){ cloudLast='读取失败：'+e.message; toast(cloudLast); buildPanel(true); }
+}
+function cloudAutoPush(){
+  const c=cloudCfg();
+  if(!c.auto||!c.user||!c.pass||!cloudProto()) return;
+  clearTimeout(cloudTimer);
+  cloudTimer=setTimeout(function(){ cloudPush(true); },4000);
+}
+function buildCloudSection(){
+  const c=cloudCfg();
+  const s=section('坚果云同步 · 偏好与滤镜'); s.dataset.ptab='sync';
+  s.append(hint('走坚果云 WebDAV：服务器 <b>https://dav.jianguoyun.com/dav/</b>，账号是你登录坚果云的邮箱，'
+    +'密码要填「账户信息 → 安全 → 应用密码」，不是登录密码。<br>'
+    +'账号与应用密码只写在本机 localStorage，用于直连坚果云，不经过任何中间服务器；'
+    +'三端壳各有一个几十行的 WebDAV 代理，因为浏览器直连坚果云会被 CORS 拦死。'));
+  const form=document.createElement('div'); form.className='cloud-form';
+  const add=(label,val,ph,type)=>{
+    const w=document.createElement('label'); w.className='cloud-row';
+    const t=document.createElement('span'); t.textContent=label;
+    const i=document.createElement('input'); i.className='fsel'; i.type=type||'text';
+    i.value=val||''; i.placeholder=ph||''; i.spellcheck=false;
+    w.append(t,i); form.append(w); return i;
+  };
+  const iSrv=add('服务器',c.server,'https://dav.jianguoyun.com/dav/');
+  const iUsr=add('账号',c.user,'坚果云邮箱');
+  const iPwd=add('应用密码',c.pass,'账户信息 → 安全 → 应用密码','password');
+  const iDir=add('目录',c.dir,'Iris');
+  const iFil=add('文件名',c.file,'iris-sync.json');
+  s.append(form);
+  const r=document.createElement('div'); r.className='row';
+  r.append(button('保存设置',function(){
+      const cc=cloudCfg();
+      cloudSaveCfg({server:iSrv.value.trim()||cc.server,user:iUsr.value.trim(),pass:iPwd.value.trim(),
+        dir:iDir.value.trim()||'Iris',file:iFil.value.trim()||'iris-sync.json',auto:cc.auto});
+      buildPanel(true); toast('同步设置已保存');
+    }),
+    button('测试连接',function(){ cloudTest(); },'accent'));
+  s.append(r);
+  const r2=document.createElement('div'); r2.className='row';
+  r2.append(button('↑ 上传到坚果云',function(){ cloudPush(false); },'accent'),
+    button('↓ 从坚果云恢复',function(){ cloudPull(); }));
+  s.append(r2);
+  s.append(chipRow([{id:'on',name:'改滤镜就自动上传'},{id:'off',name:'只手动上传'}], c.auto?'on':'off', function(id){
+    const cc=cloudCfg(); cc.auto=(id==='on'); cloudSaveCfg(cc); buildPanel(true);
+    toast(cc.auto?'已开启自动上传':'已关闭自动上传');
+  }));
+  const stat=document.createElement('div'); stat.className='cloud-stat';
+  const proto=cloudProto();
+  stat.innerHTML='<b>通道</b> '+(proto==='ios'?'iOS 原生 WebDAV':proto==='android'?'Android 原生 WebDAV'
+      :proto==='desktop'?'桌面原生 WebDAV':'无（网页版不支持直连）')
+    +'　·　<b>同步内容</b> 我的滤镜 / 收藏 / 最近使用 / 自定义预设 / 色调库 / 界面偏好'
+    +(cloudLast?('<br><b>状态</b> '+cloudLast):'');
+  s.append(stat);
+  return s;
+}
+
 /* --- 预设 / 参数管理 --- */
 function copyParams(){ navigator.clipboard?.writeText(JSON.stringify(state,null,2)).then(()=>toast('编辑参数已复制')).catch(()=>toast('复制失败，可用导出 JSON')); }
 function presetObj(name){ return {name,state:deep(state)}; }
@@ -16173,7 +16342,7 @@ function presetObj(name){ return {name,state:deep(state)}; }
    推向目标照片，滤镜层 / 调色盘 / 文字贴纸 / 裁剪一律不动。
    ============================================================ */
 const IRIS_TONE_STORE='iris_tones_v1';
-function irisToneSave(){ try{ localStorage.setItem(IRIS_TONE_STORE,JSON.stringify(IRIS_TONES)); }catch(e){ toast('保存失败：本地存储已满'); } }
+function irisToneSave(){ try{ localStorage.setItem(IRIS_TONE_STORE,JSON.stringify(IRIS_TONES)); }catch(e){ toast('保存失败：本地存储已满'); } cloudAutoPush(); }
 function irisToneLoad(){
   try{ const a=JSON.parse(localStorage.getItem(IRIS_TONE_STORE)||'[]');
     IRIS_TONES=Array.isArray(a)?a.filter(t=>t&&t.id&&t.name&&(t.fp||t.thumb||t.state)).slice(0,60):[];
@@ -20258,7 +20427,7 @@ function buildPresets(p){
   const r3=document.createElement('div'); r3.className='row'; r3.style.marginTop='8px';
   r3.append(button('＋ 保存当前',()=>{
     const name=prompt('预设名称','我的风格 '+(custom.length+1)); if(!name)return;
-    const arr=loadCustom(); arr.push(presetObj(name)); localStorage.setItem('plate_presets',JSON.stringify(arr)); buildPanel(); toast('已保存');
+    const arr=loadCustom(); arr.push(presetObj(name)); localStorage.setItem('plate_presets',JSON.stringify(arr)); buildPanel(); toast('已保存'); cloudAutoPush();
   }),
   button('清空预设',()=>{ if(confirm('清空所有自定义预设？')){localStorage.removeItem('plate_presets');buildPanel();} }));
   s2.dataset.ptab='style'; s2.append(r2,r3); p.append(s2);
@@ -20271,6 +20440,7 @@ function buildPresets(p){
     button('导入 JSON',()=>$('#jsonFile').click()));
   s3.append(hint('参数可复制到另一张照片，保持整套色调一致；JSON 可存档 / 分享。'));
   s3.dataset.ptab='style'; s3.append(r4); p.append(s3);
+  p.append(buildCloudSection());
   const ab=section('关于 Iris 与作者'); ab.dataset.ptab='about';
   /* 用独立 class，不套 .hint（面板会把 .hint 默认收进「操作说明」） */
   const an=document.createElement('div'); an.className='ab-tab-note';
@@ -20443,7 +20613,7 @@ function buildPresets(p){
   sl.append(note); sl.dataset.ptab='export'; p.append(sl);
   /* 三个分栏：一次只显示一组，功能全保留但不再堆在一起 */
   const tabs=document.createElement('div'); tabs.className='iris-fixed preset-tabs';
-  [['style','风格'],['export','导出'],['about','关于']].forEach(([id,n])=>{
+  [['style','风格'],['export','导出'],['sync','同步'],['about','关于']].forEach(([id,n])=>{
     const b=button(n,()=>{ presetTab=id; buildPanel(true); $('#panel').scrollTop=0; });
     b.className='chip'+(presetTab===id?' active':''); tabs.append(b);
   });
