@@ -6,7 +6,7 @@
 <title>Iris 调色盘 · 语义感知的在线照片编辑器</title>
 <meta name="theme-color" content="#0b0b0d">
 <!-- 版本元数据：检查更新时远端只需读取文件头部即可比对，不必下载整份页面 -->
-<meta name="iris-version" content="1.0.30">
+<meta name="iris-version" content="1.0.38">
 <meta name="iris-build" content="2026-11-19">
 <meta name="iris-repo" content="david1a21/iris-palette">
 <meta name="description" content="Iris 调色盘：语义感知的二维色彩控制器。Tone × Color 两轴、端侧区域分割与肤色锁，433 款滤镜、78 套模板，支持照片 / 视频 / GIF 导出，纯前端不上传。">
@@ -135,6 +135,59 @@ button{cursor:pointer;border:0;background:none}
   overflow:hidden;text-overflow:ellipsis;max-width:40vw}
 /* 编辑栏被收起时不显示完成条；面板里与画面双击仍可完成 */
 #app.dock-off #cropBar{display:none}
+
+/* ============================================================
+   v1.0.34 · 导出进度条
+   普通流的一行，挂在编辑栏顶部（桌面右侧栏 / 手机底部工作卡），
+   或二级页内容区顶部。两者都不进入 .stage —— 因此不覆盖任何照片像素，
+   也不像 toast 那样浮在画面中间。dock 尺寸固定，显示/隐藏不改变画布尺寸。
+   ============================================================ */
+.exp-progress{display:none;flex:0 0 auto;align-items:center;gap:11px;
+  margin:9px 12px 3px;padding:10px 12px;border-radius:15px;
+  border:1px solid var(--w12);background:var(--w045);
+  box-shadow:0 4px 18px rgba(0,0,0,.13),inset 0 1px 0 rgba(255,255,255,.05);
+  animation:epIn .2s ease-out both}
+.exp-progress.show{display:flex}
+@keyframes epIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+.ep-ic{flex:0 0 30px;width:30px;height:30px;display:grid;place-items:center;
+  border-radius:10px;font-size:15px;font-weight:800;color:var(--on-accent);
+  background:linear-gradient(135deg,var(--accent),rgba(var(--accent-rgb),.72))}
+.ep-main{flex:1 1 auto;min-width:0}
+.ep-row{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:6px}
+.ep-label{font-size:12px;font-weight:700;color:var(--txt);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ep-pct{flex:0 0 auto;font-size:11px;font-weight:800;color:var(--accent);
+  font-variant-numeric:tabular-nums}
+.ep-track{position:relative;height:6px;border-radius:999px;background:rgba(127,127,127,.22);overflow:hidden}
+/* 全分辨率渲染是同步 WebGL，主线程会短暂阻塞；斜向流光走合成层 transform，
+   即使 JS 卡住也继续走，进度条不会看起来像死机 */
+.exp-progress.busy .ep-track::after{content:'';position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.30),transparent);
+  transform:translateX(-100%);animation:epShine 1.1s linear infinite}
+@keyframes epShine{to{transform:translateX(100%)}}
+.ep-fill{height:100%;width:0;border-radius:999px;
+  background:linear-gradient(90deg,rgba(var(--accent-rgb),.65),var(--accent));
+  transition:width .16s linear}
+.ep-sub{margin-top:5px;font-size:10.5px;line-height:1.4;color:var(--sub);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ep-close{flex:0 0 auto;width:26px;height:26px;border-radius:8px;border:0;cursor:pointer;
+  background:var(--w08);color:var(--sub);font-size:12px;line-height:1}
+.ep-close:hover{background:var(--w12);color:var(--txt)}
+.exp-progress.done .ep-ic{background:linear-gradient(135deg,#2fbf71,#1f9d5b);color:#fff}
+.exp-progress.fail .ep-ic{background:linear-gradient(135deg,#e2564e,#c13a34);color:#fff}
+.exp-progress.fail .ep-pct,.exp-progress.fail .ep-label{color:#ff8a80}
+/* 二级页（导出中心 / 导出设置）里挂在内容区顶部，滚动时吸顶 */
+.exp-progress.in-sub{margin:0 0 14px;position:sticky;top:0;z-index:4;
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+html[data-ui="nova"] .exp-progress{border-radius:var(--nova-r)}
+.exp-progress.done .ep-sub,.exp-progress.fail .ep-sub{white-space:normal;overflow:visible}
+html[data-glass="off"] .exp-progress.in-sub{backdrop-filter:none;-webkit-backdrop-filter:none}
+@media(max-width:560px){
+  .exp-progress{margin:7px 9px 2px;padding:9px 10px;gap:8px}
+  .ep-ic{flex-basis:26px;width:26px;height:26px;font-size:13px}
+  .ep-label{font-size:11.5px}.ep-sub{font-size:10px}}
+@media(prefers-reduced-motion:reduce){.exp-progress{animation:none}.ep-fill{transition:none}}
+
 /* 照片方向：裁剪页首屏的大控件，不随侧栏变窄被挤成一行小字 */
 .dir-wrap{margin:11px 0 9px;padding:11px 12px 12px;border-radius:16px;
   border:1px solid var(--w12);
@@ -255,6 +308,80 @@ button{cursor:pointer;border:0;background:none}
 .dock-grip span{width:36px;height:4px;border-radius:3px;background:var(--w28);
   transition:background .2s,width .2s}
 .dock-grip:active span{background:var(--accent);width:52px}
+
+/* ============================================================
+   v1.0.35 · 初次进入的「小横条」引导
+   作为 .dock 的普通流一行，紧跟在 grip 之后：不进入 #stage、不覆盖照片，
+   也不盖住下面任何工具 / 参数控件（只是把内容往下顺延一行）。
+   顶部的箭头指向正上方那根 grip；grip 自身同步高亮 + 呼吸。
+   ============================================================ */
+.grip-hint{display:none;position:relative;flex:0 0 auto;align-items:center;gap:10px;
+  margin:9px 12px 4px;padding:10px 11px 10px 12px;border-radius:15px;
+  border:1px solid rgba(var(--accent-rgb),.42);
+  background:linear-gradient(135deg,rgba(var(--accent-rgb),.16),rgba(var(--accent-rgb),.05));
+  box-shadow:0 5px 20px rgba(0,0,0,.18),inset 0 1px 0 rgba(255,255,255,.06);
+  animation:ghIn .32s cubic-bezier(.2,.9,.28,1.05) both;cursor:pointer}
+.grip-hint.show{display:flex}
+@keyframes ghIn{from{opacity:0;transform:translateY(-9px) scale(.97)}to{opacity:1;transform:none}}
+/* 指向上方 grip 的小尖角 + 箭头 */
+.gh-arrow{position:absolute;top:-9px;left:26px;width:18px;height:18px;
+  display:grid;place-items:center;font-size:13px;line-height:1;font-weight:800;
+  color:var(--accent);border-radius:50%;
+  background:var(--panel);border:1px solid rgba(var(--accent-rgb),.42);
+  animation:ghNudge 1.5s ease-in-out infinite}
+@keyframes ghNudge{0%,100%{transform:translateY(2px)}50%{transform:translateY(-3px)}}
+/* 手势示意：一根会变长的横条 + 一只上下移动的手 */
+.gh-ic{flex:0 0 40px;width:40px;height:40px;position:relative;border-radius:12px;
+  background:rgba(0,0,0,.16);border:1px solid var(--w12);overflow:hidden}
+.gh-ic .gh-bar{position:absolute;left:9px;right:9px;top:11px;height:4px;border-radius:3px;
+  background:var(--accent);animation:ghBar 1.5s ease-in-out infinite}
+@keyframes ghBar{0%,100%{transform:scaleX(.72)}50%{transform:scaleX(1.18)}}
+.gh-ic .gh-hand{position:absolute;left:50%;bottom:1px;margin-left:-8px;font-size:15px;
+  line-height:1;filter:drop-shadow(0 1px 3px rgba(0,0,0,.5));
+  animation:ghHand 1.5s ease-in-out infinite}
+@keyframes ghHand{0%,100%{transform:translateY(3px)}50%{transform:translateY(-5px)}}
+.gh-main{flex:1 1 auto;min-width:0}
+.gh-main b{display:block;font-size:12.5px;font-weight:800;color:var(--txt);
+  letter-spacing:.2px;margin-bottom:3px}
+.gh-main small{display:block;font-size:10.5px;line-height:1.45;color:var(--sub)}
+.gh-ok{flex:0 0 auto;padding:7px 11px;border-radius:999px;cursor:pointer;font-size:11px;
+  font-weight:800;border:1px solid rgba(var(--accent-rgb),.5);
+  background:var(--accent);color:var(--on-accent)}
+.gh-ok:active{transform:scale(.94)}
+/* grip 高亮：横条变金色并呼吸，底部浮出方向箭头 */
+.dock-grip.gh-on span{background:var(--accent);width:52px;
+  animation:ghGrip 1.5s ease-in-out infinite}
+@keyframes ghGrip{0%,100%{opacity:.72;transform:scaleX(.9)}50%{opacity:1;transform:scaleX(1.06)}}
+.dock-grip.gh-on::after{content:'↑';position:absolute;right:calc(50% - 44px);top:-2px;
+  font-size:12px;font-weight:800;color:var(--accent);
+  animation:ghNudge 1.5s ease-in-out infinite}
+.dock-grip{position:relative}
+/* 宽屏：侧栏是往左拖宽，箭头转成向左，高亮箭头也挪到横条左边 */
+@media(min-width:900px){
+  .gh-arrow{transform:rotate(-90deg);left:24px;top:-8px;
+    animation:ghNudgeX 1.5s ease-in-out infinite}
+  @keyframes ghNudgeX{0%,100%{transform:rotate(-90deg) translateY(2px)}
+                      50%{transform:rotate(-90deg) translateY(-3px)}}
+  .dock-grip.gh-on::after{content:'←';right:calc(50% + 34px);top:-3px;
+    animation:ghNudgeX2 1.5s ease-in-out infinite}
+  @keyframes ghNudgeX2{0%,100%{transform:translateX(2px)}50%{transform:translateX(-3px)}}
+}
+html[data-ui="nova"] .grip-hint{border-radius:var(--nova-r)}
+html[data-ui="focus"] .grip-hint,#app.dock-off .grip-hint{display:none!important}
+@media(max-width:560px){
+  .grip-hint{margin:7px 9px 3px;padding:9px 9px 9px 10px;gap:8px}
+  .gh-ic{flex-basis:34px;width:34px;height:34px}
+  .gh-main b{font-size:11.8px}.gh-main small{font-size:10px}
+  .gh-ok{padding:6px 9px;font-size:10.5px}
+}
+@media(prefers-reduced-motion:reduce){
+  .grip-hint,.gh-arrow,.gh-ic .gh-bar,.gh-ic .gh-hand,
+  .dock-grip.gh-on span,.dock-grip.gh-on::after{animation:none!important}
+}
+html[data-motion="off"] .gh-arrow,html[data-motion="off"] .gh-ic .gh-bar,
+html[data-motion="off"] .gh-ic .gh-hand,html[data-motion="off"] .dock-grip.gh-on span,
+html[data-motion="off"] .dock-grip.gh-on::after{animation:none!important}
+
 .dock-float{position:absolute;right:10px;bottom:56px;display:none;padding:9px 14px;border-radius:11px;
   font-size:12px;font-weight:600;background:var(--accent);color:var(--on-accent);z-index:6;
   box-shadow:0 4px 18px rgba(0,0,0,.5)}
@@ -1001,6 +1128,46 @@ input[type=range]::-webkit-slider-thumb{width:16px;height:16px;margin-top:-6.5px
   box-shadow:0 14px 34px rgba(0,0,0,.65);max-height:168px;overflow-y:auto;
   animation:toneIn .16s ease-out}
 .tone-picker:not([open]) .chips{display:none}
+
+/* ============================================================
+   v1.0.36 · 桌面端调色盘「归属 / 色调」折叠选择器
+   旧版这两行是 .chip-line + .chips(overflow-x:auto; scrollbar-width:none)：
+   12 个色调总宽 625px，挤在 268px 容器里，滚动条又被隐藏，
+   鼠标滚轮只能纵向滚 —— 右边 7~8 个色相在电脑端永远点不到。
+   现在改成 details：收起一行显示当前项，展开后 wrap 平铺，
+   12 个全部可见、直接点，零横向滚动。手机端仍用原来的浮层选择器。
+   ============================================================ */
+.plate-fold{margin:0 0 5px;border:1px solid var(--w11);border-radius:10px;
+  background:var(--w022);overflow:hidden}
+.plate-fold>summary{list-style:none;display:flex;align-items:center;gap:7px;
+  padding:6px 9px;min-height:32px;cursor:pointer;user-select:none;
+  -webkit-tap-highlight-color:transparent}
+.plate-fold>summary::-webkit-details-marker{display:none}
+.plate-fold>summary:hover{background:var(--w045)}
+.pf-lab{font-size:10px;color:var(--sub);flex:0 0 auto;letter-spacing:.3px;white-space:nowrap}
+.pf-cur{flex:1;min-width:0;font-size:11.5px;font-weight:700;color:var(--txt);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pf-n{font-size:9.5px;color:var(--accent);white-space:nowrap;flex:0 0 auto;
+  padding:2px 6px;border-radius:6px;background:rgba(var(--accent-rgb),.11)}
+.pf-caret{font-size:10px;color:var(--sub);transition:transform .2s ease;
+  width:9px;flex:0 0 9px;text-align:center}
+.plate-fold[open] .pf-caret{transform:rotate(180deg)}
+.plate-fold[open]>summary{border-bottom:1px solid var(--w08)}
+.plate-fold-body{padding:7px 9px 8px}
+.plate-fold-body .chips{display:flex;flex-wrap:wrap;gap:5px;
+  overflow:visible;scrollbar-width:auto;padding:0;max-height:none}
+.plate-fold-body .chips::-webkit-scrollbar{display:none}
+.plate-fold-body .chip{font-size:11px;padding:5px 9px;white-space:nowrap}
+.plate-fold-foot{display:flex;justify-content:flex-end;margin-top:7px}
+.plate-fold-foot button{border:0;background:transparent;color:var(--accent);
+  font-size:10px;cursor:pointer;padding:3px 6px;border-radius:6px}
+.plate-fold-foot button:hover{background:rgba(var(--accent-rgb),.10)}
+.panel[data-fit="slim"] .plate-fold-body .chip{font-size:10px;padding:4px 7px}
+.panel[data-fit="slim"] .pf-n{display:none}
+html[data-ui="nova"] .plate-fold{border-radius:var(--nova-r,14px)}
+@media(prefers-reduced-motion:reduce){.pf-caret{transition:none}}
+html[data-motion="off"] .pf-caret{transition:none}
+
 @keyframes toneIn{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:none}}
 .tone-picker .chip{padding:6px 10px;font-size:10.5px}
 
@@ -3631,7 +3798,6 @@ html[data-motion="off"] .fx-btn,html[data-motion="off"] .fx-knob{transition:none
 .cloud-row>input{flex:1 1 auto;min-width:0;width:100%;max-width:none}
 .cloud-stat{margin:8px 0 0;font-size:11.5px;line-height:1.55;opacity:.78}
 .cloud-stat b{opacity:.95}
-
 </style>
 <script>
 /* ============================================================
@@ -3891,7 +4057,28 @@ html[data-motion="off"] .fx-btn,html[data-motion="off"] .fx-knob{transition:none
     <button class="fx-btn fx-all" id="fxDrawer" title="参数 / 工具 / 全部（展开下方工作区）">▦</button>
   </div>
   <div class="dock">
+    <!-- v1.0.34 · 导出进度条：编辑栏内独立一行，不是浮层，不进入 stage -->
+    <div class="exp-progress" id="expProgress" role="progressbar"
+         aria-label="导出进度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+      <div class="ep-ic" id="epIc">↧</div>
+      <div class="ep-main">
+        <div class="ep-row"><b class="ep-label" id="epLabel">准备导出…</b><span class="ep-pct" id="epPct">0%</span></div>
+        <div class="ep-track"><div class="ep-fill" id="epFill"></div></div>
+        <div class="ep-sub" id="epSub"></div>
+      </div>
+      <button class="ep-close" id="epClose" title="收起进度条">✕</button>
+    </div>
     <div class="dock-grip" id="grip" title="拖动调整大小 · 点击收起 · 双击复位"><span></span></div>
+    <!-- v1.0.35 · 初次进入的引导：普通流一行，指向正上方那根 grip -->
+    <div class="grip-hint" id="gripHint" hidden role="note" aria-label="编辑面板调整提示">
+      <div class="gh-arrow" aria-hidden="true">↑</div>
+      <div class="gh-ic" aria-hidden="true"><span class="gh-bar"></span><span class="gh-hand">☝</span></div>
+      <div class="gh-main">
+        <b id="ghTitle">长按小横条 · 往上拖</b>
+        <small id="ghSub">把编辑面板调高，就能看到更多参数；双击复位，轻点收起</small>
+      </div>
+      <button class="gh-ok" id="ghOk" title="不再提示">知道了</button>
+    </div>
     <!-- 裁剪完成条：属于编辑栏，不覆盖画面里的任何一个像素 -->
     <div id="cropBar" role="group" aria-label="裁剪操作">
       <span id="cropBarInfo">拖动四角或边缘调整</span>
@@ -3975,6 +4162,98 @@ const toastEl = $('#toast');
 let toastTimer;
 function toast(t){ toastEl.textContent=t; toastEl.classList.add('show'); clearTimeout(toastTimer);
   toastTimer=setTimeout(()=>toastEl.classList.remove('show'),1600); }
+
+/* ============================================================
+   v1.0.34 · 导出进度控制器
+   · 挂载点：编辑栏顶部（默认）；二级页打开时移到内容区顶部并吸顶。
+     两处都是普通流，绝不浮在 .stage 的照片上。
+   · 阶段：准备 → 渲染成品 → 编码 / 压缩 → 写出文件 → 完成。
+     同步的 WebGL 渲染无法细分，用「带上限的时间软推进」保持走动，
+     渲染结束立刻跳到真实阶段值；全程单调、不倒退、不会瞬间 100%。
+   · 完成后显示真实耗时与文件信息，短暂停留自动收起；失败变红并留久一点。
+   ============================================================ */
+const ExportProgress = (()=>{
+  const el=$('#expProgress'), lab=$('#epLabel'), pctEl=$('#epPct'),
+        fill=$('#epFill'), sub=$('#epSub'), ic=$('#epIc'), close=$('#epClose');
+  let pct=0, active=false, raf=0, hideTimer=0, t0=0;
+  const cp=v=>Math.max(0,Math.min(100,v));
+  function mount(){
+    const sp=$('#subPage'), dock=document.querySelector('.dock'), body=$('#spBody');
+    if(sp&&sp.classList.contains('show')&&body){
+      if(el.parentNode!==body){ body.insertBefore(el,body.firstChild); el.classList.add('in-sub'); }
+    } else if(dock&&el.parentNode!==dock){
+      dock.insertBefore(el,dock.firstChild); el.classList.remove('in-sub');
+    }
+  }
+  function set(v,label,detail){
+    mount();
+    pct=Math.max(pct,cp(v));
+    /* 进度轨迹：仅当外部预先建立 __xpTrace 时记录（自动化核对用），
+       正常运行时零开销；完成 / 失败那次 set(100) 也要记到，active 此时已置 false。 */
+    if(typeof window!=='undefined'&&window.__xpTrace&&window.__xpTrace.length<200)
+      window.__xpTrace.push([+pct.toFixed(1),label||'']);
+    const r=pct.toFixed(1);
+    if(fill.style.width!==r+'%') fill.style.width=r+'%';
+    const q=Math.round(pct)+'%';
+    if(pctEl.textContent!==q) pctEl.textContent=q;
+    el.setAttribute('aria-valuenow',String(Math.round(pct)));
+    if(label!==undefined&&lab.textContent!==label) lab.textContent=label;
+    if(detail!==undefined&&sub.textContent!==detail) sub.textContent=detail;
+  }
+  function show(title,detail){
+    clearTimeout(hideTimer); stopSoft();
+    pct=0; active=true; t0=performance.now();
+    el.classList.remove('done','fail'); el.classList.add('show','busy');
+    ic.textContent='↧';
+    /* 全屏看图时编辑栏是收起的，展开它才能让进度条可见 —— 依然不覆盖图片 */
+    try{ if(app.classList.contains('dock-off')&&typeof expandDock==='function') expandDock(); }catch(e){}
+    set(0,title,detail||'');
+  }
+  /* 不可细分阶段的软推进：按时间渐近到 to，永远不越过阶段上限 */
+  function softTo(from,to,ms,label,detail){
+    stopSoft();
+    const t=performance.now();
+    const tick=()=>{
+      if(!active) return;
+      const k=1-Math.exp(-3*(performance.now()-t)/Math.max(1,ms));
+      const v=from+(to-from)*Math.min(1,k);
+      if(v>pct) set(v,label,detail);
+      if(k<1) raf=requestAnimationFrame(tick); else raf=0;
+    };
+    raf=requestAnimationFrame(tick);
+  }
+  function stopSoft(){ if(raf){ cancelAnimationFrame(raf); raf=0; } }
+  function finish(ok,summary){
+    stopSoft(); active=false;
+    el.classList.remove('busy');
+    ic.textContent=ok?'✓':'!';
+    set(100,ok?'已导出':'导出失败',summary||'');
+    el.classList.add(ok?'done':'fail');
+    hideTimer=setTimeout(hide,ok?2600:5200);
+  }
+  function hide(){
+    clearTimeout(hideTimer); stopSoft(); active=false;
+    el.classList.remove('show','busy');
+    /* 隐藏时一律归位编辑栏：二级页会清空 spBody.innerHTML，
+       若节点还留在里面就会被一起删掉（下次 show 虽能救回，但 DOM 会短暂缺失）。 */
+    const dock=document.querySelector('.dock');
+    if(dock&&el.parentNode!==dock){
+      dock.insertBefore(el,dock.firstChild); el.classList.remove('in-sub');
+    }
+  }
+  close.addEventListener('click',hide);
+  return {
+    get active(){ return active; }, get pct(){ return pct; },
+    get el(){ return el; },
+    show,set,softTo,stopSoft,finish,hide,mount,
+    elapsed(){ return ((performance.now()-t0)/1000).toFixed(1)+'s'; }
+  };
+})();
+/* 双 rAF：确保进度条真正绘制出来后再跑同步的 WebGL 渲染，否则条子不会出现 */
+function xpNextPaint(){
+  return new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
+}
+
 
 /* ============================================================
    主调色盘 30 种模式 · 7 组（5×4 + 2×5）
@@ -6190,7 +6469,7 @@ vec3 brushSample(vec2 uv, vec2 p, float t, vec2 ctr){
     a+=src(uv-v*0.42)*0.07;
     return a;
   } else {
-    /* v1.0.30 · 消除（涂抹笔）
+    /* v1.0.33 · 消除（涂抹笔）
        CPU 侧按 TELEA 的「由边界向内 + 距离加权」与 exemplar PatchMatch 的
        propagation / random search 预计算一张「源坐标导向场」u_healField，
        每个洞像素指向一个纹理最相似的已知源块。这里只按场采样原图全分辨率像素，
@@ -7331,7 +7610,7 @@ function clearHeal(){
   });
 }
 /* ============================================================
-   消除导向场 · v1.0.30
+   消除导向场 · v1.0.33
    借鉴开源实现：
    · OpenCV cv::inpaint / INPAINT_TELEA —— 快速行进由边界向内推进，
      每个像素取邻域已知像素的归一化加权和，权重含距离、方向、水平集；
@@ -7689,7 +7968,7 @@ function stageRect(){
 function invalidateStageRect(){ _stageRect=null; }
 
 let imgW=1600,imgH=1200, imageReady=false;
-/* v1.0.35：导出尺寸唯一依据 = 原始图源像素。
+/* v1.0.38：导出尺寸唯一依据 = 原始图源像素。
    预览尺寸 / 预览帧 / 视频中间帧都不许再影响导出，避免「预览缩一点、导出跟着缩」。 */
 let imgSrcW=1600,imgSrcH=1200,imgSrcKind='demo',imgSrcLow=false;
 let comparing=false, picking=false, pickCb=null;
@@ -8067,7 +8346,7 @@ function render(){ cancelAnimationFrame(raf); raf=requestAnimationFrame(paintFra
    ============================================================ */
 const FX_TYPES=[{id:1,name:'马赛克',icon:'mosaic'},{id:2,name:'柔焦模糊',icon:'blur'},
   {id:3,name:'动态模糊',icon:'motion'},{id:4,name:'径向模糊',icon:'radial'}];
-/* v1.0.30：消除只剩「涂抹笔」一条通路，和上面四种像素效果并列放在同一网格里。
+/* v1.0.33：消除只剩「涂抹笔」一条通路，和上面四种像素效果并列放在同一网格里。
    HEAL_TYPE=5 只标识 state.brushStrokes 的笔迹类型，不再是 fxRegions 的点放效果；
    旧存档里遗留的 type 5 圆形区域在 sanitize 阶段直接丢弃。 */
 const HEAL_TYPE=5;
@@ -8908,8 +9187,8 @@ const LIVE={
   pair:false, matched:false, playing:false, recording:false, vidFile:null,
   raf:0, holdTimer:0, holdFired:false, holdX:0, holdY:0, duration:0,
   coverTime:null, seekWant:null, seekRaf:0, seekTimer:0, seekDragging:false,
-  coverSource:'原图',   /* v1.0.35：封面来源（原图 / 视频帧），导出面板据此提示口径 */
-  exportRender:null    /* v1.0.36：导出/录制渲染尺寸覆盖 {w,h}，期间主画布按此尺寸全分辨率渲染 */
+  coverSource:'原图',   /* 封面来源（原图 / 视频帧），导出面板据此提示口径 */
+  exportRender:null    /* 导出/录制渲染尺寸覆盖 {w,h}，期间主画布按此尺寸全分辨率渲染 */
 };
 function liveBase(n){ return (n||'').replace(/\.[^.]+$/,''); }
 function restoreLiveStill(){
@@ -9249,7 +9528,7 @@ async function openCoverPicker(){
        必须在 cvClose() 释放独立 <video> 之前完成。 */
     let c=null;
     try{ if(COVER.video) c=await cvGrab(COVER.video,t,4096); }catch(e){}
-    /* v1.0.35：这里以前有 `if(!c) c=COVER.preview;` 的降级 —— 那会把 960px 预览帧
+    /* v1.0.38：这里以前有 `if(!c) c=COVER.preview;` 的降级 —— 会把 960px 预览帧
        当成整张照片的图源，导出尺寸从此被锁在 960。现在宁可失败也不再静默降质。 */
     cvClose();
     /* 独立解码器万一完全抽不出帧（专利编码 / 权限），退回主播放器抓一帧，
@@ -9342,6 +9621,217 @@ function applyExportFrame(src){
   return out;
 }
 /* --- 导出：封面 + 逐帧录制视频，打包为同名配对素材 --- */
+/* ============================================================
+   坚果云（WebDAV）偏好同步
+   页面只负责拼 JSON，真正的 HTTP 交给三端原生壳代发：
+   dav.jianguoyun.com 不回 Access-Control-Allow-Origin，
+   浏览器与 WKWebView 直连必被 CORS 拦死，只能走原生通道。
+   ============================================================ */
+const IRIS_SYNC_KEYS=['plate_user_filters','plate_fav_filters','plate_recent_filters','plate_presets','iris_tones_v1','iris_skin','iris_bar','iris_tool_pos','plate_fit','plate_pad_tone'];
+const IRIS_CLOUD_CFG='iris_cloud_cfg', IRIS_CLOUD_BK='iris_cloud_backup';
+let cloudSeq=0, cloudWaits={}, cloudLast='', cloudTimer=null;
+
+function cloudCfg(){
+  const d={server:'https://dav.jianguoyun.com/dav/',user:'',pass:'',dir:'',file:'iris-sync.json',auto:true};
+  try{ return Object.assign(d,JSON.parse(localStorage.getItem(IRIS_CLOUD_CFG)||'{}')); }catch(e){ return d; }
+}
+function cloudSaveCfg(c){ try{ localStorage.setItem(IRIS_CLOUD_CFG,JSON.stringify(c)); }catch(e){} }
+function b64enc(str){ const b=new TextEncoder().encode(str); let s=''; for(let i=0;i<b.length;i++) s+=String.fromCharCode(b[i]); return btoa(s); }
+function b64dec(s){ const bin=atob(s), u=new Uint8Array(bin.length); for(let i=0;i<bin.length;i++) u[i]=bin.charCodeAt(i); return new TextDecoder().decode(u); }
+function cloudProto(){
+  if(window.irisDesktop&&window.irisDesktop.cloud) return 'desktop';
+  if(window.IrisNative&&window.IrisNative.cloud) return 'android';
+  if(window.webkit&&window.webkit.messageHandlers&&window.webkit.messageHandlers.iris) return 'ios';
+  return '';
+}
+window.__irisCloudResult=function(id,ok,status,b64){
+  const w=cloudWaits[id]; if(!w) return; delete cloudWaits[id];
+  if(ok) w.ok({status:status||0,text:b64?b64dec(b64):''});
+  else w.fail(new Error('连接失败'+(status?(' · HTTP '+status):'')));
+};
+function cloudReq(method,url,auth,body){
+  return new Promise(function(resolve,reject){
+    const id='c'+(++cloudSeq);
+    const timer=setTimeout(function(){ if(cloudWaits[id]){ delete cloudWaits[id]; reject(new Error('坚果云 30 秒没响应')); } },30000);
+    cloudWaits[id]={ok:function(v){ clearTimeout(timer); resolve(v); },
+                    fail:function(e){ clearTimeout(timer); reject(e); }};
+    try{
+      const body64=body?b64enc(body):'';
+      if(window.irisDesktop&&window.irisDesktop.cloud){
+        window.irisDesktop.cloud(id,method,url,auth||'',body64)
+          .then(function(r){ window.__irisCloudResult(id,true,r&&r.status,r&&r.b64); })
+          .catch(function(){ window.__irisCloudResult(id,false,0,''); });
+      }else if(window.IrisNative&&window.IrisNative.cloud){
+        window.IrisNative.cloud(id,method,url,auth||'',body64);
+      }else if(window.webkit&&window.webkit.messageHandlers&&window.webkit.messageHandlers.iris){
+        window.webkit.messageHandlers.iris.postMessage({op:'cloud',id:id,method:method,url:url,authorization:auth||'',body:body64});
+      }else throw new Error('这个版本没有云端通道（网页版不支持）');
+    }catch(e){ delete cloudWaits[id]; clearTimeout(timer); reject(e); }
+  });
+}
+function cloudBase(){ return cloudCfg().server.replace(/\/+$/,''); }
+function cloudDirPath(){ return String(cloudCfg().dir||'').split('/').map(function(x){return x.trim();}).filter(Boolean).map(encodeURIComponent).join('/'); }
+function cloudDirURL(){ const d=cloudDirPath(); return d?(cloudBase()+'/'+d):cloudBase(); }
+function cloudFileURL(dirPath){ const d=(dirPath===undefined?cloudDirPath():dirPath);
+  return cloudBase()+'/'+(d?(d+'/'):'')+encodeURIComponent(cloudCfg().file||'iris-sync.json'); }
+function cloudAuthB64(){ const c=cloudCfg(); return b64enc((c.user||'')+':'+(c.pass||'')); }
+function cloudReady(){
+  const c=cloudCfg();
+  if(!c.user||!c.pass){ toast('先填坚果云账号和应用密码'); return false; }
+  if(!cloudProto()){ toast('当前版本没有云端通道，请装新的安装包'); return false; }
+  return true;
+}
+async function cloudTest(){
+  if(!cloudReady()) return;
+  cloudLast='正在连接…'; buildPanel(true);
+  try{
+    const r=await cloudReq('GET',cloudFileURL(),cloudAuthB64(),'');
+    cloudLast=r.status===200?'连接正常 · 云端已有同步文件'
+      :r.status===404?'连接正常 · 还没有同步文件（点上传就行）'
+      :('连接正常 · HTTP '+r.status);
+    toast('坚果云连接正常');
+  }catch(e){ cloudLast='连接失败：'+e.message; toast(cloudLast); }
+  buildPanel(true);
+}
+/* 逐级 MKCOL 建目录。两个坑都在这里：
+   ① 集合 URL 必须带尾斜杠，缺了会被坚果云回 409；
+   ② 多级目录一次建（a/b）因为父级 a 不存在也会 409，所以一级一级来。
+   201/200/204 = 建成，301/302/405/409 一律当「已经存在」继续下一步，
+   真建不成也不抛错——让后面的 PUT 决定，失败再退回根目录。 */
+async function cloudEnsureDir(trace){
+  const segs=String(cloudCfg().dir||'').split('/').map(function(x){return x.trim();}).filter(Boolean);
+  if(!segs.length) return {ok:true,root:true};
+  const base=cloudBase(); let built=[];
+  for(let i=0;i<segs.length;i++){
+    built.push(encodeURIComponent(segs[i]));
+    const path='/'+built.join('/');
+    let r;
+    try{ r=await cloudReq('MKCOL',base+path+'/',cloudAuthB64(),''); }
+    catch(e){ return {ok:false,status:0,path:path}; }
+    if(trace) trace.push('MKCOL '+path+' → '+r.status);
+    if(r.status>=400 && (r.status===409||r.status===405||r.status===301||r.status===302||r.status===403)) continue;
+    if(r.status>=400) return {ok:false,status:r.status,path:path,body:(r.text||'').slice(0,120)};
+  }
+  return {ok:true};
+}
+async function cloudPush(silent){
+  const c=cloudCfg();
+  if(!c.user||!c.pass||!cloudProto()){ if(!silent) cloudReady(); return false; }
+  const data={}; let chars=0;
+  IRIS_SYNC_KEYS.forEach(function(k){ const v=localStorage.getItem(k); if(v!=null){ data[k]=v; chars+=v.length; } });
+  const pack={app:'iris-palette',kind:'iris-sync',version:1,updatedAt:Date.now(),data:data};
+  const body=JSON.stringify(pack);
+  const trace=[];
+  if(!silent){ cloudLast='正在上传…'; buildPanel(true); }
+  let fellBack=false;
+  try{
+    const dir=await cloudEnsureDir(trace);
+    if(!dir.ok) trace.push('目录 '+dir.path+' 建不成（HTTP '+dir.status+'）');
+    let r=await cloudReq('PUT',cloudFileURL(),cloudAuthB64(),body);
+    trace.push('PUT '+cloudFileURL().replace(cloudBase(),'…')+' → '+r.status);
+    if(r.status>=400 && cloudDirPath()){
+      /* 目录没建成，或者坚果云对父目录不存在一律回 409：
+         退回「我的坚果云」根目录，先把数据存下来，再提示用户。 */
+      const fb=await cloudReq('PUT',cloudFileURL(''),cloudAuthB64(),body);
+      trace.push('PUT 根目录 → '+fb.status);
+      if(fb.status<400){
+        r=fb; fellBack=true;
+        const cc=cloudCfg(); cc.dir=''; cloudSaveCfg(cc);
+      }
+    }
+    if(r.status>=400) throw new Error('HTTP '+r.status+(r.status===409?'（父目录不存在）':''));
+    const at=new Date().toLocaleTimeString();
+    cloudLast=(silent?'自动上传完成 · ':'已上传 · ')+at+' · '+Math.round(chars/1024)+' KB';
+    if(fellBack) cloudLast+=' · 目录建不成，已改存到根目录（设置里的目录已清空）';
+    if(!silent) toast(cloudLast);
+  }catch(e){
+    cloudLast='上传失败：'+e.message+(trace.length?('　['+trace.join('；')+']'):'');
+    if(!silent) toast('上传失败：'+e.message);
+  }
+  if(!silent) buildPanel(true);
+  return cloudLast.indexOf('失败')<0;
+}
+async function cloudPull(){
+  if(!cloudReady()) return;
+  if(!confirm('从坚果云恢复会覆盖本机的滤镜 / 收藏 / 色调 / 界面偏好，恢复后页面会自动重载。继续？')) return;
+  cloudLast='正在读取…'; buildPanel(true);
+  try{
+    const r=await cloudReq('GET',cloudFileURL(),cloudAuthB64(),'');
+    if(r.status===404) throw new Error('云端还没有同步文件，先上传一次');
+    if(r.status>=400) throw new Error('HTTP '+r.status);
+    const pack=JSON.parse(r.text);
+    if(pack.kind!=='iris-sync'||!pack.data) throw new Error('这个文件不是 Iris 同步包');
+    const bk={}; IRIS_SYNC_KEYS.forEach(function(k){ bk[k]=localStorage.getItem(k); });
+    try{ localStorage.setItem(IRIS_CLOUD_BK,JSON.stringify({at:Date.now(),data:bk})); }catch(e){}
+    let n=0;
+    IRIS_SYNC_KEYS.forEach(function(k){
+      if(Object.prototype.hasOwnProperty.call(pack.data,k)){ localStorage.setItem(k,pack.data[k]); n++; }
+    });
+    cloudLast='已恢复 '+n+' 项 · 正在重新载入…'; toast(cloudLast);
+    setTimeout(function(){ location.reload(); },900);
+  }catch(e){ cloudLast='读取失败：'+e.message; toast(cloudLast); buildPanel(true); }
+}
+function cloudAutoPush(){
+  const c=cloudCfg();
+  if(!c.auto||!c.user||!c.pass||!cloudProto()) return;
+  clearTimeout(cloudTimer);
+  cloudTimer=setTimeout(function(){ cloudPush(true); },4000);
+}
+function buildCloudSection(){
+  const c=cloudCfg();
+  const s=section('坚果云同步 · 偏好与滤镜'); s.dataset.ptab='sync';
+  s.append(hint('走坚果云 WebDAV：服务器 <b>https://dav.jianguoyun.com/dav/</b>，账号是你登录坚果云的邮箱，'
+    +'密码要填「账户信息 → 安全 → 应用密码」，不是登录密码。<br>'
+    +'账号与应用密码只写在本机 localStorage，用于直连坚果云，不经过任何中间服务器；'
+    +'三端壳各有一个几十行的 WebDAV 代理，因为浏览器直连坚果云会被 CORS 拦死。'));
+  const form=document.createElement('div'); form.className='cloud-form';
+  const add=(label,val,ph,type)=>{
+    const w=document.createElement('label'); w.className='cloud-row';
+    const t=document.createElement('span'); t.textContent=label;
+    const i=document.createElement('input'); i.className='fsel'; i.type=type||'text';
+    i.value=val||''; i.placeholder=ph||''; i.spellcheck=false;
+    w.append(t,i); form.append(w); return i;
+  };
+  const iSrv=add('服务器',c.server,'https://dav.jianguoyun.com/dav/');
+  const iUsr=add('账号',c.user,'坚果云邮箱');
+  const iPwd=add('应用密码',c.pass,'账户信息 → 安全 → 应用密码','password');
+  const iDir=add('目录',c.dir,'留空 = 坚果云根目录');
+  const iFil=add('文件名',c.file,'iris-sync.json');
+  s.append(form);
+  const r=document.createElement('div'); r.className='row';
+  r.append(button('保存设置',function(){
+      const cc=cloudCfg();
+      cloudSaveCfg({server:iSrv.value.trim()||cc.server,user:iUsr.value.trim(),pass:iPwd.value.trim(),
+        dir:iDir.value.trim(),file:iFil.value.trim()||'iris-sync.json',auto:cc.auto});
+      buildPanel(true); toast('同步设置已保存');
+    }),
+    button('测试连接',function(){ cloudTest(); },'accent'));
+  s.append(r);
+  const r2=document.createElement('div'); r2.className='row';
+  r2.append(button('↑ 上传到坚果云',function(){
+      const fn=(iFil.value.trim()||'iris-sync.json');
+      if(fn.indexOf('/')>=0){ toast('文件名不要带斜杠，目录请写在「目录」那一栏'); return; }
+      cloudPush(false);
+    },'accent'),
+    button('↓ 从坚果云恢复',function(){ cloudPull(); }));
+  s.append(r2);
+  s.append(chipRow([{id:'on',name:'改滤镜就自动上传'},{id:'off',name:'只手动上传'}], c.auto?'on':'off', function(id){
+    const cc=cloudCfg(); cc.auto=(id==='on'); cloudSaveCfg(cc); buildPanel(true);
+    toast(cc.auto?'已开启自动上传':'已关闭自动上传');
+  }));
+  const stat=document.createElement('div'); stat.className='cloud-stat';
+  const proto=cloudProto();
+  stat.innerHTML='<b>通道</b> '+(proto==='ios'?'iOS 原生 WebDAV':proto==='android'?'Android 原生 WebDAV'
+      :proto==='desktop'?'桌面原生 WebDAV':'无（网页版不支持直连）')
+    +'　·　<b>同步内容</b> 我的滤镜 / 收藏 / 最近使用 / 自定义预设 / 色调库 / 界面偏好'
+    +(cloudLast?('<br><b>状态</b> '+cloudLast):'');
+  s.append(stat);
+  return s;
+}
+
+/* --- 预设 / 参数管理 --- */
+function copyParams(){ navigator.clipboard?.writeText(JSON.stringify(state,null,2)).then(()=>toast('编辑参数已复制')).catch(()=>toast('复制失败，可用导出 JSON')); }
+
 function renderExportCanvas(noFrame){
   const [ew,eh]=exportDims(), oldW=canvas.width, oldH=canvas.height;
   canvas.width=ew; canvas.height=eh;
@@ -9383,6 +9873,7 @@ function liveTargetDims(from){
   const k=Math.min(1,1440/Math.max(w,h));
   return [Math.max(2,Math.round(w*k)),Math.max(2,Math.round(h*k))];
 }
+
 
 /* ============================================================
    PNG 无损瘦身：不改变任何一个像素，只让文件更小
@@ -9429,7 +9920,7 @@ function pngFilterByte(f,x,a,b,c){
          const pr=(pa<=pb&&pa<=pc)?a:(pb<=pc?b:c); v=x-pr; }
   return v&255;
 }
-async function encodePngLossless(cv){
+async function encodePngLossless(cv,onProgress){
   if(typeof CompressionStream==='undefined') return null;
   const w=cv.width,h=cv.height;
   if(!w||!h||w>16384||h>16384) return null;
@@ -9462,7 +9953,14 @@ async function encodePngLossless(cv){
       raw[off+1+x]=pngFilterByte(bestF,cur[x],a,b,c);
     }
     prev.set(cur);
+    /* v1.0.34：把「已处理行数 / 总行数」作为真实进度回调出去，
+       每 128 行让出一帧刷新进度条；大图多等几十毫秒，换来进度不假。 */
+    if(onProgress&&h>256&&(y&127)===0){
+      onProgress(y/h);
+      await new Promise(r=>setTimeout(r,0));
+    }
   }
+  if(onProgress) onProgress(1);
   let z;
   try{
     const cs=new CompressionStream('deflate');
@@ -9478,12 +9976,12 @@ async function encodePngLossless(cv){
   return new Blob(parts,{type:'image/png'});
 }
 /* 与浏览器原始 PNG 比大小，取更小的那个；返回优化信息供提示 */
-async function optimizePng(cv){
+async function optimizePng(cv,onProgress){
   const original=await canvasToBlob(cv,'image/png');
   if(!original) return null;
   let best=original, saved=0, ok=false;
   try{
-    const opt=await encodePngLossless(cv);
+    const opt=await encodePngLossless(cv,onProgress);
     if(opt&&opt.size&&opt.size<original.size){ best=opt; ok=true; }
   }catch(e){}
   saved=original.size-best.size;
@@ -9746,24 +10244,36 @@ function zipStore(files){
 async function blobBytes(b){ return new Uint8Array(await new Response(b).arrayBuffer()); }
 async function exportLivePair(){
   if(!LIVE.pair){ toast('未检测到实况视频'); return; }
-  toast('正在生成配对素材…');
+  if(exportBusy||ExportProgress.active){ toast('正在导出，请稍候…'); return; }
+  exportBusy=true;
+  ExportProgress.show('准备配对素材','封面图 + 实况片段 + 说明');
   try{
     const base=LIVE.baseName||liveBase(LIVE.imgName||LIVE.vidName||'LivePhoto')||'LivePhoto';
     let mime=state.exportFormat||'image/png';
     if(!supportsMime(mime)) mime='image/png';
     const ext=mime==='image/jpeg'?'.jpg':mime==='image/webp'?'.webp':'.png';
     const q=mime==='image/png'?undefined:clamp(state.exportQuality??.92,.3,1);
-    const imgBlob=await canvasToBlob(liveCoverCanvas(),mime,q);
+    ExportProgress.set(6,'渲染封面',base+ext+' · 全分辨率重算');
+    ExportProgress.softTo(6,40,1200,'渲染封面',base+ext);
+    await xpNextPaint();
+    /* v1.0.38：配对素材封面与动态轨同比例，不叠画框 */
+    const cv=liveCoverCanvas();
+    ExportProgress.stopSoft();
+    ExportProgress.set(44,'编码封面',base+ext);
+    const imgBlob=await canvasToBlob(cv,mime,q);
     const files=[{name:base+ext,data:await blobBytes(imgBlob)}];
     let hasVideo=true, vExt='.mp4';
+    ExportProgress.set(55,'录制实况片段','最长 6 秒 · 逐帧套用同一套编辑');
+    ExportProgress.softTo(55,88,4200,'录制实况片段','最长 6 秒');
     try{
       let vb=await recordLiveClip();
+      ExportProgress.stopSoft();
       const alts=liveRecorderMimes();
       if(vb.size<256&&alts.length>1){
         const first=alts[0];
         for(const m of alts.slice(1)){
           if(m===first||!LIVE.pair) continue;
-          toast('正在用另一种编码重新录制…');
+          ExportProgress.set(89,'换一种编码重试','当前编码产出为空');
           try{ vb=await recordLiveClip(m); }catch(e){ continue; }
           if(vb.size>=256) break;
         }
@@ -9771,7 +10281,7 @@ async function exportLivePair(){
       if(vb.size<256) throw new Error('EMPTY_CLIP');
       vExt=(vb.type||'').indexOf('mp4')>=0?'.mp4':'.webm';
       files.push({name:base+vExt,data:await blobBytes(vb)});
-    }catch(e){ hasVideo=false; }
+    }catch(e){ hasVideo=false; ExportProgress.stopSoft(); }
     const note=[
       '这是网页编辑器导出的「iOS 实况照片配对素材」。',
       '文件 1：静态封面 '+base+ext+'（已套用全部编辑效果）',
@@ -9792,9 +10302,16 @@ async function exportLivePair(){
       '· 全过程在本机完成，照片不会上传'
     ].join('\r\n');
     files.push({name:'配对说明.txt',data:new TextEncoder().encode(note)});
+    ExportProgress.set(93,'打包 ZIP',files.length+' 个文件');
+    await xpNextPaint();
     downloadBlob(zipStore(files),base+'_实况素材.zip');
-    toast(hasVideo?'已导出封面 + 实况视频配对包':'已导出封面（浏览器不支持视频录制）');
-  }catch(e){ toast('导出失败：'+(e.message||e)); }
+    ExportProgress.finish(true,
+      (hasVideo?'封面 + 实况片段':'仅封面（浏览器不支持录制）')+
+      ' · '+files.length+' 个文件 · 用时 '+ExportProgress.elapsed());
+  }catch(e){
+    ExportProgress.finish(false,'导出失败：'+(e.message||e));
+    toast('导出失败：'+(e.message||e));
+  }finally{ exportBusy=false; }
 }
 /* 换照片：把「编辑」归零，只保留与照片无关的偏好与视图设置。
    不做这一步，上一张的整套调整会直接套到新照片上 —— 这是之前最烦人的 bug。 */
@@ -10417,6 +10934,7 @@ function collapseDock(){
   dock.style.flex='0 0 0px';
   app.classList.add('dock-off');
   syncFocusBtn(); render();
+  try{ document.dispatchEvent(new CustomEvent('iris-dock-change')); }catch(e){}
 }
 function expandDock(){
   app.classList.remove('dock-off');
@@ -12702,7 +13220,7 @@ function renderVideoPage(body){
    4) 断网、限流、404、旧版页面格式都有明确降级与提示，
       检查失败不影响任何编辑与导出功能。
    ============================================================ */
-const IRIS_VERSION='1.0.37';             /* 页面版本：走 HTML 热更新，持续递增 */
+const IRIS_VERSION='1.0.38';             /* 页面版本：走 HTML 热更新，持续递增 */
 const IRIS_BUILD='2026-11-19';
 const IRIS_CHANNEL='hot';                /* hot = HTML 热更新通道 */
 const IRIS_APP_BASELINE='1.0.1.8';       /* 最终安装包 / Release 版本，已冻结 */
@@ -13370,6 +13888,8 @@ function irisSkinApply(animate){
     lastAppliedUI=r.dataset.ui;
     try{ render(); }catch(e){}
   }
+  /* v1.0.35：界面版本一变就同步通知引导收起（MutationObserver 作兜底） */
+  try{ document.dispatchEvent(new CustomEvent('iris-skin-change')); }catch(e){}
 }
 function setIrisSkin(patch,animate){
   Object.assign(irisSkin,patch||{});
@@ -13861,16 +14381,93 @@ function initFocusUI(){
   }
   fxBuildPicker(); fxBuildTools(); fxTrackBind(); fxSync(true);
 }
-/* 版本首次提示：避免「装了新版本却完全没发现新界面」 */
-setTimeout(()=>{
+
+/* ============================================================
+   v1.0.35 · 初次进入的「小横条」引导
+   · 只在真正第一次进入时显示一次（localStorage 键），刷新 / 重开都不再出现
+   · 等启动页完全移除（iris-splash-done）后再淡入，避免被加载页盖住
+   · 关闭条件：点「知道了」/ 点卡片 / 真的拖过 grip / 10 秒超时 / 切到无 grip 的界面
+   · 命令面板可强制重新查看（不改「首次」语义）
+   ============================================================ */
+(function(){
+  var KEY='iris_grip_hint_v1', el=$('#gripHint'), ok=$('#ghOk'),
+      title=$('#ghTitle'), sub=$('#ghSub'), gripEl=grip,
+      timer=0, shown=false, done=false;
+  function seen(){ try{ return localStorage.getItem(KEY)==='1'; }catch(e){ return false; } }
+  function mark(){ done=true; try{ localStorage.setItem(KEY,'1'); }catch(e){} }
+  function text(){
+    var wide=isWide();
+    title.textContent=wide?'长按小横条 · 往左拖':'长按小横条 · 往上拖';
+    sub.textContent=(wide?'把右侧编辑栏调宽':'把编辑面板调高')+
+      '，就能看到更多参数；双击复位，轻点收起';
+    el.querySelector('.gh-arrow').textContent=wide?'↑':'↑';
+  }
+  function hide(write){
+    if(!shown)return;
+    shown=false; clearTimeout(timer);
+    el.classList.remove('show'); el.hidden=true;
+    gripEl.classList.remove('gh-on');
+    if(typeof window!=='undefined') window.__irisGripHintVisible=false;
+    if(write) mark();
+  }
+  function show(force){
+    if(shown) return;
+    if(!force&&(seen()||done)) return;
+    /* 沉浸大图与全屏看图没有这根横条，不显示也不写已读 */
+    if(document.documentElement.dataset.ui==='focus'||app.classList.contains('dock-off')) return;
+    text();
+    el.hidden=false; el.classList.add('show'); shown=true;
+    gripEl.classList.add('gh-on');
+    if(typeof window!=='undefined') window.__irisGripHintVisible=true;
+    clearTimeout(timer);
+    timer=setTimeout(function(){ hide(true); },10000);
+  }
+  /* 启动页移除后 380ms 再淡入；另给 5.2s 兜底，事件没来也一定显示 */
+  function arm(){
+    var t=setTimeout(function(){ show(false); },380);
+    document.addEventListener('iris-splash-done',function(){
+      clearTimeout(t); setTimeout(function(){ show(false); },380);
+    },{once:true});
+    setTimeout(function(){ clearTimeout(t); if(!done&&!seen()) show(false); },5200);
+  }
+  ok.addEventListener('click',function(e){ e.stopPropagation(); hide(true); });
+  el.addEventListener('click',function(){ hide(true); });
+  /* 真的拖动了 grip 就认为用户已学会，立刻收起（pointermove 时读 moved） */
+  gripEl.addEventListener('pointermove',function(){
+    if(shown&&gripStart&&gripStart.moved>=6) hide(true);
+  });
+  /* 切到 focus / 全屏看图时收起：先同步监听事件（当帧就生效），
+     再用 MutationObserver 兜住不经过那两个函数的路径。 */
+  function onLeave(){ if(shown) hide(true); }
+  document.addEventListener('iris-skin-change',function(){
+    if(document.documentElement.dataset.ui==='focus'||app.classList.contains('dock-off')) onLeave();
+  });
+  document.addEventListener('iris-dock-change',onLeave);
+  if(typeof MutationObserver!=='undefined'){
+    var mo=new MutationObserver(function(){
+      if(shown&&(document.documentElement.dataset.ui==='focus'||app.classList.contains('dock-off'))) hide(true);
+    });
+    mo.observe(document.documentElement,{attributes:true,attributeFilter:['data-ui']});
+    mo.observe(app,{attributes:true,attributeFilter:['class']});
+  }
+  window.addEventListener('resize',function(){ if(shown) text(); });
+  window.irisGripHint=show;              /* 命令面板：重新查看 */
+  window.irisGripHintHide=hide;
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',arm,{once:true});
+  else arm();
+})();
+/* 旧的「新版本首次 toast」让位：等引导收起后再弹，避免两条提示同时出现 */
+setTimeout(function(){
   try{
     const k='iris_focus_hint_124';
     if(localStorage.getItem(k)) return;
+    if(window.__irisGripHintVisible) return;      /* 引导还在，留给下次启动 */
     localStorage.setItem(k,'1');
     if(document.documentElement.dataset.ui!=='focus')
       toast('新增：沉浸大图 · 点 ⋯ → 沉浸大图，用一根大滑杆调曝光');
   }catch(e){}
-},2800);
+},7200);
+
 
 const TOOLS=[
   {id:'plate',name:'调色盘',icon:'plate'}, {id:'filters',name:'滤镜',icon:'filters'},
@@ -14034,7 +14631,7 @@ function tidyPanel(p){
   help.onclick=()=>{ helpShown=!helpShown; help.classList.toggle('on',helpShown); p.classList.toggle('show-help',helpShown); };
   head.append(left,help); p.insertBefore(head,p.firstChild);
   p.classList.toggle('show-help',helpShown);
-  /* v1.0.35：data-keep="1" 的提示行常显，不参与「更多选项」自动隐藏（导出尺寸口径要一直看得见） */
+  /* v1.0.38：data-keep="1" 的提示行常显，不参与「更多选项」自动隐藏（导出尺寸口径要一直看得见） */
   p.querySelectorAll('.hint').forEach(el=>{ if(el.dataset.keep==='1') return; if(!el.closest('details')) el.classList.add('auto-hide'); });
   // 窄屏用短标签，让一行放得下、看得清
   p.querySelectorAll('[data-short]').forEach(el=>{
@@ -14136,7 +14733,8 @@ let lastFitWidth=-1;
    任何一个横排溢出就切成纵向 / 换行布局。 */
 const FIT_ROWS=['.row','.fsearch','.layer-bot','.layer-top','.chip-line',
   '.pad-row','.btn-grid','.zone-chips','.pm-fold>summary','.fcat-grid',
-  '.fgrid','.tpl-grid','.scope-bar','.plate-picker','.pm-grp .chips'];
+  '.fgrid','.tpl-grid','.scope-bar','.plate-picker','.pm-grp .chips',
+  '.plate-fold>summary'];
 function syncPanelFit(force){
   const p=$('#panel'); if(!p) return;
   const w=p.clientWidth;
@@ -14154,6 +14752,10 @@ function syncPanelFit(force){
       const lim=Math.min(els.length,12);
       for(let i=0;i<lim;i++){
         const el=els[i], ck=sel+'|'+(el.className||el.tagName);
+        /* v1.0.36：details 收起 / 抽屉隐藏时，内部节点的 scrollWidth 仍会
+           报告内容宽度，而 clientWidth=0 —— 不跳过会把面板误判成 slim，
+           连带把 .pad 从 175px 撑成 198px。隐藏节点一律不参与溢出测量。 */
+        if(el.clientWidth===0) continue;
         let ox=oxCache[ck];
         if(ox===undefined){ ox=getComputedStyle(el).overflowX; oxCache[ck]=ox; }
         /* .chips / .fgroup 本身允许横向滚动，不算溢出 */
@@ -14288,8 +14890,38 @@ function buildPlate(p){
     det.addEventListener('toggle',()=>{ tonePickerOpen=det.open; });
     bar.append(sel,det); s0.append(bar);
   } else {
-    s0.append(mkLine('归属',sc));
-    s0.append(mkLine('色调',tc));
+    /* v1.0.36：桌面端也用折叠。旧版 12 色调横排 625px 挤在 268px 里，
+       滚动条隐藏 + 鼠标滚轮纵向 = 右侧 7~8 个色相在电脑端永远点不到。
+       折叠后展开区 wrap 平铺，全部可见、可直接点；选完保持展开，
+       连续切换多个色调不用来回点开，再点标题或「收起 ↑」即可合上。 */
+    let foldState={};
+    try{ foldState=JSON.parse(localStorage.getItem('iris_plate_folds')||'{}')||{}; }catch(e){}
+    const saveFolds=()=>{ try{ localStorage.setItem('iris_plate_folds',JSON.stringify(foldState)); }catch(e){} };
+    const mkFold=(key,label,items,active,chips,count)=>{
+      const det=document.createElement('details');
+      det.className='plate-fold chip-line';   /* 保留 chip-line 供溢出测量与旧脚本定位 */
+      det.dataset.fold=key; det.open=!!foldState[key];
+      const cur=items.find(o=>String(o.id)===String(active))||items[0];
+      const sum=document.createElement('summary');
+      const lab=document.createElement('span'); lab.className='pf-lab'; lab.textContent=label;
+      const now=document.createElement('span'); now.className='pf-cur'; now.textContent=cur.name;
+      const num=document.createElement('span'); num.className='pf-n'; num.textContent=count;
+      const car=document.createElement('span'); car.className='pf-caret'; car.textContent='▾';
+      sum.append(lab,now,num,car); det.append(sum);
+      const body=document.createElement('div'); body.className='plate-fold-body';
+      chips.classList.add('plate-chips');
+      body.append(chips);
+      const foot=document.createElement('div'); foot.className='plate-fold-foot';
+      const close=document.createElement('button'); close.type='button';
+      close.textContent='收起 ↑'; close.setAttribute('aria-label','收起'+label+'选项');
+      close.onclick=()=>{ det.open=false; sum.focus(); };
+      foot.append(close); body.append(foot); det.append(body);
+      det.addEventListener('toggle',()=>{ foldState[key]=det.open; saveFolds(); });
+      det.addEventListener('keydown',e=>{ if(e.key==='Escape'&&det.open){ det.open=false; sum.focus(); } });
+      return det;
+    };
+    s0.append(mkFold('scope','归属',scopeItems,state.plateScope,sc,scopeItems.length+' 个归属'));
+    s0.append(mkFold('target','色调',TARGETS,state.plateTarget,tc,'12 色调'));
   }
   p.append(s0);
 
@@ -14993,7 +15625,7 @@ function buildElements(p){
       buildPanel(true);
     },drawMode===key));
   });
-  /* v1.0.30：消除只是这排像素效果里的第 5 个并列按钮，不再有独立大卡。
+  /* v1.0.33：消除只是这排像素效果里的第 5 个并列按钮，不再有独立大卡。
      它只有涂抹一种交互，所以无论当前是「涂抹笔刷」还是「点放圆形」，
      点它都会切回涂抹模式，避免出现「点放消除圆」那条被删掉的通路。 */
   fxRow.append(mkAdd('heal','消除',()=>{
@@ -16587,214 +17219,6 @@ function exportSize(){
   return [w,h];
 }
 
-/* ============================================================
-   坚果云（WebDAV）偏好同步
-   页面只负责拼 JSON，真正的 HTTP 交给三端原生壳代发：
-   dav.jianguoyun.com 不回 Access-Control-Allow-Origin，
-   浏览器与 WKWebView 直连必被 CORS 拦死，只能走原生通道。
-   ============================================================ */
-const IRIS_SYNC_KEYS=['plate_user_filters','plate_fav_filters','plate_recent_filters','plate_presets','iris_tones_v1','iris_skin','iris_bar','iris_tool_pos','plate_fit','plate_pad_tone'];
-const IRIS_CLOUD_CFG='iris_cloud_cfg', IRIS_CLOUD_BK='iris_cloud_backup';
-let cloudSeq=0, cloudWaits={}, cloudLast='', cloudTimer=null;
-
-function cloudCfg(){
-  const d={server:'https://dav.jianguoyun.com/dav/',user:'',pass:'',dir:'',file:'iris-sync.json',auto:true};
-  try{ return Object.assign(d,JSON.parse(localStorage.getItem(IRIS_CLOUD_CFG)||'{}')); }catch(e){ return d; }
-}
-function cloudSaveCfg(c){ try{ localStorage.setItem(IRIS_CLOUD_CFG,JSON.stringify(c)); }catch(e){} }
-function b64enc(str){ const b=new TextEncoder().encode(str); let s=''; for(let i=0;i<b.length;i++) s+=String.fromCharCode(b[i]); return btoa(s); }
-function b64dec(s){ const bin=atob(s), u=new Uint8Array(bin.length); for(let i=0;i<bin.length;i++) u[i]=bin.charCodeAt(i); return new TextDecoder().decode(u); }
-function cloudProto(){
-  if(window.irisDesktop&&window.irisDesktop.cloud) return 'desktop';
-  if(window.IrisNative&&window.IrisNative.cloud) return 'android';
-  if(window.webkit&&window.webkit.messageHandlers&&window.webkit.messageHandlers.iris) return 'ios';
-  return '';
-}
-window.__irisCloudResult=function(id,ok,status,b64){
-  const w=cloudWaits[id]; if(!w) return; delete cloudWaits[id];
-  if(ok) w.ok({status:status||0,text:b64?b64dec(b64):''});
-  else w.fail(new Error('连接失败'+(status?(' · HTTP '+status):'')));
-};
-function cloudReq(method,url,auth,body){
-  return new Promise(function(resolve,reject){
-    const id='c'+(++cloudSeq);
-    const timer=setTimeout(function(){ if(cloudWaits[id]){ delete cloudWaits[id]; reject(new Error('坚果云 30 秒没响应')); } },30000);
-    cloudWaits[id]={ok:function(v){ clearTimeout(timer); resolve(v); },
-                    fail:function(e){ clearTimeout(timer); reject(e); }};
-    try{
-      const body64=body?b64enc(body):'';
-      if(window.irisDesktop&&window.irisDesktop.cloud){
-        window.irisDesktop.cloud(id,method,url,auth||'',body64)
-          .then(function(r){ window.__irisCloudResult(id,true,r&&r.status,r&&r.b64); })
-          .catch(function(){ window.__irisCloudResult(id,false,0,''); });
-      }else if(window.IrisNative&&window.IrisNative.cloud){
-        window.IrisNative.cloud(id,method,url,auth||'',body64);
-      }else if(window.webkit&&window.webkit.messageHandlers&&window.webkit.messageHandlers.iris){
-        window.webkit.messageHandlers.iris.postMessage({op:'cloud',id:id,method:method,url:url,authorization:auth||'',body:body64});
-      }else throw new Error('这个版本没有云端通道（网页版不支持）');
-    }catch(e){ delete cloudWaits[id]; clearTimeout(timer); reject(e); }
-  });
-}
-function cloudBase(){ return cloudCfg().server.replace(/\/+$/,''); }
-function cloudDirPath(){ return String(cloudCfg().dir||'').split('/').map(function(x){return x.trim();}).filter(Boolean).map(encodeURIComponent).join('/'); }
-function cloudDirURL(){ const d=cloudDirPath(); return d?(cloudBase()+'/'+d):cloudBase(); }
-function cloudFileURL(dirPath){ const d=(dirPath===undefined?cloudDirPath():dirPath);
-  return cloudBase()+'/'+(d?(d+'/'):'')+encodeURIComponent(cloudCfg().file||'iris-sync.json'); }
-function cloudAuthB64(){ const c=cloudCfg(); return b64enc((c.user||'')+':'+(c.pass||'')); }
-function cloudReady(){
-  const c=cloudCfg();
-  if(!c.user||!c.pass){ toast('先填坚果云账号和应用密码'); return false; }
-  if(!cloudProto()){ toast('当前版本没有云端通道，请装新的安装包'); return false; }
-  return true;
-}
-async function cloudTest(){
-  if(!cloudReady()) return;
-  cloudLast='正在连接…'; buildPanel(true);
-  try{
-    const r=await cloudReq('GET',cloudFileURL(),cloudAuthB64(),'');
-    cloudLast=r.status===200?'连接正常 · 云端已有同步文件'
-      :r.status===404?'连接正常 · 还没有同步文件（点上传就行）'
-      :('连接正常 · HTTP '+r.status);
-    toast('坚果云连接正常');
-  }catch(e){ cloudLast='连接失败：'+e.message; toast(cloudLast); }
-  buildPanel(true);
-}
-/* 逐级 MKCOL 建目录。两个坑都在这里：
-   ① 集合 URL 必须带尾斜杠，缺了会被坚果云回 409；
-   ② 多级目录一次建（a/b）因为父级 a 不存在也会 409，所以一级一级来。
-   201/200/204 = 建成，301/302/405/409 一律当「已经存在」继续下一步，
-   真建不成也不抛错——让后面的 PUT 决定，失败再退回根目录。 */
-async function cloudEnsureDir(trace){
-  const segs=String(cloudCfg().dir||'').split('/').map(function(x){return x.trim();}).filter(Boolean);
-  if(!segs.length) return {ok:true,root:true};
-  const base=cloudBase(); let built=[];
-  for(let i=0;i<segs.length;i++){
-    built.push(encodeURIComponent(segs[i]));
-    const path='/'+built.join('/');
-    let r;
-    try{ r=await cloudReq('MKCOL',base+path+'/',cloudAuthB64(),''); }
-    catch(e){ return {ok:false,status:0,path:path}; }
-    if(trace) trace.push('MKCOL '+path+' → '+r.status);
-    if(r.status>=400 && (r.status===409||r.status===405||r.status===301||r.status===302||r.status===403)) continue;
-    if(r.status>=400) return {ok:false,status:r.status,path:path,body:(r.text||'').slice(0,120)};
-  }
-  return {ok:true};
-}
-async function cloudPush(silent){
-  const c=cloudCfg();
-  if(!c.user||!c.pass||!cloudProto()){ if(!silent) cloudReady(); return false; }
-  const data={}; let chars=0;
-  IRIS_SYNC_KEYS.forEach(function(k){ const v=localStorage.getItem(k); if(v!=null){ data[k]=v; chars+=v.length; } });
-  const pack={app:'iris-palette',kind:'iris-sync',version:1,updatedAt:Date.now(),data:data};
-  const body=JSON.stringify(pack);
-  const trace=[];
-  if(!silent){ cloudLast='正在上传…'; buildPanel(true); }
-  let fellBack=false;
-  try{
-    const dir=await cloudEnsureDir(trace);
-    if(!dir.ok) trace.push('目录 '+dir.path+' 建不成（HTTP '+dir.status+'）');
-    let r=await cloudReq('PUT',cloudFileURL(),cloudAuthB64(),body);
-    trace.push('PUT '+cloudFileURL().replace(cloudBase(),'…')+' → '+r.status);
-    if(r.status>=400 && cloudDirPath()){
-      /* 目录没建成，或者坚果云对父目录不存在一律回 409：
-         退回「我的坚果云」根目录，先把数据存下来，再提示用户。 */
-      const fb=await cloudReq('PUT',cloudFileURL(''),cloudAuthB64(),body);
-      trace.push('PUT 根目录 → '+fb.status);
-      if(fb.status<400){
-        r=fb; fellBack=true;
-        const cc=cloudCfg(); cc.dir=''; cloudSaveCfg(cc);
-      }
-    }
-    if(r.status>=400) throw new Error('HTTP '+r.status+(r.status===409?'（父目录不存在）':''));
-    const at=new Date().toLocaleTimeString();
-    cloudLast=(silent?'自动上传完成 · ':'已上传 · ')+at+' · '+Math.round(chars/1024)+' KB';
-    if(fellBack) cloudLast+=' · 目录建不成，已改存到根目录（设置里的目录已清空）';
-    if(!silent) toast(cloudLast);
-  }catch(e){
-    cloudLast='上传失败：'+e.message+(trace.length?('　['+trace.join('；')+']'):'');
-    if(!silent) toast('上传失败：'+e.message);
-  }
-  if(!silent) buildPanel(true);
-  return cloudLast.indexOf('失败')<0;
-}
-async function cloudPull(){
-  if(!cloudReady()) return;
-  if(!confirm('从坚果云恢复会覆盖本机的滤镜 / 收藏 / 色调 / 界面偏好，恢复后页面会自动重载。继续？')) return;
-  cloudLast='正在读取…'; buildPanel(true);
-  try{
-    const r=await cloudReq('GET',cloudFileURL(),cloudAuthB64(),'');
-    if(r.status===404) throw new Error('云端还没有同步文件，先上传一次');
-    if(r.status>=400) throw new Error('HTTP '+r.status);
-    const pack=JSON.parse(r.text);
-    if(pack.kind!=='iris-sync'||!pack.data) throw new Error('这个文件不是 Iris 同步包');
-    const bk={}; IRIS_SYNC_KEYS.forEach(function(k){ bk[k]=localStorage.getItem(k); });
-    try{ localStorage.setItem(IRIS_CLOUD_BK,JSON.stringify({at:Date.now(),data:bk})); }catch(e){}
-    let n=0;
-    IRIS_SYNC_KEYS.forEach(function(k){
-      if(Object.prototype.hasOwnProperty.call(pack.data,k)){ localStorage.setItem(k,pack.data[k]); n++; }
-    });
-    cloudLast='已恢复 '+n+' 项 · 正在重新载入…'; toast(cloudLast);
-    setTimeout(function(){ location.reload(); },900);
-  }catch(e){ cloudLast='读取失败：'+e.message; toast(cloudLast); buildPanel(true); }
-}
-function cloudAutoPush(){
-  const c=cloudCfg();
-  if(!c.auto||!c.user||!c.pass||!cloudProto()) return;
-  clearTimeout(cloudTimer);
-  cloudTimer=setTimeout(function(){ cloudPush(true); },4000);
-}
-function buildCloudSection(){
-  const c=cloudCfg();
-  const s=section('坚果云同步 · 偏好与滤镜'); s.dataset.ptab='sync';
-  s.append(hint('走坚果云 WebDAV：服务器 <b>https://dav.jianguoyun.com/dav/</b>，账号是你登录坚果云的邮箱，'
-    +'密码要填「账户信息 → 安全 → 应用密码」，不是登录密码。<br>'
-    +'账号与应用密码只写在本机 localStorage，用于直连坚果云，不经过任何中间服务器；'
-    +'三端壳各有一个几十行的 WebDAV 代理，因为浏览器直连坚果云会被 CORS 拦死。'));
-  const form=document.createElement('div'); form.className='cloud-form';
-  const add=(label,val,ph,type)=>{
-    const w=document.createElement('label'); w.className='cloud-row';
-    const t=document.createElement('span'); t.textContent=label;
-    const i=document.createElement('input'); i.className='fsel'; i.type=type||'text';
-    i.value=val||''; i.placeholder=ph||''; i.spellcheck=false;
-    w.append(t,i); form.append(w); return i;
-  };
-  const iSrv=add('服务器',c.server,'https://dav.jianguoyun.com/dav/');
-  const iUsr=add('账号',c.user,'坚果云邮箱');
-  const iPwd=add('应用密码',c.pass,'账户信息 → 安全 → 应用密码','password');
-  const iDir=add('目录',c.dir,'留空 = 坚果云根目录');
-  const iFil=add('文件名',c.file,'iris-sync.json');
-  s.append(form);
-  const r=document.createElement('div'); r.className='row';
-  r.append(button('保存设置',function(){
-      const cc=cloudCfg();
-      cloudSaveCfg({server:iSrv.value.trim()||cc.server,user:iUsr.value.trim(),pass:iPwd.value.trim(),
-        dir:iDir.value.trim(),file:iFil.value.trim()||'iris-sync.json',auto:cc.auto});
-      buildPanel(true); toast('同步设置已保存');
-    }),
-    button('测试连接',function(){ cloudTest(); },'accent'));
-  s.append(r);
-  const r2=document.createElement('div'); r2.className='row';
-  r2.append(button('↑ 上传到坚果云',function(){
-      const fn=(iFil.value.trim()||'iris-sync.json');
-      if(fn.indexOf('/')>=0){ toast('文件名不要带斜杠，目录请写在「目录」那一栏'); return; }
-      cloudPush(false);
-    },'accent'),
-    button('↓ 从坚果云恢复',function(){ cloudPull(); }));
-  s.append(r2);
-  s.append(chipRow([{id:'on',name:'改滤镜就自动上传'},{id:'off',name:'只手动上传'}], c.auto?'on':'off', function(id){
-    const cc=cloudCfg(); cc.auto=(id==='on'); cloudSaveCfg(cc); buildPanel(true);
-    toast(cc.auto?'已开启自动上传':'已关闭自动上传');
-  }));
-  const stat=document.createElement('div'); stat.className='cloud-stat';
-  const proto=cloudProto();
-  stat.innerHTML='<b>通道</b> '+(proto==='ios'?'iOS 原生 WebDAV':proto==='android'?'Android 原生 WebDAV'
-      :proto==='desktop'?'桌面原生 WebDAV':'无（网页版不支持直连）')
-    +'　·　<b>同步内容</b> 我的滤镜 / 收藏 / 最近使用 / 自定义预设 / 色调库 / 界面偏好'
-    +(cloudLast?('<br><b>状态</b> '+cloudLast):'');
-  s.append(stat);
-  return s;
-}
-
 /* --- 预设 / 参数管理 --- */
 function copyParams(){ navigator.clipboard?.writeText(JSON.stringify(state,null,2)).then(()=>toast('编辑参数已复制')).catch(()=>toast('复制失败，可用导出 JSON')); }
 function presetObj(name){ return {name,state:deep(state)}; }
@@ -17246,8 +17670,13 @@ const GUIDE_CHAPTERS=[
    +'<br>调好之后从顶栏「导出 ▾」选照片 / GIF / 视频 / 配对素材，或按 Ctrl/⌘+S 直接出图。'
    +'<br><b>大照片也跟手</b>：导入时只降采样一次生成共享分析图，原图完整保留供导出；6000×4000 的照片首帧约 70ms 出画面，拖动调色盘不会逐像素重算。'
    +'<br><b>第一次打开</b>会看到一张自带的演示图，方便先试手感；一旦导入过自己的照片，之后再启动就不会再显示它，'
-   +'而是换成一张写着「选择一张照片开始」的中性占位画面（点「继续上次的编辑」仍会换回上次那张真照片）。'},
- {id:'pad',t:'02 · 主调色盘与 30 种模式',k:'调色盘 二维盘 白点 Tone Color 强度 颜色 影调 肤色锁 语义 模式 鲜艳 vivid 经典 电影 黑白 折叠 分组 鲜亮通透 浓金溢彩 冷艳蓝调 清朗鲜明 柔光绽放 胶片人像 铂金影调 交叉冲印 哑光质地 双色调印 鲜活 工艺',
+   +'而是换成一张写着「选择一张照片开始」的中性占位画面（点「继续上次的编辑」仍会换回上次那张真照片）。'
+   +'<br><b>初次进入还有一条小引导</b>：编辑栏最上面那根<b>小横条</b>不只是装饰 —— '
+   +'<b>长按它往上拖</b>（桌面宽屏是往左拖），可以把编辑面板调高 / 调宽，一次看到更多参数；'
+   +'双击复位、轻点一下收起。引导是编辑栏里普通的一行，<b>不盖住照片，也不挡住下面的工具</b>，'
+   +'只出现这一次；点「知道了」、真的拖过横条、或 10 秒后自动收起。'
+   +'想再看一次，用全局搜索「面板调整提示」。'},
+ {id:'pad',t:'02 · 主调色盘与 30 种模式',k:'调色盘 二维盘 白点 Tone Color 强度 颜色 影调 肤色锁 语义 模式 鲜艳 vivid 经典 电影 黑白 折叠 分组 桌面 归属 色调 鲜亮通透 浓金溢彩 冷艳蓝调 清朗鲜明 柔光绽放 胶片人像 铂金影调 交叉冲印 哑光质地 双色调印 鲜活 工艺',
   b:'方盘横轴 <b>Color</b>（色温偏置 + 色度）、纵轴 <b>Tone</b>（暗部深度 + 对比斜率），下方强度条控套用量，顶部实时显示数值。'
    +'<br>与普通滤镜不同，它先在端侧生成低分辨率 <b>matte</b>（皮肤 / 天空 / 头发 / 亮部四通道），再对不同区域做不等权映射：'
    +'皮肤区乘 skin_mask 压回肤色流形，非皮肤区吃满用户值 —— 所以拖冷调脸不泛蓝、拖浓艳天空不爆橙。'
@@ -17267,9 +17696,14 @@ const GUIDE_CHAPTERS=[
     +'与原有 20 款不重名、不撞方向。全部仍是同一张表驱动的定长循环，模式数增加不改变每帧成本。'
    +'其中<b>「鲜艳」</b>一键把饱和度、鲜明度与明快感一起推上去，有高光保护，不会溢色糊成一片。'
    +'<br>折叠行右侧的 <b>ⓘ</b> 点开才显示当前模式的完整说明，桌面把鼠标停在选项上也能看到；默认不占画面。'},
- {id:'targets',t:'03 · 12 种独立色调',k:'色调 高光 中间调 阴影 红橙黄绿青蓝紫品红 归属 分层',
+ {id:'targets',t:'03 · 12 种独立色调',k:'色调 高光 中间调 阴影 红橙黄绿青蓝紫品红 归属 分层 桌面 折叠 收起 展开 横向滚动 推不动 电脑端',
   b:'在「归属」里可切换全局语义盘或任意一层滤镜；12 个色调（全部 / 高光 / 中间调 / 阴影 / 红橙黄绿青蓝紫 / 品红）'
    +'<b>各自记忆</b>白点与强度，互不串扰。手机上点色调 chip 会弹出浮层，选完自动收起。'
+   +'<br><b>电脑端「归属 / 色调」现在是折叠卡</b>（v1.0.36）：收起时一行显示当前选中项，'
+   +'点开后 12 个色调<b>换行平铺、全部可见、直接点</b>，不用再横向推。'
+   +'这是因为旧版 12 个 chip 横排总宽 625px，而侧栏容器只有 268px，滚动条又被隐藏、鼠标滚轮只走纵向，'
+   +'右边 7~8 个色相在桌面根本点不到。<b>选完不会自动收起</b>，可以连着切好几个；'
+   +'再点标题、点底部「收起 ↑」或按 Esc 合上，开合状态记住，刷新保持。'
    +'<br>「取色」从照片里抓一点自动切到对应色相；「复制到全部」在语义盘下按较低强度复制，避免双重染色。'},
  {id:'matte',t:'04 · 分割 matte 与精度',k:'matte 分割 精度 快速 标准 精细 重新分析 肤色 皮肤 天空',
   b:'语义页「更多选项 · 语义引擎」里可看 matte 伪彩（皮肤橙 / 天空青 / 头发紫）与统计。'
@@ -17313,7 +17747,7 @@ const GUIDE_CHAPTERS=[
    +'切到「◐ 形状渐变」可回到传统的线性 / 径向渐变（含「在照片上点中心」与折叠的精确数值），两种来源各自的参数都会保留。'
    +'<br>「元素」页的四种像素效果（马赛克 / 柔焦 / 动态 / 径向模糊）同样支持<b>直接在照片上涂抹</b>：选一种后拖着刷，'
    +'笔刷大小与强度可调，可撤销上一笔、一键清除；原来的「点一下放个圆」也保留。'
-   +'<br><b>消除（v1.0.30）</b>就是这排效果里的第 5 个并列按钮，不单独做大卡、也没有圈选模式：'
+   +'<br><b>消除（v1.0.33）</b>就是这排效果里的第 5 个并列按钮，不单独做大卡、也没有圈选模式：'
    +'点它进入「涂抹 · 消除」，在照片上涂过路人 / 水印 / 瑕疵，松手就补上；笔刷大小、强度、撤销、清除消除都和旁边四种完全一样。'
    +'<br>它不是模糊也不是马赛克。实现参照了几套开源图像修复算法：'
    +'<code>OpenCV cv::inpaint / INPAINT_TELEA</code> 的快速行进「由边界向内、距离加权」、'
@@ -17367,7 +17801,18 @@ const GUIDE_CHAPTERS=[
    +'可选画质档、自定义码率、帧率 <b>最高 60fps</b>、原始 / 4K 分辨率、自定义时长最长 24 小时、5 种运镜，导出中有进度并可中途停止保存。'
    +'要真正零重编码，用「原始视频文件」直接下载源 .MOV/.MP4。'
    +'<br><b>GIF</b>：纯前端 GIF89a 编码，256 色自适应调色板 + 抖动，可调时长 / 帧率 / 尺寸 / 动效 / 循环次数。'
-   +'<br><b>打包全格式</b>：一次出 PNG + JPG + WebP 的 ZIP。'},
+   +'<br><b>打包全格式</b>：一次出 PNG + JPG + WebP 的 ZIP。'
+   +'<br><b>导出进度条（v1.0.34）</b>：以前导出只在画面正中间弹一句「正在导出…」，既盖住照片又不知道还要等多久。'
+   +'现在换成<b>编辑栏顶部独立一行</b>的进度卡：桌面在右侧栏顶部、手机在底部工作卡顶部；'
+   +'从导出中心 / 导出设置这类二级页里导出时，它自动移到内容区顶部并吸顶。'
+   +'两种位置都属于普通内容流，<b>不进入画布、不覆盖照片的任何一个像素</b>，也不改变画面尺寸。'
+   +'进度按真实阶段走：<code>准备 → 渲染成品 → 编码 / 压缩 → 写出文件 → 完成</code>；'
+   +'PNG 无损瘦身会把「已处理行数」作为真实进度报出来，GIF 报真实帧数，打包报第几种格式。'
+   +'全分辨率重算那一步是同步的、没法细分，用一段带 52% 上限的时间软推进保持走动，'
+   +'渲染一结束立刻跳到真实阶段值 —— 全程单调不倒退、不会一瞬间跳到 100%；'
+   +'这一段主线程会短暂阻塞，进度条上另有一道走合成层 transform 的斜向流光，不会看着像死机。'
+   +'完成后显示尺寸、格式、文件体积与<b>真实耗时</b>，约 2.6 秒后自动收起，也能点 ✕ 立刻关掉；'
+   +'失败变红并写明原因。导出期间不再弹屏幕中央的提示，也不允许重复点击触发两次导出。'},
  {id:'live',t:'14 · iOS 实况照片',k:'实况 Live Photo HEIC MOV 播放 进度条 选帧 自定义封面 关键帧 抽帧 黑屏 遮挡 预览常驻 滑杆位置 配对素材 快捷指令',
   b:'同时导入同名 .HEIC + .MOV 会自动认成一组，画面左上出现 LIVE 标记；长按画面、点标记或按 L 播放。'
    +'播放时所有滤镜、调色盘、文字贴纸与涂抹效果都逐帧生效。'
@@ -17446,7 +17891,7 @@ const GUIDE_CHAPTERS=[
    +'<br>关于作者、开发方式、版本状态、完整隐私说明与联系方式，见独立的「关于 Iris 与作者」页（顶栏「⋯」或全局搜索「关于」）。'
    +'<br>想了解这些功能具体是怎么实现的（渲染管线、着色器生成、坐标系统、语义 matte、涂抹遮罩、色彩迁移与导出），'
    +'请打开独立页面「<b>技术实现</b>」，共 18 章，带目录与搜索；本篇只讲怎么用。'},
- {id:'appearance',t:'21 · 外观、主题与双界面',k:'主题 外观 皮肤 配色 Nova 原版界面 圆角 动效 浅色 深色 切换 工具栏位置 底部 顶栏 顶栏留白 悬浮 贴边 启动页 加载页 splash',
+ {id:'appearance',t:'21 · 外观、主题与双界面',k:'主题 外观 皮肤 配色 Nova 原版界面 圆角 动效 浅色 深色 切换 工具栏位置 底部 顶栏 顶栏留白 悬浮 贴边 启动页 加载页 splash 小横条 面板调整 初次提示 引导',
   b:'顶栏「⋯ → 外观与主题」或全局搜索「主题」打开独立设置页，里面有<b>六件事</b>：'
    +'<br><b>① 9 套配色主题</b>：琥珀金（默认）、曜石黑、石墨蓝、青瓷、樱粉、熔金六套深色，'
    +'晨雾白、纸白暖两套浅色，外加一套<b>液态玻璃</b>（高斯模糊玻璃 + 折射高光 + 冷蓝虹彩）。'
@@ -17630,6 +18075,8 @@ function closeSubPage(){
   spCurrent=null; spAnchor=null;
   const sp=$('#subPage'); sp.classList.remove('show'); sp.setAttribute('aria-hidden','true');
   app.classList.remove('sp-open'); $('#spBody').innerHTML='';
+  /* 导出中关闭二级页：进度条跟着回到编辑栏，不会随 innerHTML 一起消失 */
+  try{ if(typeof ExportProgress!=='undefined') ExportProgress.mount(); }catch(e){}
 }
 function openSubPage(id,anchor){
   if(id==='video'&&!VIDEO_STUDIO_ON){ toast('视频工作台暂未开放'); return; }
@@ -17644,6 +18091,8 @@ function openSubPage(id,anchor){
   if(!anchor) body.scrollTop=0;
   const sp=$('#subPage'); sp.classList.add('show'); sp.setAttribute('aria-hidden','false');
   app.classList.add('sp-open');
+  /* 导出中打开二级页：进度条迁移到内容区顶部，始终可见且不盖照片 */
+  try{ if(typeof ExportProgress!=='undefined') ExportProgress.mount(); }catch(e){}
   if(anchor) setTimeout(()=>spScrollTo(anchor),80);
 }
 /* 换照片后：区域工作台 / 我的空间 / 图像信息 / 诊断 / 历史 等页面
@@ -18412,7 +18861,18 @@ const TECH_CHAPTERS=[
 <p><b>⑤ 着色器</b>：VS / FS 是模板字符串，其中几段用代码生成后插入占位符（下一章详述）。</p>
 <p><b>⑥ 运行时</b>：<code>state</code> 单一状态树 + <code>render()</code> 单一渲染入口 + pointer 事件分发。</p>
 <p><b>⑦ 外围</b>：导出、独立页面系统 <code>SUBPAGES</code>、全局搜索 <code>CMD</code>、启动逻辑（首次 <code>uploadImage(demoImage())</code>，之后改中性占位 <code>uploadImage(placeholderImage())</code>，避免导入过照片后重启又冒出测试图）。</p>
-<div class="tech-note">整个文件没有打包器，所以「模块」靠的是命名与注释分区，而不是 import。这也是为什么每段的开头都有一块块注释横幅 —— 它们就是这个文件里的目录。</div>`},
+<div class="tech-note">整个文件没有打包器，所以「模块」靠的是命名与注释分区，而不是 import。这也是为什么每段的开头都有一块块注释横幅 —— 它们就是这个文件里的目录。</div>
+<p><b>v1.0.35 · 初次进入的「小横条」引导</b>：<code>#gripHint</code> 是 <code>.dock</code> 的普通流子元素，紧跟在 <code>#grip</code> 之后，
+不是 <code>position:fixed</code> 浮层 —— 和导出进度条同一条原则：<b>不进入 <code>#stage</code>、不覆盖任何照片像素，也不遮挡下面的工具 / 参数</b>，只是把内容往下顺延一行。
+卡顶的小箭头指向正上方那根 grip，grip 同步加 <code>.gh-on</code> 变金色并呼吸，卡内还有一个会伸长的小横条 + 上下移动的手指做手势示意；
+宽屏（≥900px）侧栏是<b>往左拖宽</b>，箭头与文案一起转向左并改成「往左拖」。</p>
+<p>只在<b>真正第一次进入</b>显示：<code>iris_grip_hint_v1</code> 写本机 localStorage，刷新、重开、切主题都不再出现。
+启动页会发 <code>iris-splash-done</code>，引导在该事件后 380ms 淡入，另给 5.2 秒兜底定时器，加载页卡住也不会漏掉；
+沉浸大图（grip 被 CSS 隐藏）与全屏看图（<code>dock-off</code>）下不显示也不写已读。
+关闭条件有四个：点「知道了」/ 点卡片、<code>pointermove</code> 时检测到 <code>gripStart.moved≥6</code>（用户真的拖过了）、10 秒超时、切到 focus / dock-off。
+实现上 <code>irisSkinApply()</code> / <code>collapseDock()</code> 会同步派发 <code>iris-skin-change</code> / <code>iris-dock-change</code>，
+引导当帧就收起；<code>MutationObserver</code> 盯根元素 <code>data-ui</code> 与 <code>#app</code> 的 class 作兜底，覆盖不经过这两个函数的路径。
+命令面板「重新查看面板调整提示」可以强制再看一次，不改「首次」语义。旧的「新版本首次 toast」延后到 7.2 秒并让位，避免两条提示叠在一起。</p>`},
 
 {id:'pipeline',n:'03',eyebrow:'PIPELINE',t:'渲染管线 · 一帧像素走过的路',k:'渲染管线 shader 逐帧 顺序 采样 滤镜 调色盘 LUT 合成 导出 一致',html:`
 <p>所有编辑最终都收敛到<b>一个片元着色器</b>。不管你在界面上拖了滑杆、涂了蒙版还是叠了四层滤镜，<code>render()</code> 只是把状态翻译成 uniform，再画一个铺满屏幕的四边形。一帧的顺序大致是：</p>
@@ -18428,7 +18888,23 @@ const TECH_CHAPTERS=[
 <p><b>调色盘与语义</b>：12 个色调槽各自持有 (tone, color, intensity)，再叠加一张语义主盘。皮肤区走独立约束，非皮肤区吃满用户值（第 08、09 章）。</p>
 <p><b>局部与空间</b>：3 个局部蒙版（涂抹或形状渐变）、最多 6 块像素效果区域、涂抹笔刷遮罩、背景虚化 matte、光场深度代理，都在同一帧里按遮罩权重混合。</p>
 <p><b>收尾</b>：<code>c = clamp(c, 0, 1)</code>，分屏对比时左半边直接短路回 <code>src(uv)</code>（未经任何处理的真原图），最后写入 <code>gl_FragColor</code>。</p>
-<div class="tech-note"><b>导出为什么和预览一致？</b>因为导出时用的还是这同一个程序：只是把输出目标从屏幕换成离屏 FBO / 更大尺寸的 canvas，把 uniform 里的输出尺寸改成成品尺寸，再 <code>readPixels</code> 或 <code>toBlob</code>。没有第二套「导出专用」的图像处理代码，这是减少不一致 bug 最有效的办法。</div>`},
+<div class="tech-note"><b>导出为什么和预览一致？</b>因为导出时用的还是这同一个程序：只是把输出目标从屏幕换成离屏 FBO / 更大尺寸的 canvas，把 uniform 里的输出尺寸改成成品尺寸，再 <code>readPixels</code> 或 <code>toBlob</code>。没有第二套「导出专用」的图像处理代码，这是减少不一致 bug 最有效的办法。</div>
+<p><b>v1.0.34 · 导出进度条为何不盖照片、且不假</b>：<code>#expProgress</code> 是编辑栏 <code>.dock</code> 的普通流子元素（<code>display:none</code> 时不占空间），
+不是 <code>position:fixed</code> 浮层 —— 桌面落在右侧栏、手机落在底部工作卡，都不属于 <code>#stage</code>。
+二级页打开时 <code>ExportProgress.mount()</code> 把它 <code>insertBefore</code> 到 <code>#spBody</code> 首位并用 <code>position:sticky</code> 吸顶；
+<code>hide()</code> 一律归位回 dock，因为 <code>openSubPage()</code> / <code>closeSubPage()</code> 会清空 <code>#spBody.innerHTML</code>，
+隐藏时若还留在里面会被一起删掉；两个页面函数末尾也各补了一次 <code>mount()</code>，导出中途切页进度条会跟着迁移。
+全屏看图（<code>dock-off</code>）时 <code>show()</code> 会先 <code>expandDock()</code>，仍然不用浮层。</p>
+<p>进度由 <code>ExportProgress.set()</code> 统一收口：<code>pct=Math.max(pct,cp(v))</code> 保证单调不倒退，
+每个阶段有硬上限（准备 6%、渲染 52%、编码 88%、写出 92%、完成 100%）。
+<code>renderExportCanvas()</code> 是一次同步 WebGL 绘制，无法按像素细分，所以渲染前先 <code>await xpNextPaint()</code>（双 <code>requestAnimationFrame</code>，确保进度卡真的画出来），
+同时用 <code>softTo(from,to,ms)</code> 按 <code>1−e^(−3t/ms)</code> 渐近推进、永不越过 52%；渲染返回立刻 <code>stopSoft()</code> 并跳到 55% 的真实阶段值。
+这段同步绘制会短暂占住主线程，所以进度卡带 <code>.busy</code> 时轨道上有一道斜向流光（<code>transform</code> 动画走合成层，JS 阻塞时仍继续），避免看起来像卡死。
+编码阶段是<b>真进度</b>：<code>encodePngLossless(cv,onProgress)</code> 每 128 行回调一次「已处理行数 / 总行数」并让出一帧刷新，
+<code>optimizePng()</code> 把回调透传；GIF 用 <code>(i+1)/n</code> 报真实帧，全格式打包报第几种格式；
+其余 <code>toBlob</code> 与实况录制这类不可细分步骤用同款软推进。
+<code>finish()</code> 写入 100%、尺寸 / 体积 / <code>elapsed()</code> 真实耗时，2.6 秒后自动收起，失败变红留 5.2 秒。
+<code>exportBusy</code> 锁住 <code>doExport / exportBundle / exportGif / exportLivePair</code> 四个入口，连按两次只导出一次。</p>`},
 
 {id:'shader',n:'04',eyebrow:'SHADER',t:'着色器是「生成」出来的',k:'GLSL 代码生成 模板字符串 循环展开 uniform 数组 PLATE_CODE MASK_CODE 编译 链接',html:`
 <p>WebGL 1.0 / GLSL ES 1.0 里数组索引必须是常量表达式，循环上界必须恒定，写一个「对 12 个色调做 for 循环」很容易在手机上编译失败。解决办法是<b>在 JavaScript 里把重复代码生成出来</b>，再插进片段着色器模板：</p>
@@ -18518,6 +18994,16 @@ function mutate(fn){
  <div><b>Tone 轴</b><span>加性亮度曲线 + 对比斜率 + 暗部保底。向上是明亮奶油、向下是浓郁暗调，但<b>不动色度</b>。</span></div>
  <div><b>强度</b><span>把上述变换整体做 0–100% 混合；0 时逐像素等于原图。</span></div>
  <div><b>12 个色调槽</b><span>全部 / 高光 / 中间调 / 阴影 / 红橙黄绿青蓝紫品红，各存一份参数，互不串扰；4 层滤镜又各自挂一整套。</span></div>
+ <p><b>v1.0.36 · 桌面端选择器改折叠</b>：旧版 <code>buildPlate()</code> 在非手机 branch 里把「归属 / 色调」两行塞进
+ <code>.chip-line + .chips(overflow-x:auto; scrollbar-width:none)</code>。实测 12 个色调 chip 总宽 <b>625px</b>，
+ 桌面侧栏容器只有 <b>268px</b>，滚动条隐藏且鼠标滚轮只走纵向 → 右侧 7~8 个色相永远点不到，这就是「电脑端无法向右推动」的根因。
+ 现在桌面端改用两个 <code>&lt;details class="plate-fold"&gt;</code>：收起时 <code>summary</code> 显示当前项 + 数量 + ▾，
+ 展开区 <code>.plate-fold-body .chips{flex-wrap:wrap;overflow:visible}</code> 让 12 个 chip 全部换行平铺，
+ 零横向滚动、直接点。手机端仍走原来的 <code>.plate-picker / .tone-picker</code> 浮层，一字未动。</p>
+ <p>选完<b>不自动收起</b>（旧版沉浸大图被指出「换一个选项就收起」，这里刻意反过来），可连续切换多个色调；
+ 收起方式有三个：再点标题、底部「收起 ↑」按钮、Esc。开合状态写 <code>localStorage.iris_plate_folds</code>，
+ 刷新保持；<code>syncPanelFit()</code> 的测量列表同步加入 <code>.plate-fold&gt;summary</code> 与
+ <code>.plate-fold-body .chips</code>，250px 窄侧栏也逐项验过零溢出。保留 <code>chip-line</code> 类名供旧脚本定位。</p>
 </div>
 <p><b>这里踩过一个很严重的坑</b>：早期版本把色温做成「暖端蓝通道 ×0.68、冷端 ×1.34」，再叠暗部染色，Tone 又用「整条颜色乘亮度比例」，结果暖调整片黄绿、冷调死蓝、暗调全黑；肤色锁还把夕阳和砖墙误判成皮肤，整片拉橙。真实渲染逐帧复现后的改法是四条：</p>
 <ul class="tech-list">
@@ -18727,7 +19213,7 @@ c = mix(shifted, clampToSkin(shifted, src), skinMask * u_semLock);</pre>
 </ul>
 <p><b>v1.0.23 · 沉浸大图是第三套界面版本，不是第三个编辑器</b>：<code>IRIS_UIS</code> 增加 <code>focus</code>，<code>irisSkinApply()</code> 把 <code>data-ui="focus"</code> 写到根元素，head 内联脚本在首屏绘制前读取同一个 <code>iris_skin</code> 键，刷新不闪回。所有差异都在 CSS：原顶栏退成 <code>height:0</code> 的浮层宿主（<code>⋯</code> 与导出菜单仍挂在它下面，重新指定 <code>top</code>），新增的 <code>.focus-bar</code> 只放五个按钮；桌面 <code>#app</code> 强制回 <code>column</code>，<code>.stage</code> 吃掉顶栏与底部工作区之间的全部高度，<code>.dock</code> 限高 36dvh、横向全宽。</p>
 <p>功能不靠「藏按钮」实现：<code>buildTools()</code> 在 focus 下把 14 个工具全铺成横向 tab（不再需要「更多」弹层），<code>applyToolPos()</code> 用 <code>eff</code> 变量把工具行强制放回 dock 但不改写用户的「顶栏」偏好，切回原版自动恢复。大滑杆的 <code>fxSet()</code> 直接读写同一份 <code>state.base.&lt;key&gt;</code>，<code>commit(before)</code> 保证一次拖动只进一条撤销历史；<code>fxSync()</code> 挂在 <code>paintFrame</code> 末尾，带值去重，静止帧零 DOM 写入。导出、撤销、重做、对比、全屏、画质设置全部调用主编辑器已有的函数。</p>
-<p><b>v1.0.30 · 消除按开源 inpainting 重做</b>：v1.0.29 那版「固定 12 方向 × 3 尺度搬像素 + 点放一个圆」效果差、还把功能做成显眼大卡，已整体移除。
+<p><b>v1.0.33 · 消除按开源 inpainting 重做</b>：v1.0.29 那版「固定 12 方向 × 3 尺度搬像素 + 点放一个圆」效果差、还把功能做成显眼大卡，已整体移除。
 现在<b>只有涂抹笔一种交互</b>，就是「元素」页像素效果网格里与马赛克 / 柔焦 / 动态 / 径向并列的第 5 个按钮；
 <code>state.fxRegions</code> 的 <code>type 5</code> 圆形区域在 <code>sanitize</code> 里直接丢弃，旧存档不会冒出幽灵圈。</p>
 <p>算法参照开源实现而非自造：OpenCV <code>cv::inpaint</code> 的 <b>INPAINT_TELEA</b>（Telea 2004，FMM 由边界向内推进、权重含方向 / 距离 / 水平集）
@@ -19931,44 +20417,45 @@ function renderDiagnosticsPage(body){
 
 /* ---------- 16 版本演进 ---------- */
 const AS_CHANGELOG=[
- {v:'v1.0.37',t:'实况帧与预览手势彻底解耦',d:''
-  +'1.0.36 把画布尺寸修对了，但逐帧渲染还有一处漏网：<code>draw()</code> 的默认参数是 '
-  +'<code>pan:state.pan, zoom:state.zoom</code>，而逐帧调用时<b>没有显式覆盖</b>。'
-  +'结果你在预览里双指放大 1.6 倍、或平移过画面，录出来的每一帧就跟着放大 / 偏移，'
-  +'播放时自然「就是预览时的大小」。现在导出模式固定 '
-  +'<code>pan:[0,0] · zoom:1 · viewAspect:imageAspect()</code>，与封面同口径。'
-  +'另加 <code>noFullSwap</code>：逐帧时纹理槽里放的是视频当前帧，不能因为尺寸变大就换成整张照片，'
-  +'否则抓到的会是静止封面。实测：预览放大 1.6 倍并平移后，导出帧与 100% 状态下的帧'
-  +'<b>逐字节相同</b>（PNG 数据完全一致），而预览画面本身照常随缩放变化。'},
- {v:'v1.0.36',t:'实况画质：逐帧按目标尺寸全分辨率渲染',d:''
-  +'比例修好之后暴露出来的下一层问题：动态轨尺寸变成 1440 了，但每一帧是从<b>预览画布</b>抓的，'
-  +'而预览画布只有 <code>canvas.clientWidth×dpr</code>（手机竖屏约 390 宽）。'
-  +'把 390 宽的帧放大到 1440，等于一次重磅插值 —— 所以「预览越小、播放越糊」。'
-  +'现在加 <code>LIVE.exportRender</code>：录制 / 逐帧合成期间主画布直接撑到目标尺寸（长边 1440）渲染，'
-  +'抓到的是原生分辨率帧；同时跳过叠加层（选框 / 笔刷圈 / 分屏线），不会把辅助线录进画面。'
-  +'高频测试图实测：细节梯度 158 vs 旧的放大版 49.9，<b>约 3.2 倍</b>。'
-  +'逐帧合成开始前还会强制关掉「原图对比」，避免抓到未经处理的原片。'},
- {v:'v1.0.35',t:'导出尺寸锁定图源 · 实况封面与动态轨强制同比例',d:''
-  +'两个「看起来毫无道理」的毛病，根因都在于尺寸口径不唯一。<b>① 预览大小偷偷决定导出</b>：'
-  +'导出尺寸只由 <code>imgW/imgH</code> 推，而这对值是「最后一次 uploadImage 进去的图源像素」，'
-  +'所以一旦实况封面退回 960px 预览帧、或只载入 MOV 时用 1440 视频帧当封面，'
-  +'整张照片的导出底数就被锁死在那个小尺寸上。现在单独记 <code>imgSrcW/imgSrcH</code>，'
-  +'只有原始图源能写；实况封面按「视频原生比例 + 长边 1440」记账；'
-  +'换封面时抽帧失败不再静默退回 960px 预览帧。'
-  +'<b>② 实况一播就扁</b>：封面走 <code>applyExportFrame()</code> 会叠画框（拍立得底边最狠），'
-  +'画布宽高被改，而动态轨用的是不带画框的 <code>exportDims()</code>；系统播放时按封面矩形拉伸视频就会被压扁。'
-  +'现在封面与动态轨同源：实况封面不叠画框（<code>renderExportCanvas(true)</code>），'
-  +'动态轨尺寸由 <code>liveTargetDims()</code> 从封面画布推出，逐帧与实时录制都改等比裁切、不再硬拉伸。'
-  +'③ 导出面板新增一行口径：图源 W×H · 封面来源（原图 / 视频帧）。'},
- {v:'v1.0.30',t:'消除重做 · 只留涂抹笔，按开源 inpainting 算法重建',d:'按反馈整体撤掉 v1.0.29 的「消除」：'
+ {v:'v1.0.38',t:'实况导出彻底与预览尺寸脱钩 · 同步页回归',d:'把 1.0.35~1.0.37 三轮的实况修复整体并进这个底稿，并补回坚果云同步与输入法守卫。'
+    +'① 导出尺寸只认原始图源像素（新增 imgSrcW/imgSrcH 记账），预览画布多大、预览帧是不是 960、视频中间帧多大，都不再决定导出像素；'
+    +'② 导出时主画布切到目标分辨率全分辨率重渲染（LIVE.exportRender），不再把 390×470 的预览帧拉成 1440×1080，播放不再是马赛克；'
+    +'③ 逐帧绘制显式清空缩放与平移（zoom:1 / pan:[0,0] / noFullSwap），预览里放大 1.6 倍不会再被录进实况，缩放态与 100% 态导出的帧逐字节相同；'
+    +'④ 配对素材的封面改成不叠画框的同比例画布，封面与动态轨比例严格一致，iOS 按住播放不再被拉伸压扁；'
+    +'⑤ 换封面失败时不再退回 960 预览帧这种静默降质，宁可报错；'
+    +'⑥ 导出面板常显一行口径：当前裁剪后尺寸 / 图源像素 / 封面来源；'
+    +'⑦ 坚果云 WebDAV 偏好同步回归「同步」页（10 项偏好打包一次往返，改滤镜后 4 秒静默上传，密码只存本机）；'
+    +'⑧ 安卓输入法守卫回归：焦点在输入框里时布局变化只记账不重建，键盘不会再一弹就被关掉。'},
+ {v:'v1.0.36',t:'桌面调色盘 · 归属 / 色调改折叠',d:'修掉一个电脑端专属的真 bug：'
+    +'调色盘「色调」那行 12 个 chip 总宽 625px，容器只有 268px，靠 overflow-x:auto 横向滚，'
+    +'但 scrollbar-width:none 把滚动条藏了、鼠标滚轮又只走纵向 —— 右边 7~8 个色相在桌面永远点不到。'
+    +'现在桌面端「归属 / 色调」都改成 details 折叠卡：收起一行显示当前选中项与数量，'
+    +'展开后 12 个色调 wrap 平铺、全部可见、直接点，零横向滚动；选完保持展开可连续切换，'
+    +'再点标题 / 底部「收起 ↑」/ Esc 合上，开合状态写本机 localStorage。'
+    +'手机端原有的浮层选择器一字未动，9 套主题、Nova 圆角、250px 窄侧栏逐项验过零溢出。'},
+ {v:'v1.0.35',t:'初次进入引导 · 长按小横条调面板',d:'新用户不知道编辑栏顶部那根小横条能调高度。'
+    +'首次进入（仅一次，写 localStorage）在启动页收起后淡入一张引导卡：'
+    +'手机写「长按小横条 · 往上拖」，桌面宽屏自动改成「往左拖」，副标题说明「把面板调高 / 调宽，看到更多参数；双击复位，轻点收起」。'
+    +'卡片是 dock 的普通流一行，箭头指向上方 grip、grip 同步高亮呼吸、卡内有手势动画；不进入 #stage、不盖照片、不挡工具。'
+    +'点「知道了」/ 点卡片 / 真的拖过 grip / 10 秒超时 / 切到沉浸大图或全屏看图，都会收起并标记已读；'
+    +'命令面板可强制重新查看。说明书第 1 章、技术实现页、README 同步。'},
+ {v:'v1.0.34',t:'导出进度条 · 不盖照片、按真实阶段推进',d:'导出不再用浮在画面正中间的 toast 报「正在导出」。'
+    +'新增 #expProgress：编辑栏顶部独立一行（桌面右侧栏 / 手机底部卡），二级页里自动移到内容区顶部并吸顶，'
+    +'两种位置都不进入 #stage、不覆盖任何照片像素、也不改变画布尺寸。'
+    +'进度按「准备 → 渲染成品 → 编码 / 压缩 → 写出文件 → 完成」五段推进，'
+    +'PNG 无损瘦身报真实已处理行数、GIF 报真实帧数、打包报第几种格式；'
+    +'同步的全分辨率渲染用带 52% 上限的时间软推进 + 合成层流光（JS 阻塞时仍动），渲染结束立刻跳真实值，全程单调不倒退、不瞬间 100%。'
+    +'完成显示尺寸 / 体积 / 真实耗时并自动收起，失败变红写明原因，导出期间不弹中央提示、不允许重复触发。'
+    +'照片 / GIF / 全格式打包 / 实况配对素材四个入口统一接入，说明书第 13 章、技术实现页、README 同步。'},
+ {v:'v1.0.33',t:'消除重做 · 只留涂抹笔，按开源 inpainting 算法重建',d:'按反馈整体撤掉 v1.0.29 的「消除」：'
     +'删掉显眼的亮色大卡、删掉点放圆形的圈选通路、名字不再叫「智能」，消除改成元素页像素效果网格里与马赛克 / 柔焦 / 动态 / 径向并列的第 5 个按钮。'
     +'算法不再是固定 12 方向 × 3 尺度搬像素：参照 OpenCV INPAINT_TELEA / INPAINT_NS、exemplar-based PatchMatch 与两遍 chamfer 距离变换，'
     +'CPU 预计算 256²「源坐标导向场」(TEXTURE10，16bit×2 打包)，GPU 按场采样原图全分辨率像素并做 5 点加权投票，补进来的是真实纹理而不是平滑灰云。'
     +'遮罩做了 2px 生长与 3×3 羽化；拖动中走 chamfer 快速场、松手补 PatchMatch 精修，6 个 256² 数组全程复用零 GC；'
     +'纹理单元不足 11 个时自动降级为 8 方向射线。旧存档里的 type 5 圆形区域在 sanitize 直接丢弃。'
     +'桌面菜单、⋯ 菜单、命令面板、说明书第 9 章、技术实现页、README 全部同步。'},
- {v:'v1.0.29',t:'消除（已在 v1.0.30 移除）',d:'曾加入显眼大卡与点放圆形圈选，'
-    +'用 GPU 固定方向采样搬周围像素。实测效果差、交互过重，v1.0.30 已整体移除并改为开源 inpainting 导向场算法。'},
+ {v:'v1.0.29',t:'消除（已在 v1.0.33 移除）',d:'曾加入显眼大卡与点放圆形圈选，'
+    +'用 GPU 固定方向采样搬周围像素。实测效果差、交互过重，v1.0.33 已整体移除并改为开源 inpainting 导向场算法。'},
  {v:'v1.0.28',t:'沉浸大图 · 顶栏按钮不再偏左',d:'修掉手机端顶栏整组按钮挤到左边：'
     +'560px 断点把唯一的 flex:1 占位元素 #fbMid 设为 display:none，画质 / 导出失去向右推力。'
     +'现在保留占位只隐藏文字，并加 margin-left:auto 兜底；⋯ 与导出菜单左右定位也写死。'
@@ -20959,7 +21446,7 @@ function buildPresets(p){
   const r3=document.createElement('div'); r3.className='row'; r3.style.marginTop='8px';
   r3.append(button('＋ 保存当前',()=>{
     const name=prompt('预设名称','我的风格 '+(custom.length+1)); if(!name)return;
-    const arr=loadCustom(); arr.push(presetObj(name)); localStorage.setItem('plate_presets',JSON.stringify(arr)); buildPanel(); toast('已保存'); cloudAutoPush();
+    const arr=loadCustom(); arr.push(presetObj(name)); localStorage.setItem('plate_presets',JSON.stringify(arr)); cloudAutoPush(); buildPanel(); toast('已保存');
   }),
   button('清空预设',()=>{ if(confirm('清空所有自定义预设？')){localStorage.removeItem('plate_presets');buildPanel();} }));
   s2.dataset.ptab='style'; s2.append(r2,r3); p.append(s2);
@@ -20994,7 +21481,7 @@ function buildPresets(p){
   sk.dataset.ptab='about'; p.append(sk);
   const s4=section('导出成品');
   const [dw,dh]=exportDims();
-  /* v1.0.35：把「图源像素 → 导出像素 → 封面来源」摆到明面上，预览尺寸不再偷偷决定导出 */
+  /* v1.0.38：把「图源像素 → 导出像素 → 封面来源」摆到明面上，预览尺寸不再偷偷决定导出 */
   const ov=hint(`当前裁剪后 <b>${dw}×${dh}</b> px。倍率与最长边取较小值，不会把照片放大到糊掉。`
     +`<br>图源 <b>${imgSrcW}×${imgSrcH}</b> · 封面来源 <b>${LIVE.coverSource||'原图'}</b>`
     +(imgSrcLow?' · 实况视频帧口径（动态轨按封面比例，长边 1440）':''));
@@ -21147,6 +21634,7 @@ function buildPresets(p){
   const nsm=document.createElement('summary'); nsm.textContent='关于 Live Photo 的限制'; note.append(nsm);
   note.append(hint('浏览器拿到的是「静态封面 + 配对视频」，网页无法把结果写回 iOS 相册成为原生实况照片。导出的 ZIP 内含已调色的封面与逐帧调色的视频，把两个文件改成相同主文件名，再用 iOS「快捷指令 → 将图像和视频转换为实况照片」或支持 Live Photo 的 App 合并即可。<br>部分浏览器无法解码 HEIC，会自动用视频中间帧作封面；视频不含原音频，最长录制 6 秒。'));
   sl.append(note); sl.dataset.ptab='export'; p.append(sl);
+  /* v1.0.38：同步页移植自 1.0.37 —— 坚果云 WebDAV，10 项偏好一键往返 */
   p.append(buildCloudSection());
   /* 三个分栏：一次只显示一组，功能全保留但不再堆在一起 */
   const tabs=document.createElement('div'); tabs.className='iris-fixed preset-tabs';
@@ -21421,7 +21909,7 @@ function gifMotionFrame(src,i,n,mode){
 }
 let gifExporting=false;
 async function exportGif(){
-  if(gifExporting){ toast('正在生成 GIF，请稍候…'); return; }
+  if(gifExporting||ExportProgress.active){ toast('正在导出，请稍候…'); return; }
   gifExporting=true;
   try{
     const [ew,eh]=exportDims();
@@ -21432,82 +21920,144 @@ async function exportGif(){
     let fps=clamp(state.exportGifFps||10,5,20);
     let secs=clamp(state.exportGifSeconds||2,.3,30);
     let n=Math.max(1,Math.min(400,Math.round(fps*secs)));
-    if(n>400){ n=400; }
     const motion=state.exportGifMotion||'push';
-    toast('正在生成 GIF：'+n+' 帧 · '+W+'×'+H+' …');
+    const info=n+' 帧 · '+W+'×'+H+' · '+fps+'fps';
+    ExportProgress.show('准备生成 GIF',info);
+    /* ① 渲染底图 */
+    ExportProgress.set(6,'渲染成品',info+' · 全分辨率重算');
+    ExportProgress.softTo(6,18,900,'渲染成品',info);
+    await xpNextPaint();
     const small=renderExportCanvas();
-    // 缩小到 GIF 尺寸，之后所有帧复用这张位图
+    ExportProgress.stopSoft();
     const src=document.createElement('canvas'); src.width=W; src.height=H;
     src.getContext('2d').drawImage(small,0,0,W,H);
     src.__gw=W; src.__gh=H;
     const enc=new GIFEncoder(W,H,Math.round(100/fps),state.exportGifLoop,!!state.exportGifDither);
-    // 第一遍：采样建调色板（每帧按步长取样，避免全量缓存）
+    ExportProgress.set(20,'采样配色',info);
     const samples=[]; const step=Math.max(1,Math.floor(Math.sqrt(W*H*n/14000)));
     for(let i=0;i<n;i++){
       const d=gifMotionFrame(src,i,n,motion);
       for(let y=0;y<H;y+=step)for(let x2=0;x2<W;x2+=step){
         const q=(y*W+x2)*4; samples.push([d[q],d[q+1],d[q+2]]);
       }
-      if(i%12===0) await new Promise(r=>setTimeout(r,0));
+      if(i%12===0){ ExportProgress.set(20+(i+1)/n*24,'采样配色',(i+1)+' / '+n+' 帧');
+                     await new Promise(r=>setTimeout(r,0)); }
     }
     enc.buildPalette(samples);
-    // 第二遍：量化并编码
+    ExportProgress.set(46,'编码 GIF',info);
     for(let i=0;i<n;i++){
       const d=gifMotionFrame(src,i,n,motion);
       enc.addFrame(enc.quantize(d));
-      if(i%8===0){ toast('GIF 编码中… '+Math.round((i+1)/n*100)+'%'); await new Promise(r=>setTimeout(r,0)); }
+      if(i%8===0){ ExportProgress.set(46+(i+1)/n*44,'编码 GIF',(i+1)+' / '+n+' 帧');
+                    await new Promise(r=>setTimeout(r,0)); }
     }
     const blob=enc.finish();
+    ExportProgress.set(94,'写出文件',IrisAutosave.fmtSize(blob.size));
+    await xpNextPaint();
     downloadBlob(blob,'Iris_动图_'+Date.now()+'.gif');
-    toast('已导出 GIF · '+(blob.size/1024).toFixed(0)+' KB · '+n+' 帧 / '+secs+'s · '+
-      (state.exportGifLoop===0?'无限循环':state.exportGifLoop+' 次循环'));
-  }catch(e){ toast('GIF 导出失败：'+(e.message||e)); }
-  finally{ gifExporting=false; }
+    ExportProgress.finish(true,n+' 帧 / '+secs+'s · '+IrisAutosave.fmtSize(blob.size)+
+      ' · '+(state.exportGifLoop===0?'无限循环':state.exportGifLoop+' 次循环')+
+      ' · 用时 '+ExportProgress.elapsed());
+  }catch(e){
+    ExportProgress.finish(false,'GIF 导出失败：'+(e.message||e));
+    toast('GIF 导出失败：'+(e.message||e));
+  }finally{ gifExporting=false; }
 }
+/* v1.0.34：导出不再用浮在照片中间的 toast 报「正在导出」，
+   改由编辑栏里的独立进度条按真实阶段推进。 */
+let exportBusy=false;
 async function doExport(){
+  if(exportBusy||ExportProgress.active){ toast('正在导出，请稍候…'); return; }
+  exportBusy=true;
   let mime=state.exportFormat||'image/png';
-  if(!supportsMime(mime)){ toast('当前浏览器不支持该格式，已改用 PNG'); mime='image/png'; }
+  let fallback='';
+  if(!supportsMime(mime)){ fallback='（当前浏览器不支持该格式，已改用 PNG）'; mime='image/png'; }
   const ext=mime==='image/jpeg'?'.jpg':mime==='image/webp'?'.webp':'.png';
   const q=mime==='image/png'?undefined:clamp(state.exportQuality??.92,.3,1);
   const [ew,eh]=exportDims();
-  toast('正在导出 '+ew+'×'+eh+' …');
-  const cv=renderExportCanvas();
-  let b=null, note='';
-  if(mime==='image/png'&&state.exportOptimizePng!==false){
-    const r=await optimizePng(cv);
-    if(r){
-      b=r.blob;
-      note=r.optimized
-        ? ' · 无损瘦身 −'+Math.round(r.saved/r.original*100)+'%（'+IrisAutosave.fmtSize(r.original)+' → '+IrisAutosave.fmtSize(r.size)+'，像素完全一致）'
-        : ' · 已保持原 PNG（本机编码器未更小）';
+  const fmt=mime==='image/jpeg'?'JPG':mime==='image/webp'?'WebP':'PNG';
+  const info=ew+'×'+eh+' · '+fmt+(q?' · 画质 '+Math.round(q*100)+'%':'');
+  ExportProgress.show('准备导出',info+fallback);
+  try{
+    /* 阶段 1 · 渲染：同步 WebGL，无法细分，用带 52% 上限的时间软推进 */
+    ExportProgress.set(6,'渲染成品',info+' · 全分辨率重算');
+    ExportProgress.softTo(6,52,1400,'渲染成品',info+' · 全分辨率重算');
+    await xpNextPaint();                 /* 关键：先让进度条真正画出来 */
+    const cv=renderExportCanvas();
+    ExportProgress.stopSoft();
+    /* 阶段 2 · 编码：PNG 瘦身有真实「已处理行数」，其余走软推进 */
+    ExportProgress.set(55,'编码 '+fmt,info);
+    let b=null, note='';
+    if(mime==='image/png'&&state.exportOptimizePng!==false){
+      await xpNextPaint();
+      const r=await optimizePng(cv,f=>{
+        ExportProgress.set(55+f*33,'PNG 无损压缩',info+' · 逐行滤波');
+      });
+      if(r){
+        b=r.blob;
+        note=r.optimized
+          ? ' · 无损瘦身 −'+Math.round(r.saved/r.original*100)+'%（'+IrisAutosave.fmtSize(r.original)+' → '+IrisAutosave.fmtSize(r.size)+'，像素完全一致）'
+          : ' · 已保持原 PNG（本机编码器未更小）';
+      }
     }
-  }
-  if(!b) b=await canvasToBlob(cv,mime,q);
-  if(!b){ toast('导出失败，请重试'); return; }
-  downloadBlob(b,'Iris_'+Date.now()+ext);
-  toast('已导出 '+ew+'×'+eh+' · '+IrisAutosave.fmtSize(b.size)+note);
+    if(!b){
+      ExportProgress.softTo(55,88,1000,'编码 '+fmt,info);
+      b=await canvasToBlob(cv,mime,q);
+      ExportProgress.stopSoft();
+    }
+    if(!b) throw new Error('浏览器未能生成图片数据');
+    /* 阶段 3 · 写出 */
+    ExportProgress.set(92,'写出文件',info+' · '+IrisAutosave.fmtSize(b.size));
+    await xpNextPaint();
+    downloadBlob(b,'Iris_'+Date.now()+ext);
+    ExportProgress.finish(true,
+      ew+'×'+eh+' · '+fmt+' · '+IrisAutosave.fmtSize(b.size)+note+
+      ' · 用时 '+ExportProgress.elapsed());
+  }catch(e){
+    ExportProgress.finish(false,'导出失败：'+(e.message||e));
+    toast('导出失败：'+(e.message||e));
+  }finally{ exportBusy=false; }
 }
 /* 一次出 PNG / JPG / WebP 三张，打包成一个 ZIP */
+/* 一次出 PNG / JPG / WebP 三张，打包成一个 ZIP */
 async function exportBundle(){
-  toast('正在打包全格式…');
+  if(exportBusy||ExportProgress.active){ toast('正在导出，请稍候…'); return; }
+  exportBusy=true;
+  ExportProgress.show('准备打包全格式','PNG + JPG + WebP');
   try{
-    const c=renderExportCanvas(), files=[];
+    ExportProgress.set(6,'渲染成品','全分辨率重算一次');
+    ExportProgress.softTo(6,45,1200,'渲染成品','全分辨率重算一次');
+    await xpNextPaint();
+    const c=renderExportCanvas();
+    ExportProgress.stopSoft();
+    ExportProgress.set(48,'逐格式编码','开始编码');
+    const files=[];
     const list=[['image/png','png',undefined],['image/jpeg','jpg',clamp(state.exportQuality??.92,.3,1)],
                 ['image/webp','webp',clamp(state.exportQuality??.92,.3,1)]];
-    for(const [mime,ext,q] of list){
-      if(!supportsMime(mime)) continue;
+    const usable=list.filter(([mime])=>supportsMime(mime));
+    for(let i=0;i<usable.length;i++){
+      const [mime,ext,q2]=usable[i];
+      ExportProgress.set(48+(i+1)/usable.length*40,'编码 '+ext.toUpperCase(),
+        '第 '+(i+1)+' / '+usable.length+' 种格式');
+      await xpNextPaint();
       let b;
       if(mime==='image/png'&&state.exportOptimizePng!==false){
         const r=await optimizePng(c); if(r) b=r.blob;
       }
-      if(!b) b=await canvasToBlob(c,mime,q);
+      if(!b) b=await canvasToBlob(c,mime,q2);
       if(b&&b.size) files.push({name:'Iris_'+ext+'.'+ext,data:await blobBytes(b)});
     }
     if(!files.length) throw new Error('NO_FORMAT');
+    ExportProgress.set(92,'打包 ZIP',files.length+' 个文件');
     const zip=zipStore(files);
+    await xpNextPaint();
     downloadBlob(zip,'Iris_全格式_'+Date.now()+'.zip');
-    toast('已打包 '+files.length+' 种格式 · '+(zip.size/1024).toFixed(0)+' KB');
-  }catch(e){ toast('打包失败：'+(e.message||e)); }
+    ExportProgress.finish(true,files.length+' 种格式 · '+(zip.size/1024).toFixed(0)+
+      ' KB · 用时 '+ExportProgress.elapsed());
+  }catch(e){
+    ExportProgress.finish(false,'打包失败：'+(e.message||e));
+    toast('打包失败：'+(e.message||e));
+  }finally{ exportBusy=false; }
 }
 /* 一键智能增强：自动色阶 + 自动白平衡 + 轻微鲜明度 / 清晰度 */
 function autoPlus(){
@@ -21824,14 +22374,20 @@ function cmdActions(){
     {name:'播放 / 暂停实况',desc:'播放实况片段，编辑逐帧生效',key:'live play 播放',hint:'L',icon:'●',run:()=>{LIVE.playing?livePause():livePlay();}},
     {name:'切换填满 / 适应',desc:'切换照片在画面里的预览方式',key:'fit cover 填满 适应',hint:'\\',icon:'⤢',run:()=>$('#zMode').click()},
     {name:'缩放回到 100%',desc:'复位缩放与平移',key:'zoom 100 缩放',hint:'',icon:'◎',run:()=>resetZoom()},
-    {name:'收起 / 展开编辑栏',desc:'全屏看图或返回编辑',key:'focus fullscreen 全屏',hint:'F',icon:'⛶',run:()=>app.classList.contains('dock-off')?expandDock():collapseDock()},
+     {name:'收起 / 展开编辑栏',desc:'全屏看图或返回编辑',key:'focus fullscreen 全屏',hint:'F',icon:'⛶',run:()=>app.classList.contains('dock-off')?expandDock():collapseDock()},
+    {name:'重新查看面板调整提示',desc:'长按小横条向上 / 向左拖，可调高或调宽编辑面板',
+      key:'引导 提示 小横条 面板 调整 拖 更多参数 grip hint 教程',hint:'',icon:'☝',
+      run:()=>{ if(app.classList.contains('dock-off'))expandDock();
+        try{ localStorage.removeItem('iris_grip_hint_v1'); }catch(e){}
+        window.irisGripHintHide&&window.irisGripHintHide(false);
+        window.irisGripHint&&window.irisGripHint(true); }},
     {name:'存为滤镜',desc:'把当前整套调整保存成自定义滤镜',key:'save filter 我的滤镜',hint:'',icon:'✦',run:()=>{
       const name=prompt('把当前整套调整存成新滤镜，名称：','我的风格 '+(USER_FILTERS.length+1));
       if(name&&addUserFilter(name.trim())){ gotoTool('filters'); }
     }},
     {name:'保存当前预设',desc:'把整套参数存进「我的预设」',key:'preset 预设',hint:'',icon:'✧',run:()=>{
       const arr=loadCustom(), name=prompt('预设名称','我的风格 '+(arr.length+1));
-      if(name){ arr.push(presetObj(name.trim())); localStorage.setItem('plate_presets',JSON.stringify(arr)); gotoTool('presets'); toast('已保存预设'); cloudAutoPush(); }
+      if(name){ arr.push(presetObj(name.trim())); localStorage.setItem('plate_presets',JSON.stringify(arr)); cloudAutoPush(); gotoTool('presets'); toast('已保存预设'); }
     }},
     {name:'语义调色盘',desc:'打开二维 pad 与端侧分割面板',key:'semantic pad tone color 语义 调色盘',hint:'',icon:'◉',run:()=>{
       state.plateScope='global';state.plateTarget='all';gotoTool('plate');
@@ -22104,7 +22660,7 @@ $('#btnFocus').onclick=()=>{
 };
 window.addEventListener('scroll',invalidateStageRect,true);
 let lastLayout=isMobile()+'|'+isCompact();
-/* 输入法一弹出来，窗口高度就掉到 720 以下，isCompact() 翻转 →
+/* v1.0.38：输入法一弹出来，窗口高度就掉到 720 以下，isCompact() 翻转 →
    以前会立刻 buildPanel()，把正在输入的那个框连同 DOM 一起重建，
    于是键盘刚升起就被关掉（安卓上「输入不了账号」「改文字被踢」都是这个）。
    规则：焦点在可编辑控件里时，布局变化只记下来，等失焦后再补。 */
@@ -22131,7 +22687,6 @@ window.addEventListener('focusout',()=>{
     if(now!==lastLayout) applyLayoutChange(now);
   },220);
 });
-
 
 /* ---------- 启动 ---------- */
 irisSkinApply(false);   // 与 head 内联脚本一致，并同步 theme-color
