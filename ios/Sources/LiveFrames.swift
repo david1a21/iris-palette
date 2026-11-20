@@ -109,9 +109,8 @@ enum LiveFrames {
             bitmapInfo: CGImageAlphaInfo.premultipliedFirst.rawValue
                 | CGBitmapInfo.byteOrder32Little.rawValue) else { return nil }
 
-        // CGContext 原点在左下，直接 draw 会上下颠倒。
-        ctx.translateBy(x: 0, y: CGFloat(height))
-        ctx.scaleBy(x: 1, y: -1)
+        // CGBitmapContext 的第 0 行在内存里就是图像的顶行，
+        // AVAssetWriter 也按顶行优先消费，这里不能再翻一次，否则动态会倒过来。
         ctx.draw(cg, in: CGRect(x: 0, y: 0, width: width, height: height))
         return buffer
     }
