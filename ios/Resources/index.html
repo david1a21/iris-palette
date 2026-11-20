@@ -6,7 +6,7 @@
 <title>Iris 调色盘 · 语义感知的在线照片编辑器</title>
 <meta name="theme-color" content="#0b0b0d">
 <!-- 版本元数据：检查更新时远端只需读取文件头部即可比对，不必下载整份页面 -->
-<meta name="iris-version" content="1.0.33">
+<meta name="iris-version" content="1.0.30">
 <meta name="iris-build" content="2026-11-19">
 <meta name="iris-repo" content="david1a21/iris-palette">
 <meta name="description" content="Iris 调色盘：语义感知的二维色彩控制器。Tone × Color 两轴、端侧区域分割与肤色锁，433 款滤镜、78 套模板，支持照片 / 视频 / GIF 导出，纯前端不上传。">
@@ -981,12 +981,6 @@ input[type=range]::-webkit-slider-thumb{width:16px;height:16px;margin-top:-6.5px
   box-shadow:0 0 0 3px rgba(var(--accent-rgb),.16)}
 .sem-badge span{overflow:hidden;text-overflow:ellipsis}
 .sem-badge:hover{border-color:var(--accent);color:var(--txt)}
-.cloud-form{display:grid;gap:7px;margin:9px 0}
-.cloud-row{display:flex;align-items:center;gap:8px}
-.cloud-row>span{flex:0 0 92px;font-size:11.5px;opacity:.72;line-height:1.3}
-.cloud-row>input{flex:1;min-width:0}
-.cloud-stat{margin:8px 0 0;font-size:11.5px;line-height:1.55;opacity:.78}
-.cloud-stat b{opacity:.95}
 @media(max-width:520px){ .sem-presets{grid-template-columns:repeat(4,1fr);gap:5px}
   .sem-presets button{font-size:9.5px;padding:8px 2px} }
 
@@ -3631,6 +3625,13 @@ html[data-ui="focus"] .dock>.panel{border-top:0}
 html[data-motion="off"] .fb-btn,html[data-motion="off"] .fb-export,
 html[data-motion="off"] .fx-btn,html[data-motion="off"] .fx-knob{transition:none}
 
+.cloud-form{display:grid;gap:7px;margin:9px 0}
+.cloud-row{display:flex;align-items:center;gap:8px}
+.cloud-row>span{flex:0 0 92px;font-size:11.5px;opacity:.72;line-height:1.3}
+.cloud-row>input{flex:1 1 auto;min-width:0;width:100%;max-width:none}
+.cloud-stat{margin:8px 0 0;font-size:11.5px;line-height:1.55;opacity:.78}
+.cloud-stat b{opacity:.95}
+
 </style>
 <script>
 /* ============================================================
@@ -4550,9 +4551,9 @@ function normalizeState(s){
   o.editLayer=clamp(o.editLayer||0,0,o.layers.length-1);
   o.editLayerName=o.layers[o.editLayer].name;
   o.elements=Array.isArray(s.elements)?s.elements.slice(0,40).filter(e=>e&&e.type).map(e=>({...e})):[];
-  o.fxRegions=Array.isArray(s.fxRegions)?s.fxRegions.slice(0,6).filter(r=>r&&r.type).map(r=>({...fxDefault(),...r})):[];
+  o.fxRegions=Array.isArray(s.fxRegions)?s.fxRegions.slice(0,6).filter(r=>r&&r.type&&r.type<=4).map(r=>({...fxDefault(),...r})):[];
   o.brushStrokes=Array.isArray(s.brushStrokes)?s.brushStrokes.slice(0,80)
-    .filter(st=>st&&st.pts&&st.pts.length&&st.type>=1&&st.type<=4)
+    .filter(st=>st&&st.pts&&st.pts.length&&st.type>=1&&st.type<=5)
     .map(st=>({type:st.type,pts:st.pts.map(q=>[clamp(q[0],-.2,1.2),clamp(q[1],-.2,1.2)]),
       size:clamp(st.size||.035,.008,.16),strength:clamp(st.strength===undefined?.9:st.strength,0,1)})):[];
   o.brushSize=clamp(s.brushSize||.035,.008,.16);
@@ -5763,7 +5764,9 @@ uniform float u_toneOn, u_toneLutSize;
 uniform float u_fxType[6];
 uniform vec4 u_fxGeo[6], u_fxPar[6];
 uniform sampler2D u_fxBrush1, u_fxBrush2, u_fxBrush3, u_fxBrush4;
-uniform float u_fxBrushOn, u_fxBrushStrength;
+uniform float u_fxBrushOn, u_fxBrushStrength, u_healBrushOn;
+uniform sampler2D u_healField;
+uniform float u_healFieldOn;
 uniform vec2 u_fxBrushCenter, u_brushDir;
 /* 语义渲染：matte（skin / sky / hair / highlight）+ 两轴与区域权重 */
 uniform sampler2D u_matte;
@@ -6178,7 +6181,7 @@ vec3 brushSample(vec2 uv, vec2 p, float t, vec2 ctr){
       a+=src(uv+dir*tt*2.0)*w; wsum+=w;
     }
     return a/max(wsum,0.001);
-  } else {
+  } else if(t<4.5) {
     vec2 v=(p-ctr)*3.6;
     vec3 a=src(uv)*0.18;
     a+=src(uv-v*0.06)*0.16+src(uv-v*0.12)*0.15;
@@ -6186,6 +6189,47 @@ vec3 brushSample(vec2 uv, vec2 p, float t, vec2 ctr){
     a+=src(uv-v*0.30)*0.10+src(uv-v*0.36)*0.09;
     a+=src(uv-v*0.42)*0.07;
     return a;
+  } else {
+    /* v1.0.30 · 消除（涂抹笔）
+       CPU 侧按 TELEA 的「由边界向内 + 距离加权」与 exemplar PatchMatch 的
+       propagation / random search 预计算一张「源坐标导向场」u_healField，
+       每个洞像素指向一个纹理最相似的已知源块。这里只按场采样原图全分辨率像素，
+       并做 5 点加权投票（重疊源补丁的加权平均），因此不是模糊、也不是固定半径搬运；
+       大块消除也能补进真实纹理，导出与预览逐像素一致。
+       若设备纹理单元不足 11 个，退化成 8 方向 × 5 步射线找最近已知像素。 */
+    vec2 hs=fitScale();
+    vec3 hcol=vec3(0.0);
+    if(u_healFieldOn>0.5){
+      vec4 hf=texture2D(u_healField,clamp(p,0.0,1.0));
+      float hbx=floor(hf.r*255.0+0.5), hlx=floor(hf.g*255.0+0.5);
+      float hby=floor(hf.b*255.0+0.5), hly=floor(hf.a*255.0+0.5);
+      vec2 hS=vec2((hbx*256.0+hlx)/65535.0,(hby*256.0+hly)/65535.0);
+      vec2 hd=hS-p;
+      vec3 hc0=src(clamp(uv+hd*hs,0.0,1.0));
+      vec2 hn=normalize(hd+vec2(0.00013,0.00007));
+      vec2 ht=vec2(-hn.y,hn.x)*(0.004+0.010*length(hd));
+      vec3 hc1=src(clamp(uv+(hd+ht)*hs,0.0,1.0));
+      vec3 hc2=src(clamp(uv+(hd-ht)*hs,0.0,1.0));
+      vec3 hc3=src(clamp(uv+hd*0.88*hs,0.0,1.0));
+      vec3 hc4=src(clamp(uv+hd*1.12*hs,0.0,1.0));
+      hcol=hc0*0.40+(hc1+hc2)*0.18+(hc3+hc4)*0.12;
+    } else {
+      vec3 hacc=vec3(0.0); float hwsum=0.0;
+      for(int hi=0;hi<8;hi++){
+        float ha=6.2831853*float(hi)/8.0;
+        vec2 hdir=vec2(cos(ha),sin(ha)/max(ar,0.2));
+        for(int hk=1;hk<=5;hk++){
+          float hf=float(hk);
+          vec2 hdp=hdir*0.012*hf;
+          float hm=texture2D(u_maskPaint,clamp(p+hdp,0.0,1.0)).a;
+          float hw=(1.0-smoothstep(0.02,0.40,hm))/hf;
+          hacc+=src(clamp(uv+hdp,0.0,1.0))*hw; hwsum+=hw;
+        }
+      }
+      hcol=hwsum>0.0001?hacc/hwsum:src(uv);
+    }
+    return hcol;
+
   }
 }
 /* 背景虚化：sub=1 是主体（保持清晰），sub=0 是背景（吃满散景）。
@@ -6291,11 +6335,14 @@ ${FX_CODE}
     float m2=texture2D(u_fxBrush2,mp).r;
     float m3=texture2D(u_fxBrush3,mp).r;
     float m4=texture2D(u_fxBrush4,mp).r;
+    /* 消除遮罩：u_maskPaint 的 alpha，软边（栅格化时已 feather） */
+    float m5=u_healBrushOn>0.5?texture2D(u_maskPaint,mp).a:0.0;
     float k=u_fxBrushStrength;
     if(m1>0.004) orig=mix(orig,brushSample(uv,mp,1.0,u_fxBrushCenter),clamp(m1*k,0.0,1.0));
     if(m2>0.004) orig=mix(orig,brushSample(uv,mp,2.0,u_fxBrushCenter),clamp(m2*k,0.0,1.0));
     if(m3>0.004) orig=mix(orig,brushSample(uv,mp,3.0,u_fxBrushCenter),clamp(m3*k,0.0,1.0));
     if(m4>0.004) orig=mix(orig,brushSample(uv,mp,4.0,u_fxBrushCenter),clamp(m4*k,0.0,1.0));
+    if(m5>0.004) orig=mix(orig,brushSample(uv,mp,5.0,u_fxBrushCenter),clamp(m5*k,0.0,1.0));
   }
 
   vec2 off=1.5/u_outSize;
@@ -6472,6 +6519,38 @@ try{ const mu=gl.getParameter(0x8872); if(typeof mu==='number'&&mu<10) maskPaint
 let maskPaintTex=null, maskPaintKey='';
 const maskCanv=[0,1,2].map(()=>{ const c=document.createElement('canvas'); c.width=c.height=MASK_N; return c; });
 const maskVizCanv=[0,1,2].map(()=>{ const c=document.createElement('canvas'); c.width=c.height=MASK_N; return c; });
+/* 消除遮罩：与 3 个蒙版共用同一张 RGBA 纹理的 alpha 通道。
+   笔迹只存归一化坐标 + 尺寸 + 强度，运行时确定性栅格化，存档 / 撤销都能重算。 */
+const healCanv=document.createElement('canvas'); healCanv.width=healCanv.height=MASK_N;
+/* 消除导向场：TEXTURE10。RGBA 打包 16bit×2 的「源坐标」，CPU 侧一次算好，
+   GPU 只按场采样原图全分辨率像素 —— 不把修复结果降分辨率，导出与预览一致。
+   设备纹理单元不足 11 个时自动关闭，shader 走 8 方向射线降级路径。 */
+const HEAL_N=MASK_N;
+let healFieldAvailable=true;
+try{ const mu=gl.getParameter(0x8872); if(typeof mu==='number'&&mu<11) healFieldAvailable=false; }catch(e){}
+const healFieldTex=healFieldAvailable?gl.createTexture():null;
+const healFieldCanv=document.createElement('canvas');
+healFieldCanv.width=healFieldCanv.height=HEAL_N;
+let healFieldKey='';
+/* 复用缓冲区：拖动时每帧都重算快速场，绝不能每帧分配 1.5MB 触发 GC */
+const HF_BUF={
+  hole:new Uint8Array(HEAL_N*HEAL_N),
+  D:new Float32Array(HEAL_N*HEAL_N),
+  OX:new Int16Array(HEAL_N*HEAL_N), OY:new Int16Array(HEAL_N*HEAL_N),
+  SX:new Float32Array(HEAL_N*HEAL_N), SY:new Float32Array(HEAL_N*HEAL_N),
+  out:new Uint8Array(HEAL_N*HEAL_N*4)
+};
+if(healFieldAvailable){
+  gl.activeTexture(gl.TEXTURE10); gl.bindTexture(gl.TEXTURE_2D,healFieldTex);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+  gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,1,1,0,gl.RGBA,gl.UNSIGNED_BYTE,
+    new Uint8Array([0,0,0,0]));
+  gl.uniform1i(gl.getUniformLocation(prog,'u_healField'),10);
+  gl.activeTexture(gl.TEXTURE0);
+}
 const MASK_VIZ_RGB=[[255,214,10],[50,173,230],[255,55,95]];
 if(maskPaintAvailable){
   maskPaintTex=gl.createTexture();
@@ -6481,7 +6560,7 @@ if(maskPaintAvailable){
   gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
   gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
   gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,1,1,0,gl.RGBA,gl.UNSIGNED_BYTE,
-    new Uint8Array([0,0,0,255]));
+    new Uint8Array([0,0,0,0]));   /* alpha = 消除遮罩，初始 0 */
   gl.uniform1i(gl.getUniformLocation(prog,'u_maskPaint'),9);
   gl.activeTexture(gl.TEXTURE0);
 }
@@ -7200,14 +7279,241 @@ function maskPaintSignature(){
     const last=st.pts[st.pts.length-1]||[0,0];
     return st.mode[0]+st.size.toFixed(3)+st.feather.toFixed(2)+st.pts.length+':'+
       last[0].toFixed(3)+','+last[1].toFixed(3);
-  }).join('|');}).join(';');
+  }).join('|');}).join(';')
+    +'|H:'+(state.brushStrokes||[]).filter(st=>st.type===5).map(st=>{
+      const pts=st.pts||[], last=pts[pts.length-1]||[0,0];
+      return st.size.toFixed(3)+','+(st.strength===undefined?.9:st.strength).toFixed(2)
+        +','+pts.length+':'+last[0].toFixed(3)+','+last[1].toFixed(3);
+    }).join(';');
+}
+/* 把 type 5 笔迹栅格化成软边 alpha（与蒙版涂抹同一套 stamp 插值） */
+function rasterHeal(){
+  const x=healCanv.getContext('2d',{willReadFrequently:true});
+  x.setTransform(1,0,0,1,0,0);
+  x.clearRect(0,0,MASK_N,MASK_N);
+  x.globalCompositeOperation='lighter';
+  x.strokeStyle='#fff'; x.fillStyle='#fff'; x.lineCap='round'; x.lineJoin='round';
+  (state.brushStrokes||[]).forEach(st=>{
+    if(st.type!==5) return;
+    const pts=st.pts||[]; if(!pts.length) return;
+    x.globalAlpha=clamp(st.strength===undefined?.9:st.strength,0,1);
+    /* grow 2px：把物体边缘的残留 / 光晕一起纳入，避免留一圈假边（与
+       exemplar-based content-aware fill 的 grow 参数同理） */
+    x.lineWidth=Math.max(3,(st.size||.035)*2*MASK_N+4);
+    x.beginPath();
+    pts.forEach((q,i)=>{ const px=q[0]*MASK_N,py=q[1]*MASK_N; i?x.lineTo(px,py):x.moveTo(px,py); });
+    if(pts.length===1) x.arc(pts[0][0]*MASK_N,pts[0][1]*MASK_N,x.lineWidth/2,0,7);
+    x.stroke();
+  });
+  x.globalCompositeOperation='source-over'; x.globalAlpha=1;
+  const src=x.getImageData(0,0,MASK_N,MASK_N).data;
+  /* feather：3×3 box 一次得到软边，shader 的混合权重天然从 0 渐变到 1，
+     羽化带也一起被合成，不再有硬切边 */
+  const out=new Uint8ClampedArray(src.length);
+  for(let y=0;y<MASK_N;y++) for(let xx=0;xx<MASK_N;xx++){
+    let acc=0,cnt=0;
+    for(let dy=-1;dy<=1;dy++) for(let dx=-1;dx<=1;dx++){
+      const yy=y+dy,x2=xx+dx;
+      if(yy<0||yy>=MASK_N||x2<0||x2>=MASK_N) continue;
+      acc+=src[(yy*MASK_N+x2)*4]; cnt++;
+    }
+    const i=(y*MASK_N+xx)*4;
+    out[i]=out[i+1]=out[i+2]=acc/cnt; out[i+3]=255;
+  }
+  return out;
+}
+function healStrokes(){ return (state.brushStrokes||[]).filter(st=>st.type===5); }
+function clearHeal(){
+  return mutate(()=>{
+    state.brushStrokes=(state.brushStrokes||[]).filter(st=>st.type!==5);
+    if(drawMode==='brush5') drawMode=null;
+    rebuildBrushTextures(); buildPanel(true);
+  });
+}
+/* ============================================================
+   消除导向场 · v1.0.30
+   借鉴开源实现：
+   · OpenCV cv::inpaint / INPAINT_TELEA —— 快速行进由边界向内推进，
+     每个像素取邻域已知像素的归一化加权和，权重含距离、方向、水平集；
+   · INPAINT_NS —— 沿等照度线延续结构，避免跨边缘拉花；
+   · exemplar-based inpainting / PatchMatch（Barnes 2009, Wexler 2007）——
+     propagation + shrinking-radius random search，按 patch SSD 找最相似源块，
+     让纹理而不是「平滑灰云」延续进洞里；
+   · two-pass chamfer distance transform（Barrow 1977, Felzenszwalb 2004）——
+     线性时间求「每个洞像素 → 最近已知像素」的初始场。
+   这里不复制颜色，只求「源坐标场」，颜色交给 GPU 从原图全分辨率采样。
+   ============================================================ */
+function buildHealField(healData,fast){
+  if(!healFieldAvailable||!healData) return;
+  const N=HEAL_N,n=N*N;
+  /* ① 遮罩 + 生长 + 外接框 */
+  const hole=HF_BUF.hole; hole.fill(0);
+  let x0=N,y0=N,x1=0,y1=0;
+  for(let i=0;i<n;i++){
+    const v=healData[i*4];
+    if(v>28){ hole[i]=1; const x=i%N,y=(i/N)|0;
+      if(x<x0)x0=x; if(x>x1)x1=x; if(y<y0)y0=y; if(y>y1)y1=y; }
+  }
+  if(x1<x0){ healFieldKey=''; return; }
+  const m=8;
+  x0=Math.max(0,x0-m); y0=Math.max(0,y0-m);
+  x1=Math.min(N-1,x1+m); y1=Math.min(N-1,y1+m);
+  /* chamfer 只需在「洞 + 足够找到源像素的余量」内传播，不必全 256² 扫两遍。
+     余量取 max(48, 洞尺寸的一半)，保证大块消除也能找到 bbox 外的已知像素。 */
+  const m2=Math.max(48,Math.round(Math.max(x1-x0,y1-y0)*0.55));
+  const cx0=Math.max(0,x0-m2), cy0=Math.max(0,y0-m2);
+  const cx1=Math.min(N-1,x1+m2), cy1=Math.min(N-1,y1+m2);
+  /* 工作缩略图：复用已生成的共享分析小图，不再缩放一次大原图。
+     快速场（拖动中）只跑 chamfer，连这张工作图都不读。 */
+  let work=null;
+  if(!fast){
+    const wc=healFieldCanv, wx=wc.getContext('2d',{willReadFrequently:true});
+    wx.setTransform(1,0,0,1,0,0); wx.clearRect(0,0,N,N);
+    try{
+      wx.drawImage(LIVE.analysis||LIVE.fullSource,0,0,N,N);
+      work=wx.getImageData(0,0,N,N).data;
+    }catch(e){}
+  }
+  /* ② two-pass chamfer 距离变换，同时传播最近已知像素坐标 */
+  const INF=1e8, D=HF_BUF.D, OX=HF_BUF.OX, OY=HF_BUF.OY;
+  for(let y=0;y<N;y++) for(let x=0;x<N;x++){
+    const i=y*N+x;
+    if(hole[i]){ D[i]=INF; OX[i]=x; OY[i]=y; }
+    else { D[i]=0; OX[i]=x; OY[i]=y; }
+  }
+  const FWD=[[-1,0,1],[0,-1,1],[-1,-1,1.4142],[1,-1,1.4142]];
+  const BWD=[[1,0,1],[0,1,1],[1,1,1.4142],[-1,1,1.4142]];
+  const chamfer=(steps,rev)=>{
+    for(let yy=cy0;yy<=cy1;yy++){ const y=rev?cy1-(yy-cy0):yy;
+      for(let xx=cx0;xx<=cx1;xx++){ const x=rev?cx1-(xx-cx0):xx;
+        const i=y*N+x; let best=D[i], bo=OX[i], bq=OY[i];
+        for(let k=0;k<4;k++){
+          const nx=x+steps[k][0], ny=y+steps[k][1];
+          if(nx<0||nx>=N||ny<0||ny>=N) continue;
+          const j=ny*N+nx, v=D[j]+steps[k][2];
+          if(v<best){ best=v; bo=OX[j]; bq=OY[j]; }
+        }
+        D[i]=best; OX[i]=bo; OY[i]=bq;
+      }
+    }
+  };
+  chamfer(FWD,false); chamfer(BWD,true);
+  /* ③ TELEA 式松弛：由外向内按 1/(D+1) 加权平均邻居源坐标，让场连续 */
+  const SX=HF_BUF.SX, SY=HF_BUF.SY;
+  for(let i=0;i<n;i++){ SX[i]=OX[i]; SY[i]=OY[i]; }
+  const relax=()=>{
+    for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++){
+      const i=y*N+x; if(!hole[i]) continue;
+      let ax=0,ay=0,aw=0;
+      for(let k=0;k<4;k++){
+        const nx=x+FWD[k][0], ny=y+FWD[k][1];
+        if(nx<0||nx>=N||ny<0||ny>=N) continue;
+        const j=ny*N+nx;
+        if(D[j]>D[i]) continue;                 /* 只从更靠近边界的一侧传播 */
+        const w=1/(D[j]+1);
+        ax+=SX[j]*w; ay+=SY[j]*w; aw+=w;
+      }
+      if(aw>0){
+        const nx=Math.round(ax/aw), ny=Math.round(ay/aw);
+        /* TELEA 松弛是浮点平均，可能把源坐标拖进洞里；一旦发生就保持
+           chamfer 给出的最近已知点，绝不让 shader 采到待消除区域 */
+        if(nx>=0&&nx<N&&ny>=0&&ny<N&&!hole[ny*N+nx]){ SX[i]=ax/aw; SY[i]=ay/aw; }
+      }
+    }
+  };
+  relax(); relax();
+  /* ④ exemplar / PatchMatch：propagation + shrinking random search，
+        3×3 patch SSD 选与洞周围已知区域最相似的源块（只跑外接框内） */
+  if(work&&!fast){
+    const R=3;
+    const cost=(x,y,sx,sy)=>{
+      sx=Math.round(sx); sy=Math.round(sy);
+      if(sx<R||sy<R||sx>=N-R||sy>=N-R) return 1e9;
+      if(hole[sy*N+sx]) return 1e9;          /* 源块中心必须落在已知区 */
+      let e=0,cnt=0;
+      for(let dy=-1;dy<=1;dy++) for(let dx=-1;dx<=1;dx++){
+        const px=x+dx,py=y+dy;
+        if(px<0||px>=N||py<0||py>=N) continue;
+        const pi=py*N+px; if(hole[pi]) continue;          /* 只比已知侧 */
+        const qx=sx+dx,qy=sy+dy, qi=(qy*N+qx)*4, ai=pi*4;
+        if(hole[qy*N+qx]) continue;                       /* 源块也必须在已知区 */
+        const dr=work[ai]-work[qi], dg=work[ai+1]-work[qi+1], db=work[ai+2]-work[qi+2];
+        e+=dr*dr+dg*dg+db*db; cnt++;
+      }
+      return cnt<2?1e9:e/cnt;
+    };
+    let rad=Math.max(6,Math.round(Math.max(x1-x0,y1-y0)*0.35));
+    const rounds=((x1-x0+1)*(y1-y0+1)>16000)?2:3;
+    for(let it=0;it<rounds;it++){
+      const rev=it%2===1;
+      for(let yy=y0;yy<=y1;yy++){ const y=rev?y1-(yy-y0):yy;
+        for(let xx=x0;xx<=x1;xx++){ const x=rev?x1-(xx-x0):xx;
+          const i=y*N+x; if(!hole[i]) continue;
+          let best=cost(x,y,SX[i],SY[i]), bx=SX[i], by=SY[i];
+          /* propagation：沿用左 / 上（或右 / 下）邻居的偏移 */
+          for(let k=0;k<2;k++){
+            const nx=x+(rev?1:-1)*(k?0:1), ny=y+(rev?1:-1)*(k?1:0);
+            if(nx<0||nx>=N||ny<0||ny>=N) continue;
+            const j=ny*N+nx;
+            const cx=SX[j]+(x-nx), cy=SY[j]+(y-ny);
+            const c=cost(x,y,cx,cy);
+            if(c<best){ best=c; bx=cx; by=cy; }
+          }
+          /* shrinking-radius random search */
+          const tries=fast?1:2;
+          for(let t=0;t<tries;t++){
+            const ang=(t*2.399963+it*1.117+x*0.031+y*0.017);
+            const rr=rad*(0.35+0.65*((t+1)/tries));
+            const cx=SX[i]+Math.cos(ang)*rr, cy=SY[i]+Math.sin(ang)*rr;
+            const c=cost(x,y,cx,cy);
+            if(c<best){ best=c; bx=cx; by=cy; }
+          }
+          SX[i]=bx; SY[i]=by;
+        }
+      }
+      rad=Math.max(3,Math.round(rad*0.6));
+    }
+  }
+  /* ⑤ 打包 16bit×2 源坐标 → RGBA，上传 TEXTURE10 */
+  const buf=HF_BUF.out;
+  for(let y=0;y<N;y++) for(let x=0;x<N;x++){
+    const i=y*N+x, j=i*4;
+    let sx=Math.round(clamp(SX[i],0,N-1)), sy=Math.round(clamp(SY[i],0,N-1));
+    if(hole[sy*N+sx]){ sx=OX[i]; sy=OY[i]; }   /* 回退到 chamfer 最近已知点 */
+    if(hole[sy*N+sx]){                          /* 极端兜底：3×3 内找第一个已知像素 */
+      outer: for(let dy=-1;dy<=1;dy++) for(let dx=-1;dx<=1;dx++){
+        const nx=clamp(sx+dx,0,N-1), ny=clamp(sy+dy,0,N-1);
+        if(!hole[ny*N+nx]){ sx=nx; sy=ny; break outer; }
+      }
+    }
+    const vx=Math.round(sx*65535/(N-1)), vy=Math.round(sy*65535/(N-1));
+    buf[j]=vx>>8; buf[j+1]=vx&255; buf[j+2]=vy>>8; buf[j+3]=vy&255;
+  }
+  gl.activeTexture(gl.TEXTURE10); gl.bindTexture(gl.TEXTURE_2D,healFieldTex);
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,false);
+  gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,N,N,0,gl.RGBA,gl.UNSIGNED_BYTE,buf);
+  gl.activeTexture(gl.TEXTURE0);
 }
 function rebuildMaskPaint(force){
   if(!maskPaintAvailable) return;
   const key=maskPaintSignature();
-  if(!force&&key===maskPaintKey) return;
+  /* 拖动中只跑 chamfer 快速场（F: 键），松手后签名变成 Q: 自动补一次精修场，
+     这样连续涂 80 笔也不会每帧跑 PatchMatch。
+     fkey 必须参与 early-return：否则松手后 key 与上一帧相同会直接 return，
+     精修场永远不会被触发。 */
+  const fast=!!(typeof elDrag!=='undefined'&&elDrag&&elDrag.mode==='brush');
+  const fkey=(fast?'F:':'Q:')+key;
+  if(!force&&key===maskPaintKey&&fkey===healFieldKey) return;
+  const needPaint=force||key!==maskPaintKey;
   maskPaintKey=key;
+  /* 没有消除笔迹时完全跳过栅格化与导向场 —— 零额外开销 */
+  const healData=healStrokes().length?rasterHeal():null;
   const chans=[];
+  if(healFieldAvailable&&fkey!==healFieldKey){
+    healFieldKey=fkey;
+    buildHealField(healData,fast);
+  }
+  if(!needPaint) return;   /* 只补精修场，遮罩纹理没变，不再上传一次 */
   for(let k=0;k<3;k++){
     const m=state.masks[k], cv=maskCanv[k];
     const x=cv.getContext('2d',{willReadFrequently:true});
@@ -7253,7 +7559,8 @@ function rebuildMaskPaint(force){
   const buf=new Uint8Array(MASK_N*MASK_N*4);
   const viz=[0,1,2].map(k=>maskVizCanv[k].getContext('2d').createImageData(MASK_N,MASK_N));
   for(let i=0,j=0;i<MASK_N*MASK_N*4;i+=4,j+=4){
-    buf[j]=chans[0][i]; buf[j+1]=chans[1][i]; buf[j+2]=chans[2][i]; buf[j+3]=255;
+    buf[j]=chans[0][i]; buf[j+1]=chans[1][i]; buf[j+2]=chans[2][i];
+    buf[j+3]=healData?healData[i]:0;
     for(let k=0;k<3;k++){
       const v=chans[k][i], c=MASK_VIZ_RGB[k], d=viz[k].data;
       d[j]=c[0]; d[j+1]=c[1]; d[j+2]=c[2]; d[j+3]=Math.round(v*.72);
@@ -7565,6 +7872,8 @@ function setUniforms(o){
   /* 涂抹笔刷遮罩 */
   u1('u_fxBrushOn',o.noFx?0:1);
   u1('u_fxBrushStrength',state.brushStrength);
+  u1('u_healBrushOn',(maskPaintAvailable&&healStrokes().length&&!o.noFx)?1:0);
+  u1('u_healFieldOn',(healFieldAvailable&&healStrokes().length&&!o.noFx)?1:0);
   const bd=brushMotionDir(); u2('u_brushDir',bd[0],bd[1]);
   /* 径向中心：从尾部反向查找，不复制整条笔迹数组 */
   let rad=null;
@@ -7574,6 +7883,7 @@ function setUniforms(o){
   }
   u2('u_fxBrushCenter',rad?rad.pts[0][0]:.5,rad?rad.pts[0][1]:.5);
   for(let i=1;i<=4;i++) u1i('u_fxBrush'+i,1+i);
+  if(healFieldAvailable) u1i('u_healField',10);
   /* 光场层 / 背景虚化 */
   const lf=state.lf||{}, bk=state.bokeh||{};
   u1('u_bokOn',(bk.on&&BOK.ready)?1:0);
@@ -7621,6 +7931,9 @@ function bindTextures(){
   for(let i=0;i<4;i++){ gl.activeTexture(gl.TEXTURE2+i); gl.bindTexture(gl.TEXTURE_2D,brushTex[i]); }
   gl.activeTexture(gl.TEXTURE6); gl.bindTexture(gl.TEXTURE_2D,SEM.tex);
   gl.activeTexture(gl.TEXTURE7); gl.bindTexture(gl.TEXTURE_2D,BOK.tex);
+  if(healFieldAvailable){
+    gl.activeTexture(gl.TEXTURE10); gl.bindTexture(gl.TEXTURE_2D,healFieldTex);
+  }
   gl.activeTexture(gl.TEXTURE0);
 }
 function draw(w,h,opts={}){
@@ -7673,7 +7986,7 @@ function paintFrame(){
     const tu=performance.now();
     /* 录制时目标帧率通常低于显示器刷新率：未到下一帧时刻就复用上一帧纹理，
        省掉一半以上的 texImage2D 上传，画面与输出帧率都不变。 */
-    const gap=LIVE.recording?(1000/Math.max(30,+state.exportVideoFps||30)-1.5):0;
+    const gap=LIVE.recording?(1000/Math.max(1,+state.exportVideoFps||30)-1.5):0;
     if(!LIVE.lastUpload||tu-LIVE.lastUpload>=gap){
       try{
         gl.activeTexture(gl.TEXTURE0);
@@ -7691,11 +8004,9 @@ function paintFrame(){
   lastFrameAt=now;
   const dpr=Math.min(window.devicePixelRatio||1,2);
   const scale=(burst>=2&&!LIVE.recording&&!LIVE.playing)?.65:1;
-  const rd=LIVE.recording&&LIVE.recordDims;
-  const fw=rd?LIVE.recordDims[0]:Math.max(2,Math.round(canvas.clientWidth*dpr)),
-        fh=rd?LIVE.recordDims[1]:Math.max(2,Math.round(canvas.clientHeight*dpr));
-  const w=rd?fw:Math.max(2,Math.round(fw*scale)),
-        h=rd?fh:Math.max(2,Math.round(fh*scale));
+  const fw=Math.max(2,Math.round(canvas.clientWidth*dpr)),
+        fh=Math.max(2,Math.round(canvas.clientHeight*dpr));
+  const w=Math.max(2,Math.round(fw*scale)), h=Math.max(2,Math.round(fh*scale));
   if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;}
   /* 裁剪工具由 2D 画布接管画面，跳过 WebGL 主绘制省一帧 GPU */
   if(tool!=='crop') draw(w,h,{original:comparing,outSize:[fw,fh]});
@@ -7729,6 +8040,10 @@ function render(){ cancelAnimationFrame(raf); raf=requestAnimationFrame(paintFra
    ============================================================ */
 const FX_TYPES=[{id:1,name:'马赛克',icon:'mosaic'},{id:2,name:'柔焦模糊',icon:'blur'},
   {id:3,name:'动态模糊',icon:'motion'},{id:4,name:'径向模糊',icon:'radial'}];
+/* v1.0.30：消除只剩「涂抹笔」一条通路，和上面四种像素效果并列放在同一网格里。
+   HEAL_TYPE=5 只标识 state.brushStrokes 的笔迹类型，不再是 fxRegions 的点放效果；
+   旧存档里遗留的 type 5 圆形区域在 sanitize 阶段直接丢弃。 */
+const HEAL_TYPE=5;
 const STICKERS=['✨','⭐','❤️','🔥','😊','🌸','☀️','🌙','☁️','🍃','📸','🎞️',
   '💫','🎈','🎵','🌈','🍒','🐱','👑','💎','🦋','🌊','🍀','⚡'];
 const SHAPES=[{id:'rect',name:'矩形'},{id:'round',name:'圆角'},{id:'ellipse',name:'椭圆'},
@@ -9281,21 +9596,15 @@ function recordLiveClip(mimeOverride){
     const v=LIVE.video, mime=mimeOverride||liveRecorderMime();
     /* WebGL 画布的 captureStream 在部分浏览器（含 iOS Safari）不出帧。
        用一张 2D 中转画布逐帧 drawImage，录制源始终是普通 2D canvas。 */
-    /* 动态不再从屏幕小画布取像素：按导出画幅、原片级长边逐帧重渲染 */
-    const [ew,eh]=exportDims();
-    const capEdge=1440;
-    const rs=Math.min(1,capEdge/Math.max(ew,eh));
-    const rw=Math.max(2,Math.round(ew*rs)), rh=Math.max(2,Math.round(eh*rs));
-    LIVE.recordDims=[rw,rh];
+    const dpr=Math.min(window.devicePixelRatio||1,2);
     const proxy=document.createElement('canvas');
-    proxy.width=rw; proxy.height=rh;
+    proxy.width=Math.max(2,Math.round(canvas.clientWidth*dpr));
+    proxy.height=Math.max(2,Math.round(canvas.clientHeight*dpr));
     const px=proxy.getContext('2d');
     let rec, stream;
     try{
-      stream=proxy.captureStream(clamp(Math.max(30,+state.exportVideoFps||30),30,60));
-      const ropts=videoRecorderOpts(mime);
-      if(!ropts.videoBitsPerSecond) ropts.videoBitsPerSecond=20000000;
-      rec=new MediaRecorder(stream,ropts);
+      stream=proxy.captureStream(clamp(+state.exportVideoFps||30,12,60));
+      rec=new MediaRecorder(stream,videoRecorderOpts(mime));
     }catch(e){ reject(e); return; }
     const chunks=[]; let done=false, guard=0, guard2=0, pump=0;
     let lastPaint=0;
@@ -9312,9 +9621,7 @@ function recordLiveClip(mimeOverride){
       if(done) return; done=true;
       clearTimeout(guard); clearTimeout(guard2); cancelAnimationFrame(pump);
       try{ livePause(); }catch(e){}
-      LIVE.recordDims=null;
       LIVE.recording=false; updateLiveUI();
-      try{ render(); }catch(e){}
       if(rec.state!=='inactive'){ try{rec.stop();}catch(e){} }
       setTimeout(()=>{ try{ stream.getTracks().forEach(t=>t.stop()); }catch(e){} },300);
     };
@@ -9327,7 +9634,6 @@ function recordLiveClip(mimeOverride){
     const start=()=>{
       if(started||done) return; started=true;
       v.removeEventListener('seeked',start);
-      try{ paintFrame(); }catch(e){}
       try{ px.drawImage(canvas,0,0,proxy.width,proxy.height); }catch(e){}
       try{ rec.start(100); }catch(e){ LIVE.recording=false; reject(e); return; }
       livePlay(); pump=requestAnimationFrame(paint);
@@ -12305,7 +12611,7 @@ function renderVideoPage(body){
    4) 断网、限流、404、旧版页面格式都有明确降级与提示，
       检查失败不影响任何编辑与导出功能。
    ============================================================ */
-const IRIS_VERSION='1.0.33';             /* 页面版本：走 HTML 热更新，持续递增 */
+const IRIS_VERSION='1.0.34';             /* 页面版本：走 HTML 热更新，持续递增 */
 const IRIS_BUILD='2026-11-19';
 const IRIS_CHANNEL='hot';                /* hot = HTML 热更新通道 */
 const IRIS_APP_BASELINE='1.0.1.8';       /* 最终安装包 / Release 版本，已冻结 */
@@ -13205,6 +13511,7 @@ const ICONS={
   blur:'<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="5" opacity=".75"/><circle cx="12" cy="12" r="2" opacity=".55"/><path d="M12 3.5v17M3.5 12h17" opacity=".35"/>',
   motion:'<path d="M3.5 8.5h12M3.5 12h16M3.5 15.5h9"/><path d="m17.5 5.5 3 3-3 3" opacity=".8"/><path d="M14 18.5l3 3 3-3" opacity=".45"/>',
   radial:'<circle cx="12" cy="12" r="2.2"/><path d="M12 2.8v4M12 17.2v4M2.8 12h4M17.2 12h4M5.5 5.5l2.8 2.8M15.7 15.7l2.8 2.8M18.5 5.5l-2.8 2.8M8.3 15.7l-2.8 2.8"/>',
+  heal:'<path d="M4 12a8 8 0 0113.6-5.7L20 8.6M20 4v4.6h-4.6"/><path d="M20 12a8 8 0 01-13.6 5.7L4 15.4M4 20v-4.6h4.6"/><circle cx="12" cy="12" r="3.1"/><path d="M9.6 9.6l4.8 4.8"/>',
   brush:'<path d="M14 4.5 19.5 10 10 19.5 4.5 14z"/><path d="m12.5 6 5.5 5.5M3.5 20c1.8 0 2.5-1 2.5-2.5"/>',
   place:'<circle cx="12" cy="12" r="8.5" stroke-dasharray="3 3"/><circle cx="12" cy="12" r="2.4" fill="currentColor" stroke="none"/>',
   undo:'<path d="M9 7 4.5 11.5 9 16"/><path d="M4.5 11.5H14a5.5 5.5 0 0 1 0 11h-2"/>',
@@ -13488,7 +13795,7 @@ const PANEL_META={
   plate:['调色盘','白点拖动，分别调整 12 种色调',3],
   filters:['滤镜','多层叠加，每层独立调色盘',2],
   adjust:['调整','光效 · 颜色 · 细节',3],
-  elements:['元素','文字 · 贴纸 · 形状 · 涂鸦 · 马赛克 / 模糊',2],
+  elements:['元素','文字 · 贴纸 · 形状 · 涂鸦 · 像素效果',2],
   local:['局部','在照片上涂抹选区，只修画面的某一块',4],
   grade:['分级','三色轮 · 通道混合 · 3D LUT',2],
   light:['光效','去雾 · 光晕 · 暗角 · 透视',1],
@@ -13561,6 +13868,12 @@ function buildTools(){
   m.onclick=e=>{ e.stopPropagation(); moreOpen=!moreOpen; renderMoreMenu(); };
   t.append(m);
   renderMoreMenu();
+}
+function openHeal(){
+  gotoTool('elements');
+  brushMode='brush'; drawMode='brush5';
+  toast('消除笔：在照片上涂过要去掉的东西，松手即补全');
+  buildPanel(true); render();
 }
 function renderMoreMenu(){
   const menu=$('#moreMenu');
@@ -14539,13 +14852,13 @@ function buildElements(p){
     let dname='涂鸦';
     if(typeof drawMode==='string'&&(drawMode.startsWith('brush')||drawMode.startsWith('place'))){
       const t=FX_TYPES.find(v=>v.id===parseInt(drawMode.slice(5),10));
-      dname=(drawMode.startsWith('brush')?'涂抹 · ':'点放 · ')+(t?t.name:'');
+      dname=(drawMode.startsWith('brush')?'涂抹 · ':'点放 · ')+(drawMode==='brush5'?'消除':(t?t.name:''));
     }
     const bar=document.createElement('div'); bar.className='mode-bar';
     const txt=document.createElement('span');
     const ds=typeof drawMode==='string'?drawMode:'';
-    const modeHint=ds.startsWith('brush')
-      ? '金色圈＝笔刷范围，整屏可刷，不会误删元素'
+    const modeHint=ds==='brush5' ? '涂过的地方会用周围相似纹理补上，可反复叠加'
+      : ds.startsWith('brush') ? '金色圈＝笔刷范围，整屏可刷，不会误删元素'
       : ds.startsWith('place') ? '点照片放置圆形区域' : '拖动即可画线';
     txt.innerHTML=svg('brush',15)+' <b>正在'+dname+'</b><small>'+modeHint+'</small>';
     const quit=button('✕ 退出模式',()=>{ exitDrawMode(); toast('已退出'+dname); });
@@ -14588,6 +14901,15 @@ function buildElements(p){
       buildPanel(true);
     },drawMode===key));
   });
+  /* v1.0.30：消除只是这排像素效果里的第 5 个并列按钮，不再有独立大卡。
+     它只有涂抹一种交互，所以无论当前是「涂抹笔刷」还是「点放圆形」，
+     点它都会切回涂抹模式，避免出现「点放消除圆」那条被删掉的通路。 */
+  fxRow.append(mkAdd('heal','消除',()=>{
+    brushMode='brush';
+    drawMode=drawMode==='brush5'?null:'brush5';
+    toast(drawMode?'消除笔：在照片上涂过要去掉的东西，松手即补全':'已取消消除笔');
+    buildPanel(true);
+  },drawMode==='brush5'));
   a.append(fxRow);
   if(brushMode==='brush'){
     a.append(slider('brushSize','笔刷大小',.008,.16,.002,'%',.035));
@@ -14600,11 +14922,14 @@ function buildElements(p){
     bstat.append(button('清除全部笔刷',()=>mutate(()=>{
       state.brushStrokes=[]; rebuildBrushTextures(); buildPanel(true);
     }),'sm'));
+    if(healStrokes().length){
+      bstat.append(button('清除消除',()=>{ clearHeal(); toast('已清除全部消除笔迹'); },'sm'));
+    }
     bstat.append(hint(`已涂 ${state.brushStrokes.length} 笔 · ${pts} 点`));
     a.append(bstat);
   }
   a.append(hint(brushMode==='brush'
-    ? '选一种效果后，在照片上按住拖动即可涂抹；金色圈＝笔刷实际作用范围，跟着手指走（会随照片比例呈椭圆）。涂抹时整屏都可刷，不会被文字、贴纸或效果圈挡住，也不会误删它们；笔刷可反复叠加，导出时一并合成。再点一次按钮或按 Esc 退出。'
+    ? '选一种效果后，在照片上按住拖动即可涂抹；金色圈＝笔刷实际作用范围，跟着手指走（会随照片比例呈椭圆）。涂抹时整屏都可刷，不会被文字、贴纸或效果圈挡住，也不会误删它们；笔刷可反复叠加，导出时一并合成。消除会按周围相似纹理补上涂过的区域，适合路人、水印、瑕疵；大面积规则纹理（砖墙、栏杆）仍会有近似感。再点一次按钮或按 Esc 退出。'
     : '选一种效果后点照片放置圆形区域，可拖动、调范围与羽化；再点一次按钮或按 Esc 退出。'));
   p.append(a);
 
@@ -16883,7 +17208,7 @@ const GUIDE_CHAPTERS=[
    +'<br>③ <b>重打光</b>：深度梯度近似法线，按方向做柔和定向明暗。'
    +'<br>提供人像虚化、微距浅景深、风光全景深、3D 视差微动、侧光 / 顶光重塑等预设与「自动对焦主体」。'
    +'<br><b>如实说明</b>：单张照片没有真实光场射线，这是 2.5D 近似，复杂遮挡、透明物体、发丝边缘会有误差。'},
- {id:'local',t:'09 · 局部蒙版 · 涂抹选区与涂抹效果',k:'局部 蒙版 涂抹选区 笔刷 擦除 加选区 反转 范围预览 线性 径向 可视化 马赛克 模糊 动态模糊 径向模糊',
+ {id:'local',t:'09 · 局部蒙版 · 涂抹选区与涂抹效果',k:'局部 蒙版 涂抹选区 笔刷 擦除 加选区 反转 范围预览 线性 径向 可视化 马赛克 模糊 动态模糊 径向模糊 消除 去水印 去路人 祛痘 修复 inpainting PatchMatch TELEA 距离变换',
   b:'<b>局部蒙版现在默认用涂抹选范围，不用再调中心 X / Y / 角度 / 半径这几个数值去猜位置</b>。'
    +'打开「局部」页，点某个蒙版里的「✎ 开始涂抹」，直接在照片上拖着刷出要调整的那块；'
    +'金色虚线圈就是笔刷的实际作用范围，笔刷大小与边缘柔和度可调，切「− 擦除」可以刷掉多余部分，'
@@ -16892,8 +17217,20 @@ const GUIDE_CHAPTERS=[
    +'打开「范围预览」会显示半透明彩色遮罩，指哪看哪。'
    +'<br>笔迹以归一化坐标存在参数里，撤销 / 重做 / 参数 JSON 存档都能重算；导出照片、视频、GIF 时同样生效。'
    +'切到「◐ 形状渐变」可回到传统的线性 / 径向渐变（含「在照片上点中心」与折叠的精确数值），两种来源各自的参数都会保留。'
-   +'<br>「元素」页的四种效果（马赛克 / 柔焦 / 动态 / 径向模糊）同样支持<b>直接在照片上涂抹</b>：选一种后拖着刷，'
+   +'<br>「元素」页的四种像素效果（马赛克 / 柔焦 / 动态 / 径向模糊）同样支持<b>直接在照片上涂抹</b>：选一种后拖着刷，'
    +'笔刷大小与强度可调，可撤销上一笔、一键清除；原来的「点一下放个圆」也保留。'
+   +'<br><b>消除（v1.0.30）</b>就是这排效果里的第 5 个并列按钮，不单独做大卡、也没有圈选模式：'
+   +'点它进入「涂抹 · 消除」，在照片上涂过路人 / 水印 / 瑕疵，松手就补上；笔刷大小、强度、撤销、清除消除都和旁边四种完全一样。'
+   +'<br>它不是模糊也不是马赛克。实现参照了几套开源图像修复算法：'
+   +'<code>OpenCV cv::inpaint / INPAINT_TELEA</code> 的快速行进「由边界向内、距离加权」、'
+   +'<code>INPAINT_NS</code> 的沿等照度线延续结构、'
+   +'以及 exemplar-based / <code>PatchMatch</code>（Barnes 2009、Wexler 2007）的「找最相似源块」。'
+   +'CPU 侧先用两遍 chamfer 距离变换（Barrow 1977 / Felzenszwalb 2004）求出每个洞像素到最近已知像素的场，'
+   +'再按 3×3 patch 的颜色相似度做传播与收缩半径随机搜索，得到一张「源坐标导向场」；'
+   +'GPU 只按这张场去采样<b>原图全分辨率</b>像素，并做 5 点加权投票 —— 所以补进来的是真实纹理，不是平滑灰云，导出也不糊。'
+   +'遮罩栅格化时做了 2px 生长与 3×3 羽化，物体边缘的残留和硬切边一起被合成。'
+   +'填充位于调色之前，补上的像素会一起吃滤镜；笔迹写进 <code>state.brushStrokes</code>，撤销 / 自动保存 / 刷新恢复 / 导出全链路一致。'
+   +'复杂规则纹理（砖墙、栏杆、文字）仍会有近似感，这是 exemplar 类方法的固有边界，不是 ML 抠图。'
    +'<br><b>动态模糊</b>按标准动感模糊实现：沿一个方向做等权线性积分，涂抹时方向自动跟随你的手势、长度随强度变化；'
    +'点放圆形时可在「角度」滑杆改方向。点元素本身会立刻回到编辑态，Esc 可退出当前模式。'},
  {id:'elements',t:'10 · 文字 / 贴纸 / 形状 / 涂鸦',k:'文字 贴纸 形状 涂鸦 字体 黑体 宋体 楷体 圆体 等宽 手写 描边 旋转 缩放 删除 复制 图层顺序',
@@ -18296,6 +18633,23 @@ c = mix(shifted, clampToSkin(shifted, src), skinMask * u_semLock);</pre>
 </ul>
 <p><b>v1.0.23 · 沉浸大图是第三套界面版本，不是第三个编辑器</b>：<code>IRIS_UIS</code> 增加 <code>focus</code>，<code>irisSkinApply()</code> 把 <code>data-ui="focus"</code> 写到根元素，head 内联脚本在首屏绘制前读取同一个 <code>iris_skin</code> 键，刷新不闪回。所有差异都在 CSS：原顶栏退成 <code>height:0</code> 的浮层宿主（<code>⋯</code> 与导出菜单仍挂在它下面，重新指定 <code>top</code>），新增的 <code>.focus-bar</code> 只放五个按钮；桌面 <code>#app</code> 强制回 <code>column</code>，<code>.stage</code> 吃掉顶栏与底部工作区之间的全部高度，<code>.dock</code> 限高 36dvh、横向全宽。</p>
 <p>功能不靠「藏按钮」实现：<code>buildTools()</code> 在 focus 下把 14 个工具全铺成横向 tab（不再需要「更多」弹层），<code>applyToolPos()</code> 用 <code>eff</code> 变量把工具行强制放回 dock 但不改写用户的「顶栏」偏好，切回原版自动恢复。大滑杆的 <code>fxSet()</code> 直接读写同一份 <code>state.base.&lt;key&gt;</code>，<code>commit(before)</code> 保证一次拖动只进一条撤销历史；<code>fxSync()</code> 挂在 <code>paintFrame</code> 末尾，带值去重，静止帧零 DOM 写入。导出、撤销、重做、对比、全屏、画质设置全部调用主编辑器已有的函数。</p>
+<p><b>v1.0.30 · 消除按开源 inpainting 重做</b>：v1.0.29 那版「固定 12 方向 × 3 尺度搬像素 + 点放一个圆」效果差、还把功能做成显眼大卡，已整体移除。
+现在<b>只有涂抹笔一种交互</b>，就是「元素」页像素效果网格里与马赛克 / 柔焦 / 动态 / 径向并列的第 5 个按钮；
+<code>state.fxRegions</code> 的 <code>type 5</code> 圆形区域在 <code>sanitize</code> 里直接丢弃，旧存档不会冒出幽灵圈。</p>
+<p>算法参照开源实现而非自造：OpenCV <code>cv::inpaint</code> 的 <b>INPAINT_TELEA</b>（Telea 2004，FMM 由边界向内推进、权重含方向 / 距离 / 水平集）
+与 <b>INPAINT_NS</b>（Bertalmio 2001，沿等照度线延续结构），
+exemplar-based inpainting / <b>PatchMatch</b>（Barnes 2009、Wexler 2007，传播 + 收缩半径随机搜索找最相似源块），
+以及两遍 <b>chamfer 距离变换</b>（Barrow 1977、Felzenszwalb 2004）求「最近已知像素」的初始场。
+扩散式方法在大块破损上会留灰云，exemplar 方法才能补进真实纹理，所以两者都用：chamfer 给初值、TELEA 式松弛让场连续、patch SSD 再挑纹理最像的源。</p>
+<p><code>buildHealField()</code> 输出 256² RGBA，把「源坐标」按 16bit×2 打包（R/G = x 高低位，B/A = y 高低位），
+上传到 <code>TEXTURE10</code> 的 <code>u_healField</code>；<code>brushSample</code> 的 <code>t=5</code> 分支解码坐标，
+按 <code>(S-p)*fitScale()</code> 换算回 uv，从 <code>src()</code> 取<b>原图全分辨率</b>像素，再做 5 点加权投票（主源 0.40 + 切向两个 0.18×2 + 法向两个 0.12×2）。
+颜色不经过低分辨率中间图，所以预览与 <code>renderExportCanvas()</code> 逐像素一致、导出不糊；填充仍在 <code>orig=src(uv)</code> 之后、调色之前。</p>
+<p>流畅度：遮罩仍复用 <code>u_maskPaint</code> 的 alpha（RGB 归 3 个局部蒙版）；
+拖动中只跑 chamfer 快速场（<code>F:</code> 键），松手后签名变 <code>Q:</code> 自动补一次 PatchMatch 精修场 ——
+两者都参与 <code>rebuildMaskPaint</code> 的 early-return 判断，否则松手后 key 不变会直接 return、精修永远不触发。
+<code>HF_BUF</code> 复用全部 6 个 256² 数组，拖动时零分配、零 GC；快速场连工作缩略图的 <code>getImageData</code> 都跳过。
+<code>MAX_TEXTURE_IMAGE_UNITS &lt; 11</code> 的设备自动关掉导向场，shader 退化成 8 方向 × 5 步射线找最近已知像素，不会黑屏。</p>
 <p><b>v1.0.28 · 顶栏按钮不再偏左</b>：手机端 <code>@media(max-width:560px)</code> 里写了 <code>.fb-mid{display:none}</code>，而 <code>#fbMid</code> 是 <code>.focus-bar</code> 中唯一 <code>flex:1</code> 的撑开元素 —— 它一消失，<code>#fbQuality</code> / <code>#fbExport</code> 失去向右的推力，390px 视口下最后一个按钮右边缘只到 247px、右侧空 143px，整组看起来偏左（桌面 1280px 下 fbMid 正常，所以只在手机上明显）。现在改成 <code>display:block;flex:1 1 auto</code> 保留占位、<code>.fb-mid&gt;*{display:none}</code> 只隐藏文字，并给 <code>.fb-quality</code> 在手机端加 <code>margin-left:auto</code> 双保险；顺手把 <code>⋯</code> / 导出菜单的左右定位写死，弹层不再沿用原版顶栏的居中位置。实测 360 / 390 / 414 / 560 / 768 / 1280 六种宽度下「退出键离左边缘」与「导出键离右边缘」误差 ≤2px。</p>
 <p><b>v1.0.27 · 按工具之后仍有返回选项</b>：v1.0.26 的 <code>fxBuildTools()</code> 在点工具项后调 <code>fxDrawerView('all')</code>，把 14 项工具网格整块换成完整面板 —— 用户选完工具就「没有返回选项」，只能靠顶部不起眼的分段 chip 找回去。现在点工具项只走 <code>gotoTool()</code> + 保持 <code>tools</code> 视图并重建高亮，列表与分段选项始终在；<code>#fdTabs</code> 新增 <code>‹ 返回</code>（一步回参数选项）与 <code>已选：X ›</code>（显示当前工具、点它进完整参数），第三个分段改名为更直白的「完整参数」。<code>fxSyncToolSel()</code> 同时挂在 <code>gotoTool()</code> 末尾，命令面板等外部切工具时读数也跟着变。手机 390px 下隐藏「已选」名称只留箭头，tabs 行零溢出；三视图高度仍逐像素恒定。</p>
 <p><b>v1.0.26 · 真正一条、切换不跳</b>：v1.0.25 仍留了「大滑杆行 + 14 工具 tab」两条并列工具栏，且 <code>fxBuildPicker</code> 点参数项后调 <code>fxTogglePicker(false)</code> 让 dock 从 56dvh 瞬间缩回 30dvh —— 这就是「换一个选项跳一下、工具栏收起」。现在 <code>#focusDrawer</code> 提供一块 <code>flex:0 0 196px</code> 固定槽与 <code>参数 / 工具 / 全部</code> 分段 tab；<code>#focusPicker</code> 与 <code>#panel</code> 以 <code>position:absolute;bottom:0;height:162px</code> 投影进同一块槽，工具网格在 <code>.fd-body</code> 内 <code>inset:0</code>，<code>data-view</code> 切换只换 display，全程零高度变化。参数项不再收起，工具项点击走 <code>gotoTool()</code> + 切 <code>all</code> 视图。<code>.tools</code> 在 focus 下彻底隐藏，常驻只剩 <code>#focusScrub</code> 一条；classic / Nova 下抽屉直接隐藏，<code>#tools</code> / <code>#panel</code> 仍是 dock 直接子项且顺序一字未动，<code>applyToolPos()</code> 照样能把工具行搬到顶栏（这正是不能把 #tools 包进抽屉的原因）。折叠态控件 106px → 约 60px，照片占比约 86%。</p>
@@ -19467,6 +19821,7 @@ function renderDiagnosticsPage(body){
       ['滤镜层数',(state.layers||[]).length+' / 4'],
       ['文字贴纸元素',(state.elements||[]).length+' 个'],
       ['局部效果',(state.fxRegions||[]).length+' 块'],
+      ['消除笔迹',(state.brushStrokes||[]).filter(x=>x.type===5).length+' 笔'],
       ['笔迹遮罩',(typeof rebuildBrushTextures==='function')?'已就绪':'—'],
       ['盘面配色',(typeof padToneMode!=='undefined'&&padToneMode==='native')?'iPhone 原生':'跟随照片']
     ];
@@ -19482,6 +19837,15 @@ function renderDiagnosticsPage(body){
 
 /* ---------- 16 版本演进 ---------- */
 const AS_CHANGELOG=[
+ {v:'v1.0.30',t:'消除重做 · 只留涂抹笔，按开源 inpainting 算法重建',d:'按反馈整体撤掉 v1.0.29 的「消除」：'
+    +'删掉显眼的亮色大卡、删掉点放圆形的圈选通路、名字不再叫「智能」，消除改成元素页像素效果网格里与马赛克 / 柔焦 / 动态 / 径向并列的第 5 个按钮。'
+    +'算法不再是固定 12 方向 × 3 尺度搬像素：参照 OpenCV INPAINT_TELEA / INPAINT_NS、exemplar-based PatchMatch 与两遍 chamfer 距离变换，'
+    +'CPU 预计算 256²「源坐标导向场」(TEXTURE10，16bit×2 打包)，GPU 按场采样原图全分辨率像素并做 5 点加权投票，补进来的是真实纹理而不是平滑灰云。'
+    +'遮罩做了 2px 生长与 3×3 羽化；拖动中走 chamfer 快速场、松手补 PatchMatch 精修，6 个 256² 数组全程复用零 GC；'
+    +'纹理单元不足 11 个时自动降级为 8 方向射线。旧存档里的 type 5 圆形区域在 sanitize 直接丢弃。'
+    +'桌面菜单、⋯ 菜单、命令面板、说明书第 9 章、技术实现页、README 全部同步。'},
+ {v:'v1.0.29',t:'消除（已在 v1.0.30 移除）',d:'曾加入显眼大卡与点放圆形圈选，'
+    +'用 GPU 固定方向采样搬周围像素。实测效果差、交互过重，v1.0.30 已整体移除并改为开源 inpainting 导向场算法。'},
  {v:'v1.0.28',t:'沉浸大图 · 顶栏按钮不再偏左',d:'修掉手机端顶栏整组按钮挤到左边：'
     +'560px 断点把唯一的 flex:1 占位元素 #fbMid 设为 display:none，画质 / 导出失去向右推力。'
     +'现在保留占位只隐藏文字，并加 margin-left:auto 兜底；⋯ 与导出菜单左右定位也写死。'
@@ -20485,7 +20849,6 @@ function buildPresets(p){
     button('导入 JSON',()=>$('#jsonFile').click()));
   s3.append(hint('参数可复制到另一张照片，保持整套色调一致；JSON 可存档 / 分享。'));
   s3.dataset.ptab='style'; s3.append(r4); p.append(s3);
-  p.append(buildCloudSection());
   const ab=section('关于 Iris 与作者'); ab.dataset.ptab='about';
   /* 用独立 class，不套 .hint（面板会把 .hint 默认收进「操作说明」） */
   const an=document.createElement('div'); an.className='ab-tab-note';
@@ -20656,6 +21019,7 @@ function buildPresets(p){
   const nsm=document.createElement('summary'); nsm.textContent='关于 Live Photo 的限制'; note.append(nsm);
   note.append(hint('浏览器拿到的是「静态封面 + 配对视频」，网页无法把结果写回 iOS 相册成为原生实况照片。导出的 ZIP 内含已调色的封面与逐帧调色的视频，把两个文件改成相同主文件名，再用 iOS「快捷指令 → 将图像和视频转换为实况照片」或支持 Live Photo 的 App 合并即可。<br>部分浏览器无法解码 HEIC，会自动用视频中间帧作封面；视频不含原音频，最长录制 6 秒。'));
   sl.append(note); sl.dataset.ptab='export'; p.append(sl);
+  p.append(buildCloudSection());
   /* 三个分栏：一次只显示一组，功能全保留但不再堆在一起 */
   const tabs=document.createElement('div'); tabs.className='iris-fixed preset-tabs';
   [['style','风格'],['export','导出'],['sync','同步'],['about','关于']].forEach(([id,n])=>{
@@ -21339,7 +21703,7 @@ function cmdActions(){
     }},
     {name:'保存当前预设',desc:'把整套参数存进「我的预设」',key:'preset 预设',hint:'',icon:'✧',run:()=>{
       const arr=loadCustom(), name=prompt('预设名称','我的风格 '+(arr.length+1));
-      if(name){ arr.push(presetObj(name.trim())); localStorage.setItem('plate_presets',JSON.stringify(arr)); gotoTool('presets'); toast('已保存预设'); }
+      if(name){ arr.push(presetObj(name.trim())); localStorage.setItem('plate_presets',JSON.stringify(arr)); gotoTool('presets'); toast('已保存预设'); cloudAutoPush(); }
     }},
     {name:'语义调色盘',desc:'打开二维 pad 与端侧分割面板',key:'semantic pad tone color 语义 调色盘',hint:'',icon:'◉',run:()=>{
       state.plateScope='global';state.plateTarget='all';gotoTool('plate');
@@ -21398,6 +21762,8 @@ function buildCmdItems(){
   const push=(type,icon,name,desc,key,hint,run)=>items.push({type,icon,name,desc,key:key||'',hint:hint||'',run});
   cmdActions().forEach(a=>push(a.type||'操作',a.icon,a.name,a.desc,a.key,a.hint,a.run));
   TOOLS.forEach(t=>push('工具','◈',t.name,(PANEL_META[t.id]||[])[1]||'',t.id,'',()=>gotoTool(t.id)));
+  push('操作','◇','消除','涂抹笔 · 去水印 去路人 去杂物 祛痘','heal 消除 修复 去水印','',()=>openHeal());
+  push('操作','↺','清除消除笔迹','只清掉消除笔，不碰文字贴纸与其他像素效果','clear heal','',()=>{clearHeal();toast('已清除全部消除笔迹');});
   ADJ.forEach(([g,k,label])=>push('参数','≡',label,g+' 类调整',k,'',()=>gotoParam(label,g,k)));
   FILTERS.forEach(f=>push('滤镜','✦',f.name,f.group+' 分类 · 应用到当前层',f.group,'',()=>applyFilterGlobal(f.name)));
   QUICK.forEach(q=>push('模板','✧',q.name,q.cat+' · 整套方案：'+q.f+' + 语义盘 + 画框',
@@ -21637,6 +22003,7 @@ window.addEventListener('focusout',()=>{
     if(now!==lastLayout) applyLayoutChange(now);
   },220);
 });
+
 
 /* ---------- 启动 ---------- */
 irisSkinApply(false);   // 与 head 内联脚本一致，并同步 theme-color
