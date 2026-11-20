@@ -6,7 +6,7 @@
 <title>Iris 调色盘 · 语义感知的在线照片编辑器</title>
 <meta name="theme-color" content="#0b0b0d">
 <!-- 版本元数据：检查更新时远端只需读取文件头部即可比对，不必下载整份页面 -->
-<meta name="iris-version" content="1.0.31">
+<meta name="iris-version" content="1.0.33">
 <meta name="iris-build" content="2026-11-19">
 <meta name="iris-repo" content="david1a21/iris-palette">
 <meta name="description" content="Iris 调色盘：语义感知的二维色彩控制器。Tone × Color 两轴、端侧区域分割与肤色锁，433 款滤镜、78 套模板，支持照片 / 视频 / GIF 导出，纯前端不上传。">
@@ -12305,7 +12305,7 @@ function renderVideoPage(body){
    4) 断网、限流、404、旧版页面格式都有明确降级与提示，
       检查失败不影响任何编辑与导出功能。
    ============================================================ */
-const IRIS_VERSION='1.0.31';             /* 页面版本：走 HTML 热更新，持续递增 */
+const IRIS_VERSION='1.0.33';             /* 页面版本：走 HTML 热更新，持续递增 */
 const IRIS_BUILD='2026-11-19';
 const IRIS_CHANNEL='hot';                /* hot = HTML 热更新通道 */
 const IRIS_APP_BASELINE='1.0.1.8';       /* 最终安装包 / Release 版本，已冻结 */
@@ -16179,7 +16179,7 @@ const IRIS_CLOUD_CFG='iris_cloud_cfg', IRIS_CLOUD_BK='iris_cloud_backup';
 let cloudSeq=0, cloudWaits={}, cloudLast='', cloudTimer=null;
 
 function cloudCfg(){
-  const d={server:'https://dav.jianguoyun.com/dav/',user:'',pass:'',dir:'Iris',file:'iris-sync.json',auto:true};
+  const d={server:'https://dav.jianguoyun.com/dav/',user:'',pass:'',dir:'',file:'iris-sync.json',auto:true};
   try{ return Object.assign(d,JSON.parse(localStorage.getItem(IRIS_CLOUD_CFG)||'{}')); }catch(e){ return d; }
 }
 function cloudSaveCfg(c){ try{ localStorage.setItem(IRIS_CLOUD_CFG,JSON.stringify(c)); }catch(e){} }
@@ -16216,9 +16216,11 @@ function cloudReq(method,url,auth,body){
     }catch(e){ delete cloudWaits[id]; clearTimeout(timer); reject(e); }
   });
 }
-function cloudDirURL(){ const c=cloudCfg();
-  return c.server.replace(/\/+$/,'')+'/'+(c.dir||'Iris').split('/').filter(Boolean).map(encodeURIComponent).join('/'); }
-function cloudFileURL(){ const c=cloudCfg(); return cloudDirURL()+'/'+encodeURIComponent(c.file||'iris-sync.json'); }
+function cloudBase(){ return cloudCfg().server.replace(/\/+$/,''); }
+function cloudDirPath(){ return String(cloudCfg().dir||'').split('/').map(function(x){return x.trim();}).filter(Boolean).map(encodeURIComponent).join('/'); }
+function cloudDirURL(){ const d=cloudDirPath(); return d?(cloudBase()+'/'+d):cloudBase(); }
+function cloudFileURL(dirPath){ const d=(dirPath===undefined?cloudDirPath():dirPath);
+  return cloudBase()+'/'+(d?(d+'/'):'')+encodeURIComponent(cloudCfg().file||'iris-sync.json'); }
 function cloudAuthB64(){ const c=cloudCfg(); return b64enc((c.user||'')+':'+(c.pass||'')); }
 function cloudReady(){
   const c=cloudCfg();
@@ -16231,10 +16233,33 @@ async function cloudTest(){
   cloudLast='正在连接…'; buildPanel(true);
   try{
     const r=await cloudReq('GET',cloudFileURL(),cloudAuthB64(),'');
-    cloudLast=r.status===404?'连接正常 · 云端还没有同步文件（先上传一次）':('连接正常 · HTTP '+r.status);
+    cloudLast=r.status===200?'连接正常 · 云端已有同步文件'
+      :r.status===404?'连接正常 · 还没有同步文件（点上传就行）'
+      :('连接正常 · HTTP '+r.status);
     toast('坚果云连接正常');
   }catch(e){ cloudLast='连接失败：'+e.message; toast(cloudLast); }
   buildPanel(true);
+}
+/* 逐级 MKCOL 建目录。两个坑都在这里：
+   ① 集合 URL 必须带尾斜杠，缺了会被坚果云回 409；
+   ② 多级目录一次建（a/b）因为父级 a 不存在也会 409，所以一级一级来。
+   201/200/204 = 建成，301/302/405/409 一律当「已经存在」继续下一步，
+   真建不成也不抛错——让后面的 PUT 决定，失败再退回根目录。 */
+async function cloudEnsureDir(trace){
+  const segs=String(cloudCfg().dir||'').split('/').map(function(x){return x.trim();}).filter(Boolean);
+  if(!segs.length) return {ok:true,root:true};
+  const base=cloudBase(); let built=[];
+  for(let i=0;i<segs.length;i++){
+    built.push(encodeURIComponent(segs[i]));
+    const path='/'+built.join('/');
+    let r;
+    try{ r=await cloudReq('MKCOL',base+path+'/',cloudAuthB64(),''); }
+    catch(e){ return {ok:false,status:0,path:path}; }
+    if(trace) trace.push('MKCOL '+path+' → '+r.status);
+    if(r.status>=400 && (r.status===409||r.status===405||r.status===301||r.status===302||r.status===403)) continue;
+    if(r.status>=400) return {ok:false,status:r.status,path:path,body:(r.text||'').slice(0,120)};
+  }
+  return {ok:true};
 }
 async function cloudPush(silent){
   const c=cloudCfg();
@@ -16242,17 +16267,33 @@ async function cloudPush(silent){
   const data={}; let chars=0;
   IRIS_SYNC_KEYS.forEach(function(k){ const v=localStorage.getItem(k); if(v!=null){ data[k]=v; chars+=v.length; } });
   const pack={app:'iris-palette',kind:'iris-sync',version:1,updatedAt:Date.now(),data:data};
+  const body=JSON.stringify(pack);
+  const trace=[];
   if(!silent){ cloudLast='正在上传…'; buildPanel(true); }
+  let fellBack=false;
   try{
-    try{ await cloudReq('MKCOL',cloudDirURL(),cloudAuthB64(),''); }catch(e){}
-    const r=await cloudReq('PUT',cloudFileURL(),cloudAuthB64(),JSON.stringify(pack));
-    if(r.status>=400) throw new Error('HTTP '+r.status);
+    const dir=await cloudEnsureDir(trace);
+    if(!dir.ok) trace.push('目录 '+dir.path+' 建不成（HTTP '+dir.status+'）');
+    let r=await cloudReq('PUT',cloudFileURL(),cloudAuthB64(),body);
+    trace.push('PUT '+cloudFileURL().replace(cloudBase(),'…')+' → '+r.status);
+    if(r.status>=400 && cloudDirPath()){
+      /* 目录没建成，或者坚果云对父目录不存在一律回 409：
+         退回「我的坚果云」根目录，先把数据存下来，再提示用户。 */
+      const fb=await cloudReq('PUT',cloudFileURL(''),cloudAuthB64(),body);
+      trace.push('PUT 根目录 → '+fb.status);
+      if(fb.status<400){
+        r=fb; fellBack=true;
+        const cc=cloudCfg(); cc.dir=''; cloudSaveCfg(cc);
+      }
+    }
+    if(r.status>=400) throw new Error('HTTP '+r.status+(r.status===409?'（父目录不存在）':''));
     const at=new Date().toLocaleTimeString();
     cloudLast=(silent?'自动上传完成 · ':'已上传 · ')+at+' · '+Math.round(chars/1024)+' KB';
+    if(fellBack) cloudLast+=' · 目录建不成，已改存到根目录（设置里的目录已清空）';
     if(!silent) toast(cloudLast);
   }catch(e){
-    cloudLast='上传失败：'+e.message;
-    if(!silent) toast(cloudLast);
+    cloudLast='上传失败：'+e.message+(trace.length?('　['+trace.join('；')+']'):'');
+    if(!silent) toast('上传失败：'+e.message);
   }
   if(!silent) buildPanel(true);
   return cloudLast.indexOf('失败')<0;
@@ -16301,20 +16342,24 @@ function buildCloudSection(){
   const iSrv=add('服务器',c.server,'https://dav.jianguoyun.com/dav/');
   const iUsr=add('账号',c.user,'坚果云邮箱');
   const iPwd=add('应用密码',c.pass,'账户信息 → 安全 → 应用密码','password');
-  const iDir=add('目录',c.dir,'Iris');
+  const iDir=add('目录',c.dir,'留空 = 坚果云根目录');
   const iFil=add('文件名',c.file,'iris-sync.json');
   s.append(form);
   const r=document.createElement('div'); r.className='row';
   r.append(button('保存设置',function(){
       const cc=cloudCfg();
       cloudSaveCfg({server:iSrv.value.trim()||cc.server,user:iUsr.value.trim(),pass:iPwd.value.trim(),
-        dir:iDir.value.trim()||'Iris',file:iFil.value.trim()||'iris-sync.json',auto:cc.auto});
+        dir:iDir.value.trim(),file:iFil.value.trim()||'iris-sync.json',auto:cc.auto});
       buildPanel(true); toast('同步设置已保存');
     }),
     button('测试连接',function(){ cloudTest(); },'accent'));
   s.append(r);
   const r2=document.createElement('div'); r2.className='row';
-  r2.append(button('↑ 上传到坚果云',function(){ cloudPush(false); },'accent'),
+  r2.append(button('↑ 上传到坚果云',function(){
+      const fn=(iFil.value.trim()||'iris-sync.json');
+      if(fn.indexOf('/')>=0){ toast('文件名不要带斜杠，目录请写在「目录」那一栏'); return; }
+      cloudPush(false);
+    },'accent'),
     button('↓ 从坚果云恢复',function(){ cloudPull(); }));
   s.append(r2);
   s.append(chipRow([{id:'on',name:'改滤镜就自动上传'},{id:'off',name:'只手动上传'}], c.auto?'on':'off', function(id){
