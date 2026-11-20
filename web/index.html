@@ -6,7 +6,7 @@
 <title>Iris 调色盘 · 语义感知的在线照片编辑器</title>
 <meta name="theme-color" content="#0b0b0d">
 <!-- 版本元数据：检查更新时远端只需读取文件头部即可比对，不必下载整份页面 -->
-<meta name="iris-version" content="1.0.21">
+<meta name="iris-version" content="1.0.29">
 <meta name="iris-build" content="2026-11-19">
 <meta name="iris-repo" content="david1a21/iris-palette">
 <meta name="description" content="Iris 调色盘：语义感知的二维色彩控制器。Tone × Color 两轴、端侧区域分割与肤色锁，433 款滤镜、78 套模板，支持照片 / 视频 / GIF 导出，纯前端不上传。">
@@ -561,9 +561,8 @@ input[type=color]{-webkit-appearance:none;appearance:none;width:44px;height:30px
   .dock{position:relative}
   /* 桌面 Nova 顶栏的悬浮胶囊规则在后面 Nova 段里（带 !important），
      这里不再重复。 */
-  /* 桌面：进度条靠画布顶端，不与任何底部工具 / 右侧编辑栏重叠 */
-  .live-bar{top:62px;left:12px;transform:none;width:min(340px,calc(100% - 24px))}
-  #app.more-open .live-bar{transform:translateY(-6px)}
+  /* 进度条归编辑栏，不再靠画布顶端；这行只统一桌面留白 */
+  .live-bar{margin:0 12px 9px}
 }
 @media(max-width:520px){
   .dock{flex:0 0 36dvh}
@@ -1208,26 +1207,96 @@ input[type=range]::-webkit-slider-thumb{width:16px;height:16px;margin-top:-6.5px
 .live-badge.playing i{animation:livePulse 1.1s ease-in-out infinite}
 .live-badge.playing{background:#ffd60a}
 @keyframes livePulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.45;transform:scale(.72)}}
-.live-bar{position:absolute;left:50%;top:60px;transform:translateX(-50%);z-index:6;
-  display:none;align-items:center;gap:8px;width:min(360px,calc(100% - 24px));
-  padding:7px 10px;border-radius:14px;background:rgba(16,16,19,.88);
-  backdrop-filter:blur(14px);border:1px solid var(--line);box-shadow:0 6px 24px rgba(0,0,0,.5);
-  transition:opacity .18s,transform .18s}
-/* 「更多」工具菜单展开时收起进度条，避免两层浮层互相干扰 */
-#app.more-open .live-bar{opacity:0;pointer-events:none;transform:translateX(-50%) translateY(-6px)}
+.live-bar{display:none;align-items:center;gap:8px;flex-wrap:wrap;
+  margin:0 10px 9px;padding:7px 10px;border-radius:14px;
+  background:var(--w035);border:1px solid var(--line);
+  box-shadow:0 3px 14px rgba(0,0,0,.16);transition:opacity .18s}
 .live-bar.on{display:flex}
+/* 现在它属于编辑栏，不再是画面上的浮层；「更多」菜单展开时无需收起 */
+#app.more-open .live-bar{opacity:1;pointer-events:auto}
 .live-bar button{flex:0 0 auto;padding:5px 9px;border-radius:9px;font-size:10.5px;
-  background:var(--w09);border:1px solid var(--line);color:var(--txt)}
+  background:var(--w09);border:1px solid var(--line);color:var(--txt);white-space:nowrap}
 .live-bar button:hover{background:rgba(var(--accent-rgb),.2);color:var(--accent)}
-.live-bar input[type=range]{flex:1;min-width:40px;height:18px;touch-action:none}
+.live-bar .live-cover-btn{background:rgba(var(--accent-rgb),.14);
+  border-color:rgba(var(--accent-rgb),.42);color:var(--accent);font-weight:650}
+.live-bar input[type=range]{flex:1 1 90px;min-width:40px;height:18px;touch-action:none}
 .live-bar input[type=range]::-webkit-slider-thumb{width:13px;height:13px;margin-top:-5px}
 .live-bar span{flex:0 0 auto;font-size:10px;color:var(--sub);font-variant-numeric:tabular-nums}
 .live-bar.recording{outline:1px solid #ff453a}
 @media(max-width:520px){
   .live-badge{left:8px;top:8px;padding:5px 9px;font-size:10px}
-  .live-bar{top:42px;bottom:auto;width:calc(100% - 16px);gap:6px;padding:6px 8px}
+  .live-bar{margin:0 8px 7px;gap:6px;padding:6px 8px}
   .live-bar button{padding:5px 7px;font-size:10px}
   .live-bar span{font-size:9px}
+}
+
+/* ---------- v1.0.21 · 自定义封面工作台 ----------
+   独立浮层，主动打开才出现；抽帧用单独的 <video>，不碰主播放器的
+   currentTime，所以选封面时画面不会闪、不会黑。 */
+.cv-mask{position:fixed;inset:0;z-index:260;display:flex;align-items:center;justify-content:center;
+  padding:16px;background:rgba(8,8,11,.72);backdrop-filter:blur(9px);animation:cvIn .18s ease}
+@keyframes cvIn{from{opacity:0}to{opacity:1}}
+.cv-card{width:min(560px,100%);max-height:min(88dvh,760px);display:flex;flex-direction:column;
+  border-radius:20px;border:1px solid var(--line);background:var(--panel);
+  box-shadow:0 24px 70px rgba(0,0,0,.55);overflow:hidden;animation:cvUp .22s ease}
+@keyframes cvUp{from{opacity:0;transform:translateY(12px) scale(.985)}to{opacity:1;transform:none}}
+.cv-head{display:flex;align-items:center;gap:10px;padding:14px 16px 12px;
+  border-bottom:1px solid var(--line);flex:0 0 auto}
+.cv-head b{font-size:15px;letter-spacing:.4px;flex:1;min-width:0}
+.cv-head small{display:block;font-size:10px;color:var(--sub);font-weight:400;margin-top:3px;line-height:1.4}
+.cv-x{width:30px;height:30px;border-radius:9px;font-size:14px;flex:0 0 auto;
+  background:var(--w09);border:1px solid var(--line);color:var(--txt)}
+.cv-body{padding:0 16px 16px;overflow:auto;flex:1 1 auto;min-height:0}
+/* v1.0.22 · 「预览 + 精确选帧」合成一条常驻头：
+   往下滚候选关键帧时大预览与滑杆都不跑掉，拖滑杆时正上方就是封面。 */
+.cv-stage{position:sticky;top:0;z-index:3;padding:13px 0 11px;
+  background:var(--panel);backdrop-filter:blur(18px) saturate(140%);
+  border-bottom:1px solid var(--line)}
+.cv-row{display:block;margin:0}
+.cv-preview{position:relative;width:100%;aspect-ratio:4/3;
+  max-height:min(42dvh,340px);border-radius:14px;overflow:hidden;
+  background:#141418;border:1px solid var(--line);display:grid;place-items:center}
+.cv-preview img{width:100%;height:100%;object-fit:contain;display:block}
+.cv-preview .cv-ph{font-size:11px;color:var(--sub);text-align:center;padding:20px;line-height:1.6}
+.cv-badge{position:absolute;left:9px;bottom:9px;padding:4px 9px;border-radius:8px;
+  font-size:10px;font-variant-numeric:tabular-nums;background:rgba(0,0,0,.6);
+  color:#fff;border:1px solid rgba(255,255,255,.14)}
+.cv-scrub{margin-top:10px}
+.cv-scrub-top{display:flex;align-items:baseline;justify-content:space-between;gap:8px;
+  margin-bottom:1px}
+.cv-scrub-top b{font-size:10.5px;font-weight:650;color:var(--sub);letter-spacing:.3px}
+.cv-scrub-top b em{font-style:normal;font-weight:400;opacity:.75;margin-left:5px}
+.cv-row input[type=range]{display:block;width:100%;height:22px;margin:0;touch-action:none}
+.cv-time{font-size:11px;color:var(--accent);font-variant-numeric:tabular-nums;
+  white-space:nowrap}
+.cv-lab{display:flex;align-items:center;justify-content:space-between;gap:8px;
+  margin:15px 0 8px;font-size:11px;color:var(--sub)}
+.cv-lab b{color:var(--txt);font-size:11.5px;font-weight:650}
+.cv-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px}
+.cv-th{position:relative;padding:0;border-radius:9px;overflow:hidden;aspect-ratio:4/3;
+  border:1px solid var(--line);background:#1b1b20;cursor:pointer}
+.cv-th img{width:100%;height:100%;object-fit:cover;display:block}
+.cv-th.sel{outline:2px solid var(--accent);outline-offset:1px;border-color:transparent}
+.cv-th i{position:absolute;right:3px;bottom:2px;font-style:normal;font-size:8.5px;
+  color:#fff;text-shadow:0 1px 3px #000;font-variant-numeric:tabular-nums}
+.cv-th.cv-add{display:grid;place-items:center;font-size:16px;color:var(--accent);
+  background:rgba(var(--accent-rgb),.10);border-style:dashed}
+.cv-note{margin-top:14px;padding-top:11px;border-top:1px solid var(--line);
+  font-size:10.5px;line-height:1.65;color:var(--sub)}
+.cv-foot{display:flex;gap:9px;padding:12px 16px;border-top:1px solid var(--line);flex:0 0 auto}
+.cv-foot button{flex:1;padding:10px;border-radius:11px;font-size:12px;
+  background:var(--w09);border:1px solid var(--line);color:var(--txt)}
+.cv-foot button.ok{background:var(--accent);border-color:transparent;
+  color:var(--on-accent);font-weight:700}
+.cv-foot button:disabled{opacity:.45}
+@media(max-width:520px){
+  .cv-mask{align-items:flex-end;padding:0}
+  .cv-card{width:100%;max-height:86dvh;border-radius:20px 20px 0 0;animation:cvSheet .22s ease}
+  @keyframes cvSheet{from{transform:translateY(24px);opacity:.6}to{transform:none;opacity:1}}
+  .cv-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .cv-preview{max-height:min(32dvh,240px)}
+  .cv-time{font-size:10px}
+  .cv-scrub-top b em{display:none}
 }
 
 /* 模式状态条 / 删除按钮 */
@@ -1409,6 +1478,12 @@ body.boot .dock{animation:bootUp .44s ease-out .12s both}
 .tb-menu.show{display:block}
 .tbm-title{font-size:10px;color:var(--sub);letter-spacing:1.2px;margin:2px 0 8px;text-transform:uppercase}
 .tbm-title:not(:first-child){margin-top:14px}
+.tbm-focus{display:flex;align-items:center;gap:8px;width:100%;padding:10px 12px;margin-bottom:4px;
+  border-radius:12px;background:linear-gradient(100deg,rgba(201,249,75,.16),rgba(201,249,75,.05));
+  border:1px solid rgba(201,249,75,.32);color:var(--txt);cursor:pointer;font-size:13px;text-align:left}
+.tbm-focus b{font-weight:700;color:#c9f94b}
+.tbm-focus small{margin-left:auto;font-size:10px;color:var(--sub);white-space:nowrap}
+.tbm-focus:hover{background:linear-gradient(100deg,rgba(201,249,75,.26),rgba(201,249,75,.09))}
 .tbm-row,.tbm-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
 .tbm-item,.tbm-page{display:flex;align-items:center;gap:7px;min-height:36px;padding:7px 9px;
   border-radius:10px;font-size:11.5px;color:var(--txt);background:var(--w055);
@@ -2241,7 +2316,7 @@ html[data-ui="nova"] .sp-stat>div{border-radius:calc(var(--nova-r)*.6)!important
   html[data-ui="nova"] .dock{margin:10px 12px 12px 0!important;
     height:calc(100dvh - 22px)!important;padding-top:74px!important}
   html[data-ui="nova"] #hist{top:78px}
-  html[data-ui="nova"] .live-bar{top:78px}
+  html[data-ui="nova"] .live-bar{margin:0 12px 10px}
 }
 /* ---------- 手机：底部工作卡同样浮起 ---------- */
 @media(max-width:899px){
@@ -3062,30 +3137,29 @@ html[data-theme="liquid"] .subpage{
    ============================================================ */
 /* 只补边框宽度 / 圆角 / 投影，不覆盖 background 与 border-color：
    玻璃开时由 .tb-glass 透出照片、关时由既有规则换回实色，两条链路都不被打断。 */
-html[data-bar="float"]:not([data-ui="nova"]) .topbar{
+html[data-bar="float"]:not([data-ui="nova"]):not([data-ui="focus"]) .topbar{
   border-width:1px;border-style:solid;
   border-radius:14px;
   box-shadow:0 12px 34px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.07)}
-html[data-bar="float"]:not([data-ui="nova"]) .topbar::before{
+html[data-bar="float"]:not([data-ui="nova"]):not([data-ui="focus"]) .topbar::before{
   left:12px;right:12px;top:0;border-radius:14px}
-html[data-bar="float"]:not([data-ui="nova"]) .tb-menu{top:calc(100% + 8px)}
+html[data-bar="float"]:not([data-ui="nova"]):not([data-ui="focus"]) .tb-menu{top:calc(100% + 8px)}
 @media(min-width:900px){
-  html[data-bar="float"]:not([data-ui="nova"]) .topbar{
+  html[data-bar="float"]:not([data-ui="nova"]):not([data-ui="focus"]) .topbar{
     top:10px;left:14px;right:14px}
   /* 顶栏浮起后底边下移，右侧编辑栏顶部要跟着让位，避免工具行被压住 */
-  html[data-bar="float"]:not([data-ui="nova"]) .dock{padding-top:66px}
-  html[data-bar="float"]:not([data-ui="nova"]) #hist,
-  html[data-bar="float"]:not([data-ui="nova"]) .live-bar{top:78px}
-  html[data-bar="float"][data-toolpos="top"]:not([data-ui="nova"]) .dock{padding-top:78px}
+  html[data-bar="float"]:not([data-ui="nova"]):not([data-ui="focus"]) .dock{padding-top:66px}
+  html[data-bar="float"]:not([data-ui="nova"]):not([data-ui="focus"]) #hist{top:78px}
+  html[data-bar="float"][data-toolpos="top"]:not([data-ui="nova"]):not([data-ui="focus"]) .dock{padding-top:78px}
 }
 @media(max-width:899px){
-  html[data-bar="float"]:not([data-ui="nova"]) .topbar{
+  html[data-bar="float"]:not([data-ui="nova"]):not([data-ui="focus"]) .topbar{
     margin:calc(8px + env(safe-area-inset-top,0px)) 9px 0;
     padding:8px 12px 7px}
-  html[data-bar="float"]:not([data-ui="nova"]) .tb-menu{top:calc(100% + 8px)}
+  html[data-bar="float"]:not([data-ui="nova"]):not([data-ui="focus"]) .tb-menu{top:calc(100% + 8px)}
 }
 @media(max-width:520px){
-  html[data-bar="float"]:not([data-ui="nova"]) .topbar{
+  html[data-bar="float"]:not([data-ui="nova"]):not([data-ui="focus"]) .topbar{
     margin:calc(8px + env(safe-area-inset-top,0px)) 8px 0;
     padding:7px 10px 6px}
 }
@@ -3331,6 +3405,226 @@ html[data-theme="mist"] .gp-read,html[data-theme="paper"] .gp-read{
   .gp-wheel{width:min(190px,68%)}
   .zp-prev img{max-height:230px}
 }
+
+/* ============================================================
+   沉浸大图 · FOCUS UI（v1.0.23）
+   第三套「界面版本」，与原版 / Nova 并列，随时切回。
+   只重排布局与顶栏外壳：DOM、事件、坐标、着色器、导出全部复用，
+   14 个工具页、独立页面、自动保存、全局搜索一个不少。
+   对照手机修图 App 的「大图 + 底部横向功能条」观感。
+   ============================================================ */
+html[data-ui="focus"]{--fx:#c9f94b;--fx-on:#14180a;--focus-bar-h:56px}
+html[data-ui="focus"][data-focus-green="off"]{--fx:var(--accent);--fx-on:var(--on-accent)}
+.focus-bar,.focus-scrub,.focus-drawer,.focus-picker,.focus-toolgrid,.fd-tabs,.fx-panel-note{display:none}
+
+/* 原顶栏退成「零高度浮层宿主」：按钮藏起来，但 ⋯ 菜单 / 导出菜单
+   仍挂在它下面、位置由 focus 规则重新指定，功能一个不丢。 */
+html[data-ui="focus"] #app{flex-direction:column!important}
+html[data-ui="focus"] .topbar{
+  position:absolute!important;top:0!important;left:0!important;right:0!important;
+  height:0!important;min-height:0!important;padding:0!important;margin:0!important;
+  border:0!important;border-radius:0!important;box-shadow:none!important;
+  background:transparent!important;backdrop-filter:none!important;
+  -webkit-backdrop-filter:none!important;overflow:visible!important;z-index:30}
+html[data-ui="focus"] .topbar>*:not(.tb-menu){display:none!important}
+html[data-ui="focus"] .topbar::before{display:none!important}
+html[data-ui="focus"] .tb-menu{top:calc(var(--focus-bar-h) + 8px)!important;left:12px!important;right:auto!important}
+/* 导出菜单跟随右侧「画质 ▾」按钮，不再沿用原版顶栏的居中定位 */
+html[data-ui="focus"] .export-menu{right:12px!important;left:auto!important}
+html[data-ui="focus"] .export-menu{top:calc(var(--focus-bar-h) + 8px)!important}
+
+/* 可见的极简顶栏：关闭 / 帮助 / 更多 · 画质 · 导出 */
+html[data-ui="focus"] .focus-bar{
+  display:flex;flex:0 0 var(--focus-bar-h);align-items:center;gap:8px;
+  padding:0 12px;z-index:29;background:#101013;
+  border-bottom:1px solid rgba(255,255,255,.07)}
+html[data-ui="focus"][data-theme="mist"] .focus-bar,
+html[data-ui="focus"][data-theme="paper"] .focus-bar{background:#f4f5f8}
+.fb-btn{width:34px;height:34px;flex:0 0 auto;display:grid;place-items:center;
+  border-radius:11px;font-size:17px;color:var(--txt);background:transparent;cursor:pointer}
+.fb-btn:hover{background:var(--w10)}
+.fb-mid{flex:1;min-width:0;text-align:center;overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap;font-size:10.5px;color:var(--sub)}
+.fb-mid b{display:block;font-size:12px;color:var(--txt);font-weight:600;letter-spacing:.5px}
+.fb-quality{flex:0 0 auto;padding:8px 12px;border-radius:10px;font-size:11.5px;
+  color:var(--txt);background:var(--w10);border:1px solid var(--w08);cursor:pointer}
+.fb-export{flex:0 0 auto;padding:9px 17px;border-radius:11px;font-size:12.5px;
+  font-weight:700;color:var(--fx-on);background:var(--fx);cursor:pointer;
+  box-shadow:0 5px 18px rgba(201,249,75,.22)}
+.fb-export:active{transform:translateY(1px)}
+
+/* 画布：占满顶栏与底部工具条之间的全部高度，深色底让照片自己说话 */
+html[data-ui="focus"] .stage{
+  flex:1 1 auto!important;height:auto!important;min-height:0;background:#060608}
+html[data-ui="focus"][data-theme="mist"] .stage,
+html[data-ui="focus"][data-theme="paper"] .stage{background:#d9dde5}
+html[data-ui="focus"] #hist{display:none!important}
+html[data-ui="focus"] .zoomctl{opacity:.5;transform:scale(.9);transform-origin:left bottom}
+html[data-ui="focus"] .zoomctl:hover{opacity:1}
+html[data-ui="focus"] .cmp{opacity:.62;transform:scale(.9);transform-origin:right bottom}
+html[data-ui="focus"] .cmp:hover{opacity:1}
+
+/* 底部工作区：focus 下默认几乎没有高度，只留安全区；展开时抽屉固定 196px */
+html[data-ui="focus"] .dock{
+  flex:0 0 auto!important;height:auto!important;max-height:none;min-height:0;
+  width:100%!important;max-width:100%!important;padding-top:0!important;
+  padding-bottom:calc(env(safe-area-inset-bottom,0px) + 6px)!important;
+  margin:0!important;border-left:0!important;border-top:1px solid var(--line)!important;
+  border-radius:0!important;box-shadow:none!important;background:#101013;
+  display:flex;flex-direction:column;position:relative;z-index:5}
+html[data-ui="focus"][data-theme="mist"] .dock,
+html[data-ui="focus"][data-theme="paper"] .dock{background:#f4f5f8}
+html[data-ui="focus"] .dock-grip{display:none!important}
+html[data-ui="focus"] .dock .live-bar{margin:0 12px 8px}
+html[data-ui="focus"] #cropBar{margin:0 10px 6px}
+html[data-ui="focus"] .more-menu{display:none!important}
+/* 唯一常驻控件行下面不再有第二条工具 tab */
+html[data-ui="focus"] .tools{display:none!important}
+
+/* 统一抽屉：参数 / 工具 / 全部 三个视图共用一个固定高度槽。
+   三个视图都 position:absolute;inset:0 —— 切换只换内容，高度恒定，画面零跳。 */
+html[data-ui="focus"] .dock.fd-open>.focus-drawer{
+  display:flex;flex-direction:column;flex:0 0 196px;height:196px;min-height:0;
+  border-top:1px solid var(--w08);background:#101013}
+html[data-ui="focus"][data-theme="mist"] .dock.fd-open>.focus-drawer,
+html[data-ui="focus"][data-theme="paper"] .dock.fd-open>.focus-drawer{background:#f4f5f8}
+.fd-tabs{display:none}
+html[data-ui="focus"] .fd-tabs{
+  display:flex;flex:0 0 34px;align-items:center;gap:4px;padding:0 10px;
+  border-bottom:1px solid var(--w08);position:relative;z-index:4}
+.fd-tab{flex:0 0 auto;padding:5px 14px;border-radius:999px;font-size:11.5px;
+  color:var(--sub);background:var(--w07);cursor:pointer}
+.fd-tab.on{color:var(--fx-on);background:var(--fx);font-weight:700}
+/* 显式返回：任何非「参数」视图都能一步回到参数选项，不用猜分段 tab */
+.fd-back,.fd-sel{flex:0 0 auto;display:none;align-items:center;gap:4px;
+  height:26px;padding:0 9px;border-radius:9px;font-size:11px;cursor:pointer;
+  color:var(--sub);background:var(--w08);white-space:nowrap}
+.fd-back{color:var(--txt);font-weight:600}
+.fd-sel{color:var(--fx);background:rgba(201,249,75,.09);margin-left:auto}
+.fd-back:hover,.fd-sel:hover{background:var(--w18)}
+html[data-ui="focus"] .focus-drawer[data-view="tools"] .fd-back,
+html[data-ui="focus"] .focus-drawer[data-view="all"] .fd-back,
+html[data-ui="focus"] .focus-drawer[data-view="tools"] .fd-sel{display:flex}
+.fd-close{width:28px;height:28px;border-radius:9px;font-size:14px;
+  color:var(--sub);background:var(--w08);cursor:pointer}
+html[data-ui="focus"] .focus-drawer[data-view="tools"] .fd-close{margin-left:0}
+html[data-ui="focus"] .focus-drawer:not([data-view="tools"]) .fd-close{margin-left:auto}
+.fd-body{position:relative;flex:1 1 auto;min-height:0;overflow:hidden}
+/* picker / panel 与工具网格叠进同一块 162px 槽：切换只换 display，尺寸恒定，零跳 */
+html[data-ui="focus"] .dock>.focus-picker,
+html[data-ui="focus"] .dock>.panel{
+  display:none;position:absolute;left:0;right:0;bottom:0;height:162px;
+  overflow-y:auto;overscroll-behavior:contain;z-index:3;background:#101013}
+html[data-ui="focus"][data-theme="mist"] .dock>.focus-picker,
+html[data-ui="focus"][data-theme="mist"] .dock>.panel,
+html[data-ui="focus"][data-theme="paper"] .dock>.focus-picker,
+html[data-ui="focus"][data-theme="paper"] .dock>.panel{background:#f4f5f8}
+html[data-ui="focus"] .dock.fd-open[data-view="param"]>.focus-picker{display:block}
+html[data-ui="focus"] .dock.fd-open[data-view="all"]>.panel{display:block;padding:9px 14px 22px}
+html[data-ui="focus"] .focus-toolgrid{display:none}
+html[data-ui="focus"] .focus-drawer[data-view="tools"] .focus-toolgrid{display:grid}
+/* classic / Nova：drawer 完全不出现，dock 子项顺序与 v1.0.25 之前一致 */
+
+/* ── 截图2 的核心：照片正下方一条独立实心条，不覆盖任何像素 ──
+   左撤销/重做 · 参数名 · 一根可拖的大滑杆（白色圆点）· 数值 · 对比 / 全屏 / 全部参数 */
+html[data-ui="focus"] .focus-scrub{
+  display:flex;flex:0 0 54px;align-items:center;gap:10px;padding:0 14px;
+  background:#101013;border-bottom:1px solid rgba(255,255,255,.08);z-index:8;
+  user-select:none;-webkit-user-select:none}
+html[data-ui="focus"][data-theme="mist"] .focus-scrub,
+html[data-ui="focus"][data-theme="paper"] .focus-scrub{background:#f4f5f8}
+.fx-btn{flex:0 0 auto;width:30px;height:30px;display:grid;place-items:center;
+  font-size:16px;line-height:1;color:var(--txt);background:var(--w08);
+  border:1px solid transparent;border-radius:9px;cursor:pointer}
+.fx-btn:hover{background:var(--w18)}
+.fx-btn.on{background:var(--fx);color:var(--fx-on)}
+.fx-name{flex:0 0 auto;min-width:52px;padding:5px 7px;font-size:12px;font-weight:600;
+  color:var(--txt);white-space:nowrap;letter-spacing:.3px;background:transparent;
+  border:1px solid transparent;border-radius:9px;cursor:pointer;text-align:left}
+.fx-name:hover{background:var(--w08)}
+.fx-name.on{color:var(--fx);border-color:rgba(201,249,75,.4);background:rgba(201,249,75,.08)}
+.fx-track{position:relative;flex:1;min-width:60px;height:34px;cursor:pointer;
+  touch-action:none;display:flex;align-items:center}
+.fx-track::before{content:"";position:absolute;left:0;right:0;height:3px;
+  border-radius:3px;background:rgba(255,255,255,.22)}
+.fx-fill{position:absolute;left:0;height:3px;border-radius:3px;background:var(--fx);
+  pointer-events:none;box-shadow:0 0 10px rgba(201,249,75,.35)}
+.fx-zero{position:absolute;top:50%;width:1px;height:10px;margin-top:-5px;
+  background:rgba(255,255,255,.35);pointer-events:none}
+/* 截图里那颗白色圆点：18px、带细边和柔和投影 */
+.fx-knob{position:absolute;width:18px;height:18px;border-radius:50%;
+  background:#fff;border:1px solid rgba(0,0,0,.12);
+  box-shadow:0 2px 8px rgba(0,0,0,.45);transform:translateX(-50%);
+  pointer-events:none;transition:box-shadow .15s}
+.fx-track.act .fx-knob{width:22px;height:22px;box-shadow:0 2px 12px rgba(0,0,0,.6),0 0 0 6px rgba(201,249,75,.16)}
+.fx-val{flex:0 0 auto;min-width:42px;text-align:right;font-size:12px;
+  font-variant-numeric:tabular-nums;color:var(--fx)}
+.fx-all{font-size:14px}
+
+/* 参数选择：按需展开（点大滑杆左侧的参数名），不再常驻占掉一行。
+   展开区在 dock 内部、工具 tab 之上，绝不浮到照片上。 */
+.fp-groups{display:flex;gap:6px;padding:8px 12px 6px;overflow-x:auto;scrollbar-width:none;
+  border-bottom:1px solid var(--w08);touch-action:pan-x}
+.fp-groups::-webkit-scrollbar{display:none}
+.fp-chip{flex:0 0 auto;padding:6px 15px;border-radius:999px;font-size:11.5px;
+  color:var(--sub);background:var(--w07);cursor:pointer;white-space:nowrap}
+.fp-chip.on{color:var(--fx-on);background:var(--fx);font-weight:700}
+.fp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(62px,1fr));
+  gap:2px;padding:6px 8px 10px}
+.fp-item{height:62px;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:4px;border-radius:12px;color:var(--sub);
+  cursor:pointer;background:transparent}
+.fp-item svg{width:23px;height:23px;stroke:currentColor;stroke-width:1.5;
+  fill:none;stroke-linecap:round;stroke-linejoin:round}
+.fp-item span{font-size:10px;white-space:nowrap}
+.fp-item.on{color:var(--fx);background:rgba(201,249,75,.08)}
+.fp-item.on svg{filter:drop-shadow(0 0 6px rgba(201,249,75,.4))}
+.fp-item:active{background:var(--w14)}
+.fp-hint{padding:2px 12px 8px;font-size:10px;color:var(--sub);text-align:center}
+
+/* 抽屉里的工具网格：4 列，点一项 = 切工具 + 自动看完整面板，高度不变 */
+html[data-ui="focus"] .focus-toolgrid{
+  position:absolute;inset:0;grid-template-columns:repeat(auto-fill,minmax(74px,1fr));
+  gap:4px;padding:8px 10px 12px;align-content:start;overflow-y:auto;
+  grid-auto-rows:50px}
+.ft-item{height:50px;display:flex;align-items:center;justify-content:center;gap:5px;
+  border-radius:11px;font-size:11px;color:var(--sub);background:var(--w07);cursor:pointer}
+.ft-item i{font-style:normal;font-size:15px}
+.ft-item.on{color:var(--fx-on);background:var(--fx);font-weight:700}
+.ft-item:active{background:var(--w14)}
+html[data-ui="focus"] .dock>.panel{border-top:0}
+.fx-panel-note{display:none}
+
+@media(max-width:560px){
+  html[data-ui="focus"]{--focus-bar-h:52px}
+  html[data-ui="focus"] .dock{padding-bottom:calc(env(safe-area-inset-bottom,0px) + 8px)!important}
+  html[data-ui="focus"] .dock.fd-open>.focus-drawer{flex-basis:184px;height:184px}
+  html[data-ui="focus"] .dock>.focus-picker,
+  html[data-ui="focus"] .dock>.panel{height:150px}
+  .ft-item{height:46px;font-size:10.5px}
+  html[data-ui="focus"] .focus-toolgrid{grid-auto-rows:46px}
+  html[data-ui="focus"] .fd-tabs{gap:3px;padding:0 7px}
+  html[data-ui="focus"] .fd-tab{padding:5px 9px;font-size:10.5px}
+  .fd-back,.fd-sel{padding:0 7px;font-size:10.5px}
+  .fd-sel-name{display:none}
+  .fb-quality{padding:7px 9px;font-size:11px}
+  .fb-export{padding:8px 13px;font-size:12px}
+  /* v1.0.28：不能把唯一的 flex:1 撑开元素整块 hidden，否则画质/导出全挤到左边。
+     保留占位、只隐藏文字；margin-left:auto 再兜一层，任何主题下右侧按钮都靠右。 */
+  .fb-mid{display:block;flex:1 1 auto;min-width:0}
+  /* .fb-mid b{display:block} 特异性 0,1,1，会盖掉 .fb-mid>* (0,1,0)，这里显式带属性选择器提权 */
+  html[data-ui="focus"] .fb-mid>b,
+  html[data-ui="focus"] .fb-mid>span{display:none}
+  html[data-ui="focus"] .fb-quality{margin-left:auto}
+  html[data-ui="focus"] .focus-scrub{gap:4px;padding:0 8px;flex-basis:50px}
+  .fx-btn{width:26px;height:26px;font-size:14px}
+  .fx-name{min-width:38px;padding:4px 5px;font-size:11px}
+  .fx-val{min-width:30px;font-size:11px}
+  .fp-item{height:58px}
+}
+html[data-motion="off"] .fb-btn,html[data-motion="off"] .fb-export,
+html[data-motion="off"] .fx-btn,html[data-motion="off"] .fx-knob{transition:none}
+
 </style>
 <script>
 /* ============================================================
@@ -3492,6 +3786,16 @@ html[data-theme="mist"] .gp-read,html[data-theme="paper"] .gp-read{
 })();
 </script>
 <div id="app">
+  <!-- 沉浸大图模式的可见顶栏：只在 data-ui="focus" 时显示。
+       原顶栏退成零高度浮层宿主，⋯ / 导出菜单仍挂在它下面。 -->
+  <div class="focus-bar" id="focusBar" role="toolbar" aria-label="沉浸大图顶栏">
+    <button class="fb-btn" id="fbExit" title="退出沉浸大图，回到原版界面">✕</button>
+    <button class="fb-btn" id="fbHelp" title="使用说明书">?</button>
+    <button class="fb-btn" id="fbMenu" title="编辑操作与全部独立页面">⋯</button>
+    <div class="fb-mid" id="fbMid"><b>Iris 调色盘</b><span id="fbName">沉浸看图 · 照片只在本机</span></div>
+    <button class="fb-quality" id="fbQuality" title="导出尺寸 / 画质 / 格式设置">画质 ▾</button>
+    <button class="fb-export" id="fbExport" title="导出当前成品照片">导出</button>
+  </div>
   <div class="topbar">
     <div class="tb-glass" aria-hidden="true"></div>
     <div class="tb-side left">
@@ -3515,6 +3819,8 @@ html[data-theme="mist"] .gp-read,html[data-theme="paper"] .gp-read{
     </div>
   <!-- 顶栏溢出菜单：把不常用操作收在一起 -->
   <div class="tb-menu" id="tbMenu">
+    <div class="tbm-title">界面 · 新</div>
+    <div class="tbm-focus" id="tbmFocus" title="照片占满屏幕，选参数用一根大滑杆调数值">▣ <b>沉浸大图模式</b><small>像手机修图一样看图调参 · 一键切回</small></div>
     <div class="tbm-title">编辑操作</div>
     <div class="tbm-row">
       <button class="tbm-item" id="btnUndoM" data-act="undo">↶ <span>撤销</span></button>
@@ -3551,12 +3857,6 @@ html[data-theme="mist"] .gp-read,html[data-theme="paper"] .gp-read{
     <button class="cmp" id="cmp">按住对比原图</button>
     <button class="dock-float" id="dockFloat">☰ 展开编辑</button>
     <button class="live-badge" id="liveBadge" title="播放 / 暂停实况片段（也可长按画面）"><i></i> LIVE</button>
-    <div class="live-bar" id="liveBar">
-      <button id="livePlay" title="播放 / 暂停">▶</button>
-      <input type="range" id="liveSeek" min="0" max="1000" step="1" value="0" aria-label="实况进度">
-      <span id="liveTime">0.0 / 0.0s</span>
-      <button id="liveCover" title="把当前帧设为静态封面">设封面</button>
-    </div>
     <div class="import-card" id="drop">
       <button class="ic-close" id="dropClose" title="暂时不用">×</button>
       <div class="ic-icon iris" id="icIcon"></div>
@@ -3569,6 +3869,20 @@ html[data-theme="mist"] .gp-read,html[data-theme="paper"] .gp-read{
     <div class="err" id="err"></div>
   </div>
 
+  <!-- 截图2 那条大滑杆：独立实心行，紧贴照片下缘，绝不覆盖画面像素 -->
+  <div class="focus-scrub" id="focusScrub" role="group" aria-label="参数数值调节">
+    <button class="fx-btn" id="fxUndo" title="撤销">↶</button>
+    <button class="fx-btn" id="fxRedo" title="重做">↷</button>
+    <button class="fx-name" id="fxName" title="点这里换参数（曝光 / 亮度 / 对比度…）">曝光 ▾</button>
+    <div class="fx-track" id="fxTrack" title="左右拖动调数值 · 双击归零">
+      <div class="fx-fill" id="fxFill"></div><div class="fx-zero" id="fxZero"></div>
+      <div class="fx-knob" id="fxKnob"></div>
+    </div>
+    <span class="fx-val" id="fxVal">0</span>
+    <button class="fx-btn" id="fxCmp" title="按住对比原图">◐</button>
+    <button class="fx-btn" id="fxFull" title="全屏看图">⛶</button>
+    <button class="fx-btn fx-all" id="fxDrawer" title="参数 / 工具 / 全部（展开下方工作区）">▦</button>
+  </div>
   <div class="dock">
     <div class="dock-grip" id="grip" title="拖动调整大小 · 点击收起 · 双击复位"><span></span></div>
     <!-- 裁剪完成条：属于编辑栏，不覆盖画面里的任何一个像素 -->
@@ -3578,9 +3892,33 @@ html[data-theme="mist"] .gp-read,html[data-theme="paper"] .gp-read{
       <button class="crop-btn" id="cropResetBtn">↺ 重置</button>
       <button class="crop-btn done" id="cropDoneBtn">✓ 完成裁剪</button>
     </div>
+    <!-- v1.0.21 · 实况进度条移进编辑栏：不再以浮层压住画面顶部，
+         桌面是右侧栏顶部一行，手机是底部工作卡顶部一行；只在有实况配对时显示。 -->
+    <div class="live-bar" id="liveBar" role="group" aria-label="实况片段控制">
+      <button id="livePlay" title="播放 / 暂停">▶</button>
+      <input type="range" id="liveSeek" min="0" max="1000" step="1" value="0" aria-label="实况进度">
+      <span id="liveTime">0.0 / 0.0s</span>
+      <button id="liveCover" class="live-cover-btn" title="从视频里挑一帧作封面（关键帧 + 精确到 0.01s）">✦ 自定义封面</button>
+    </div>
+    <div class="focus-picker" id="focusPicker"></div>
     <div class="tools" id="tools"></div>
     <div class="more-menu" id="moreMenu"></div>
     <div class="panel" id="panel"></div>
+    <!-- 统一抽屉：只是固定高度槽 + 分段 tab；参数/全部两个视图由 dock 上
+         同位置的 picker / panel 绝对定位投影进来，DOM 零移动（applyToolPos 要搬 #tools） -->
+    <div class="focus-drawer" id="focusDrawer" data-view="param">
+      <div class="fd-tabs" id="fdTabs">
+        <button class="fd-back" id="fdBack" title="返回参数选项">‹ 返回</button>
+        <button class="fd-tab on" data-v="param">参数</button>
+        <button class="fd-tab" data-v="tools">工具</button>
+        <button class="fd-tab" data-v="all">完整参数</button>
+        <button class="fd-sel" id="fdSel" title="查看当前工具的完整参数">已选：<b class="fd-sel-name">调色盘</b> ›</button>
+        <button class="fd-close" id="fdClose" title="收起工作区">✕</button>
+      </div>
+      <div class="fd-body" id="fdBody">
+        <div class="focus-toolgrid" id="focusToolGrid"></div>
+      </div>
+    </div>
   </div>
 </div>
 <div class="cmd-mask" id="cmdMask">
@@ -7359,6 +7697,7 @@ function paintFrame(){
   syncCropMode();
   if(tool==='crop') drawCropEditor();
   updateTB();
+  if(typeof fxSync==='function'){ try{ fxSync(); }catch(e){} }
   if(scale<1){
     clearTimeout(hiResTimer);
     hiResTimer=setTimeout(()=>{ burst=0; lastFrameAt=0; render(); scheduleHist(); },140);
@@ -8219,7 +8558,8 @@ function pulsePhoto(){
 const LIVE={
   video:null, url:null, still:null, imgName:'', vidName:'', baseName:'',
   pair:false, matched:false, playing:false, recording:false, vidFile:null,
-  raf:0, holdTimer:0, holdFired:false, holdX:0, holdY:0, duration:0
+  raf:0, holdTimer:0, holdFired:false, holdX:0, holdY:0, duration:0,
+  coverTime:null, seekWant:null, seekRaf:0, seekTimer:0, seekDragging:false
 };
 function liveBase(n){ return (n||'').replace(/\.[^.]+$/,''); }
 function restoreLiveStill(){
@@ -8266,17 +8606,22 @@ function attachLiveVideo(file){
 function liveFrame(t){
   const v=LIVE.video;
   return new Promise(resolve=>{
+    let done=false;
     const grab=()=>{
+      if(done) return; done=true;
+      /* v1.0.21：seek 未完成时绝不抓帧 —— 以前这里无条件 drawImage(v)，
+         拖进度条时经常把一张空 / 黑帧写进纹理，画面就整片变黑。 */
+      if(v.seeking||v.readyState<2||!v.videoWidth){ resolve(null); return; }
       const c=document.createElement('canvas');
       c.width=v.videoWidth||1280; c.height=v.videoHeight||960;
-      try{ c.getContext('2d').drawImage(v,0,0,c.width,c.height); }catch(e){}
+      try{ c.getContext('2d').drawImage(v,0,0,c.width,c.height); }catch(e){ resolve(null); return; }
       resolve(c);
     };
-    if(v.readyState>=2&&Math.abs((v.currentTime||0)-t)<0.03){ grab(); return; }
+    const target=clamp(t,0,Math.max(0,(LIVE.duration||3)-.05));
+    if(!v.seeking&&v.readyState>=2&&Math.abs((v.currentTime||0)-target)<0.03){ grab(); return; }
     v.addEventListener('seeked',grab,{once:true});
-    try{ v.currentTime=clamp(t,0,Math.max(0,(LIVE.duration||3)-.05)); }
-    catch(e){ grab(); }
-    setTimeout(()=>{ if(v.readyState>=2) grab(); },1200); // 兜底（once 事件可能已触发，grab 会跑两次，无害）
+    try{ v.currentTime=target; }catch(e){ grab(); }
+    setTimeout(()=>{ if(!done){ if(v.seeking) resolve(null); else grab(); } },1600);
   });
 }
 function loadImageFile(f,withVideo,token){
@@ -8354,23 +8699,257 @@ function livePause(){
   restoreLiveStill(); updateLiveUI(); render();
 }
 function previewLiveFrame(){
-  const v=LIVE.video; if(!LIVE.pair||!v||v.readyState<2) return;
+  /* v1.0.21 · 修「拖进度条卡 + 照片黑屏」
+     旧版在 140ms 定时器里无条件 texImage2D(..., v)：此时 <video> 往往
+     还在 seek（seeking=true / 当前帧尚未解码），texImage2D 会把一张空帧
+     上传成纹理 0；而 LIVE.playing=false 时 paintFrame 不会再上传视频，
+     黑帧就一直留在画面上，直到换照片或播放。现在：
+       ① 校验 seeking / readyState / videoWidth，任一不满足就【不上传】，
+          保留上一张已解码的好纹理 —— 画面只会停在上一个有效帧，绝不变黑；
+       ② 上传由 seeked 事件驱动，不再靠猜测时机的定时器；
+       ③ input 事件合并到 rAF，一次 seek 没完成就不发下一次，解码器不被打爆。 */
+  const v=LIVE.video;
+  if(!LIVE.pair||!v||v.seeking||v.readyState<2||!v.videoWidth) return false;
   try{
     gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D,tex);
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,false);
     gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,v);
-  }catch(e){}
+  }catch(e){ return false; }
   paintFrame();
+  return true;
 }
-async function useLiveFrameAsCover(){
+async function useLiveFrameAsCover(t){
   if(!LIVE.pair||!LIVE.video) return;
-  const wasPlaying=LIVE.playing, t=LIVE.video.currentTime||0;
+  const wasPlaying=LIVE.playing;
+  const time=clamp(typeof t==='number'?t:(LIVE.video.currentTime||0),
+                   0,Math.max(0,(LIVE.duration||3)-.05));
   livePause();
-  const c=await liveFrame(t);
+  const c=await liveFrame(time);
+  if(!c){ toast('这一帧还没解码好，请稍后再试'); return; }
   uploadImage(c,(liveBase(LIVE.imgName||LIVE.vidName)||'实况')+'_封面',false);
-  updateLiveUI(); toast('已把当前帧设为静态封面');
+  LIVE.coverTime=time; updateLiveUI(); toast('已把 '+time.toFixed(2)+'s 这一帧设为静态封面');
   if(wasPlaying) livePlay();
 }
+
+/* ============================================================
+   v1.0.21 · 自定义封面工作台
+   用一个独立的 <video> 抽帧，不碰主播放器的 currentTime，也不写主纹理：
+   挑封面时主画面不会闪、不会黑，正在播放的实况也不被打断。
+   候选帧 = 12 张均匀关键帧 + 任意时刻手动「＋ 加入候选」；
+   精确滑杆可定位到 0.01s，确认时直接用已抓好的全尺寸 canvas 作封面。
+   ============================================================ */
+const COVER={open:false,mask:null,video:null,url:null,ownUrl:false,dur:0,
+  frames:[],sel:-1,t:0,preview:null,seekTimer:0,token:0,grid:null,img:null,
+  badge:null,timeEl:null,seek:null,okBtn:null};
+function cvEl(tag,cls,html){
+  const e=document.createElement(tag);
+  if(cls) e.className=cls;
+  if(html!==undefined) e.innerHTML=html;
+  return e;
+}
+/* 串行抓一帧。maxW>0 时等比缩小；只在解码完成后才 drawImage。 */
+function cvGrab(v,t,maxW){
+  return new Promise(resolve=>{
+    let done=false;
+    const grab=()=>{
+      if(done) return; done=true;
+      if(v.seeking||v.readyState<2||!v.videoWidth){ resolve(null); return; }
+      const w=v.videoWidth,h=v.videoHeight;
+      const k=maxW?Math.min(1,maxW/Math.max(w,h)):1;
+      const c=document.createElement('canvas');
+      c.width=Math.max(1,Math.round(w*k)); c.height=Math.max(1,Math.round(h*k));
+      try{ c.getContext('2d').drawImage(v,0,0,c.width,c.height); }catch(e){ resolve(null); return; }
+      resolve(c);
+    };
+    const target=clamp(t,0,Math.max(0,(COVER.dur||3)-.05));
+    if(!v.seeking&&v.readyState>=2&&Math.abs((v.currentTime||0)-target)<0.02){ grab(); return; }
+    v.addEventListener('seeked',grab,{once:true});
+    try{ v.currentTime=target; }catch(e){ grab(); }
+    /* MOV / HEVC 在部分浏览器 seeked 不触发：1.6s 兜底，但仍在 seeking 就放弃，绝不抓黑帧 */
+    setTimeout(()=>{ if(!done){ if(v.seeking) resolve(null); else grab(); } },1600);
+  });
+}
+function cvClose(){
+  if(!COVER.open) return;
+  COVER.open=false; COVER.token++;
+  clearTimeout(COVER.seekTimer);
+  try{ if(COVER.video){ COVER.video.pause(); COVER.video.removeAttribute('src'); COVER.video.load(); } }catch(e){}
+  if(COVER.ownUrl&&COVER.url){ try{ URL.revokeObjectURL(COVER.url); }catch(e){} }
+  COVER.video=null; COVER.url=null; COVER.preview=null; COVER.frames=[];
+  if(COVER.mask){ COVER.mask.remove(); COVER.mask=null; }
+}
+/* Esc 优先关闭封面面板，不再顺手触发其它关闭逻辑 */
+document.addEventListener('keydown',e=>{
+  if(COVER.open&&e.key==='Escape'){ e.preventDefault(); e.stopPropagation(); cvClose(); }
+},true);
+function cvRenderGrid(){
+  const g=COVER.grid; if(!g) return;
+  g.replaceChildren();
+  COVER.frames.forEach((f,i)=>{
+    const b=cvEl('button','cv-th'+(i===COVER.sel?' sel':''));
+    b.type='button';
+    const im=document.createElement('img'); im.src=f.url; im.alt='关键帧 '+f.t.toFixed(2)+'s';
+    b.append(im, cvEl('i','',f.t.toFixed(1)+'s'));
+    b.title=f.t.toFixed(2)+'s · 点选这一帧';
+    b.onclick=()=>cvSelect(f.t,i);
+    g.append(b);
+  });
+  const add=cvEl('button','cv-th cv-add','＋');
+  add.type='button'; add.title='把精确滑杆当前时刻加入候选帧';
+  add.onclick=()=>cvSelect(COVER.t,-1,true);
+  g.append(add);
+}
+function cvShowPreview(c){
+  if(!c||!COVER.img) return;
+  /* v1.0.22：拖动时 cvSelect 直接抓 960px，这里零额外 drawImage；
+     只有来源比 960 大（例如兜底用了主播放器全尺寸帧）才缩一次。 */
+  const k=Math.min(1,960/Math.max(c.width,c.height));
+  let src=c;
+  if(k<1){
+    const sh=document.createElement('canvas');
+    sh.width=Math.max(1,Math.round(c.width*k)); sh.height=Math.max(1,Math.round(c.height*k));
+    try{ sh.getContext('2d').drawImage(c,0,0,sh.width,sh.height); src=sh; }catch(e){ return; }
+  }
+  COVER.img.src=src.toDataURL('image/jpeg',.82);
+  COVER.img.style.display='block';
+  const ph=COVER.mask&&COVER.mask.querySelector('.cv-ph');
+  if(ph) ph.style.display='none';
+  if(COVER.badge) COVER.badge.textContent=COVER.t.toFixed(2)+'s · 候选封面';
+  if(COVER.okBtn) COVER.okBtn.disabled=false;
+}
+async function cvSelect(t,idx,add){
+  const token=COVER.token;
+  COVER.t=clamp(t,0,Math.max(0,COVER.dur-.05));
+  if(COVER.seek) COVER.seek.value=Math.round(COVER.t/Math.max(COVER.dur,1e-3)*1000);
+  if(COVER.timeEl) COVER.timeEl.textContent=COVER.t.toFixed(2)+' / '+COVER.dur.toFixed(2)+'s';
+  /* 精确滑杆改了时刻就不再高亮任何候选帧；点候选 / ＋ 加入才高亮 */
+  if(idx>=0) COVER.sel=idx; else if(!add) COVER.sel=-1;
+  cvRenderGrid();
+  /* 拖动 / 点候选只抓 960px 的预览帧：seek 一次、drawImage 一次、toDataURL 一次。
+     4096px 的全尺寸封面只在点「✓ 设为封面」时抓，滑动时不再反复分配 4K canvas。 */
+  const c=await cvGrab(COVER.video,COVER.t,960);
+  if(token!==COVER.token||!COVER.open||!c) return;   // 面板已关 / 过期结果直接丢弃
+  COVER.preview=c;
+  if(add){
+    const k=Math.min(1,200/Math.max(c.width,c.height));
+    const th=document.createElement('canvas');
+    th.width=Math.max(1,Math.round(c.width*k)); th.height=Math.max(1,Math.round(c.height*k));
+    th.getContext('2d').drawImage(c,0,0,th.width,th.height);
+    COVER.frames.push({t:COVER.t,url:th.toDataURL('image/jpeg',.72)});
+    COVER.sel=COVER.frames.length-1;
+    cvRenderGrid();
+    toast('已把 '+COVER.t.toFixed(2)+'s 加入候选帧');
+  }
+  cvShowPreview(c);
+}
+async function openCoverPicker(){
+  if(COVER.open){ return; }
+  if(!LIVE.pair||!LIVE.video||!LIVE.duration){ toast('请先导入实况照片（HEIC + MOV 同名配对）'); return; }
+  COVER.token++; const token=COVER.token;
+  COVER.dur=LIVE.duration; COVER.frames=[]; COVER.sel=-1; COVER.preview=null;
+  COVER.t=(typeof LIVE.coverTime==='number')?clamp(LIVE.coverTime,0,COVER.dur-.05):COVER.dur/2;
+  COVER.open=true;
+  const mask=cvEl('div','cv-mask'); COVER.mask=mask;
+  const card=cvEl('div','cv-card'); card.setAttribute('role','dialog');
+  card.setAttribute('aria-label','自定义封面');
+  const head=cvEl('div','cv-head');
+  head.append(cvEl('b','','✦ 自定义封面<small>从实况视频里挑一帧作静态封面 · 封面会套用当前全部编辑</small>'));
+  const x=cvEl('button','cv-x','✕'); x.type='button'; x.title='关闭（Esc）'; x.onclick=cvClose;
+  head.append(x); card.append(head);
+  const body=cvEl('div','cv-body');
+  /* v1.0.22 · 常驻头：大预览在上、精确滑杆紧贴其下。
+     拖滑杆时正上方就是封面；往下滚 12 张候选帧时这一整块 sticky 不跑掉。 */
+  const stage=cvEl('div','cv-stage');
+  const pv=cvEl('div','cv-preview');
+  COVER.img=document.createElement('img'); COVER.img.style.display='none';
+  pv.append(COVER.img, cvEl('div','cv-ph','正在抽取视频关键帧…<br>不会改动当前画面'));
+  COVER.badge=cvEl('div','cv-badge','—'); COVER.badge.style.display='none';
+  pv.append(COVER.badge); stage.append(pv);
+  const row=cvEl('div','cv-row cv-scrub');
+  COVER.timeEl=cvEl('span','cv-time',COVER.t.toFixed(2)+' / '+COVER.dur.toFixed(2)+'s');
+  const scrubTop=cvEl('div','cv-scrub-top');
+  scrubTop.append(cvEl('b','','精确选帧<em>左右滑动 · 精确到 0.01s</em>'),COVER.timeEl);
+  row.append(scrubTop);
+  COVER.seek=document.createElement('input');
+  COVER.seek.type='range'; COVER.seek.min='0'; COVER.seek.max='1000'; COVER.seek.step='1';
+  COVER.seek.value=Math.round(COVER.t/COVER.dur*1000);
+  COVER.seek.setAttribute('aria-label','精确选帧');
+  row.append(COVER.seek); stage.append(row); body.append(stage);
+  COVER.seek.addEventListener('input',()=>{
+    const t=+COVER.seek.value/1000*COVER.dur;
+    COVER.t=clamp(t,0,COVER.dur-.05);
+    COVER.timeEl.textContent=COVER.t.toFixed(2)+' / '+COVER.dur.toFixed(2)+'s';
+    clearTimeout(COVER.seekTimer);
+    /* 拖动时只走一个 90ms 防抖 + rAF 合并，且每次必须等上一次 seek 完成 */
+    COVER.seekTimer=setTimeout(()=>cvSelect(COVER.t,-1,false),90);
+  });
+  body.append(cvEl('div','cv-lab','<b>候选关键帧</b><span>点一下预览 · ＋ 加入滑杆当前时刻</span>'));
+  COVER.grid=cvEl('div','cv-grid'); body.append(COVER.grid);
+  body.append(cvEl('div','cv-note',
+    '抽帧走独立的视频解码器，不改动主画面与正在播放的实况；未解码完成时保留上一张有效帧，因此不会出现黑屏。'
+    +'确认时才会按当前时刻抓一张全尺寸封面，滑动过程只处理 960px 预览帧，跟手不卡。'
+    +'这张帧会成为新的静态封面，现有滤镜 / 调色盘 / 文字贴纸 / 涂抹效果全部照常生效，可撤销与自动保存。'));
+  card.append(body);
+  const foot=cvEl('div','cv-foot');
+  const cancel=cvEl('button','','取消'); cancel.type='button'; cancel.onclick=cvClose;
+  COVER.okBtn=cvEl('button','ok','✓ 设为封面'); COVER.okBtn.type='button'; COVER.okBtn.disabled=true;
+  COVER.okBtn.onclick=async()=>{
+    const t=COVER.t;
+    /* v1.0.22：全尺寸封面只在确认这一刻抓一次（拖动时只抓 960px 预览）。
+       必须在 cvClose() 释放独立 <video> 之前完成。 */
+    let c=null;
+    try{ if(COVER.video) c=await cvGrab(COVER.video,t,4096); }catch(e){}
+    if(!c) c=COVER.preview;
+    cvClose();
+    /* 独立解码器万一完全抽不出帧（专利编码 / 权限），退回主播放器抓一帧，
+       不让用户卡在「按钮一直灰着」的状态 */
+    if(!c){ await useLiveFrameAsCover(t); return; }
+    uploadImage(c,(liveBase(LIVE.imgName||LIVE.vidName)||'实况')+'_封面',false);
+    LIVE.coverTime=t; updateLiveUI();
+    toast('已把 '+t.toFixed(2)+'s 这一帧设为封面');
+  };
+  foot.append(cancel,COVER.okBtn); card.append(foot);
+  mask.append(card);
+  mask.addEventListener('pointerdown',e=>{ if(e.target===mask) cvClose(); });
+  document.body.append(mask);
+
+  /* 独立解码器：复用 LIVE.url（blob），没有就用原始视频文件自建 URL */
+  const v=document.createElement('video');
+  v.muted=true; v.playsInline=true; v.preload='auto';
+  COVER.ownUrl=!LIVE.url;
+  COVER.url=LIVE.url||(LIVE.vidFile?URL.createObjectURL(LIVE.vidFile):null);
+  if(!COVER.url){ toast('视频源已释放，请重新导入实况照片'); cvClose(); return; }
+  v.src=COVER.url; COVER.video=v;
+  try{
+    await new Promise((res,rej)=>{
+      let settled=false;
+      const ok=()=>{ if(settled)return; settled=true; res(); };
+      const bad=()=>{ if(settled)return; settled=true; rej(new Error('META')); };
+      v.addEventListener('loadedmetadata',ok,{once:true});
+      v.addEventListener('error',bad,{once:true});
+      v.load(); setTimeout(ok,5000);
+    });
+  }catch(e){ if(COVER.open){ toast('视频解码失败，无法抽取关键帧'); cvClose(); } return; }
+  if(token!==COVER.token||!COVER.open) return;
+  if(isFinite(v.duration)&&v.duration>0) COVER.dur=Math.min(COVER.dur||v.duration,v.duration);
+  /* 12 张均匀关键帧，串行 seek、每帧让出一帧渲染，主线程不会被一口气堵住 */
+  const n=12;
+  for(let i=0;i<n;i++){
+    if(token!==COVER.token||!COVER.open) return;
+    const t=Math.min(Math.max(0,COVER.dur-.05),COVER.dur*(i+.5)/n);
+    const c=await cvGrab(v,t,200);
+    if(token!==COVER.token||!COVER.open) return;
+    if(c){
+      COVER.frames.push({t,url:c.toDataURL('image/jpeg',.72)});
+      cvRenderGrid();
+    }
+    await new Promise(r=>requestAnimationFrame(r));
+  }
+  if(token!==COVER.token||!COVER.open) return;
+  /* 默认定位到上次封面帧（或中间帧），抓一张全尺寸预览 */
+  cvSelect(COVER.t,-1,false);
+}
+
 /* --- 画框 / 留白：导出时叠加，原图与编辑参数都不改写 --- */
 function applyExportFrame(src){
   const f=state.frame;
@@ -8711,7 +9290,7 @@ function recordLiveClip(mimeOverride){
       const ropts=videoRecorderOpts(mime);
       if(!ropts.videoBitsPerSecond) ropts.videoBitsPerSecond=20000000;
       rec=new MediaRecorder(stream,ropts);
-    }catch(e){ LIVE.recordDims=null; reject(e); return; }
+    }catch(e){ reject(e); return; }
     const chunks=[]; let done=false, guard=0, guard2=0, pump=0;
     let lastPaint=0;
     const paint=()=>{
@@ -8735,7 +9314,6 @@ function recordLiveClip(mimeOverride){
     };
     rec.ondataavailable=e=>{ if(e.data&&e.data.size) chunks.push(e.data); };
     rec.onerror=e=>{ done=true; clearTimeout(guard); clearTimeout(guard2); cancelAnimationFrame(pump);
-      LIVE.recordDims=null;
       LIVE.recording=false; updateLiveUI(); reject(e.error||new Error('REC_ERR')); };
     rec.onstop=()=>resolve(new Blob(chunks,{type:rec.mimeType||mime||'video/webm'}));
     const dur=clamp(LIVE.duration||1.5,.3,3600);
@@ -8952,20 +9530,62 @@ stageEarly.addEventListener('drop',e=>{
   if(e.dataTransfer.files&&e.dataTransfer.files.length) loadFiles(e.dataTransfer.files);
 });
 
-/* 实况控件：徽标 / 播放 / 进度 / 设封面 */
+/* 实况控件：徽标 / 播放 / 进度 / 自定义封面 */
 LIVE.video=$('#liveVideo');
 $('#liveBadge').onclick=()=>LIVE.playing?livePause():livePlay();
 $('#livePlay').onclick=()=>LIVE.playing?livePause():livePlay();
-$('#liveCover').onclick=()=>useLiveFrameAsCover();
-let liveSeekTimer=0;
-$('#liveSeek').addEventListener('input',e=>{
-  const v=LIVE.video; if(!v||!LIVE.duration) return;
-  try{ v.currentTime=parseFloat(e.target.value)/1000*LIVE.duration; }catch(err){}
-  clearTimeout(liveSeekTimer);
-  liveSeekTimer=setTimeout(()=>{ if(!LIVE.playing) previewLiveFrame(); },140);
-  render(); updateLiveProgress();
-});
+$('#liveCover').onclick=()=>openCoverPicker();
+
+/* v1.0.21 · 拖进度条不再卡、不再黑屏
+   - input 只更新时间码 + 记下目标，不直接改 currentTime；
+   - 目标合并到 rAF，且必须等上一次 seek 完成（v.seeking=false）才发下一次，
+     解码器不会被几十次连续 seek 打爆；
+   - 纹理上传只在 seeked 事件里、且确认已解码才做；校验失败就保留上一张
+     好纹理（previewLiveFrame 会返回 false，画面停在上个有效帧，绝不变黑）；
+   - 播放中拖动先暂停并恢复静态封面纹理，避免播放循环与 seek 抢同一张纹理。 */
+function liveFlushSeek(){
+  const v=LIVE.video;
+  if(!LIVE.pair||!v||LIVE.seekWant==null) return;
+  if(v.seeking) return;                       // 等 seeked 再继续
+  const t=LIVE.seekWant;
+  if(Math.abs((v.currentTime||0)-t)<0.008){ LIVE.seekWant=null; return; }
+  try{ v.currentTime=t; }catch(e){ LIVE.seekWant=null; }
+}
+function liveRequestSeek(t,immediate){
+  const v=LIVE.video; if(!LIVE.pair||!v||!LIVE.duration) return;
+  LIVE.seekWant=clamp(t,0,Math.max(0,LIVE.duration-.05));
+  if(immediate){ liveFlushSeek(); return; }
+  if(LIVE.seekRaf) return;
+  LIVE.seekRaf=requestAnimationFrame(()=>{ LIVE.seekRaf=0; liveFlushSeek(); });
+}
+function liveOnSeeked(){
+  const v=LIVE.video; if(!v) return;
+  if(!v.seeking&&v.readyState>=2&&v.videoWidth) previewLiveFrame();
+  if(LIVE.seekWant!=null){
+    if(Math.abs((v.currentTime||0)-LIVE.seekWant)<0.008) LIVE.seekWant=null;
+    else if(!LIVE.seekRaf) LIVE.seekRaf=requestAnimationFrame(()=>{ LIVE.seekRaf=0; liveFlushSeek(); });
+  }
+  updateLiveProgress();
+}
+LIVE.video.addEventListener('seeked',liveOnSeeked);
 LIVE.video.addEventListener('ended',()=>{ if(LIVE.playing&&!LIVE.recording) livePause(); });
+$('#liveSeek').addEventListener('pointerdown',()=>{
+  if(LIVE.playing) livePause();               // 恢复静态封面纹理 = 一张确定有效的好帧
+  LIVE.seekDragging=true;
+});
+$('#liveSeek').addEventListener('input',e=>{
+  const d=LIVE.duration||0; if(!d) return;
+  const t=clamp(parseFloat(e.target.value)/1000*d,0,Math.max(0,d-.05));
+  $('#liveTime').textContent=t.toFixed(1)+' / '+d.toFixed(1)+'s';
+  liveRequestSeek(t,false);
+  clearTimeout(LIVE.seekTimer);
+  LIVE.seekTimer=setTimeout(()=>liveRequestSeek(LIVE.seekWant==null?t:LIVE.seekWant,true),90);
+});
+['change','pointerup','pointercancel'].forEach(ev=>$('#liveSeek').addEventListener(ev,()=>{
+  LIVE.seekDragging=false;
+  clearTimeout(LIVE.seekTimer);
+  if(LIVE.seekWant!=null) liveRequestSeek(LIVE.seekWant,true);
+}));
 updateLiveUI();
 
 /* ---------- 缩放 / 平移 / 取色 ---------- */
@@ -11679,7 +12299,7 @@ function renderVideoPage(body){
    4) 断网、限流、404、旧版页面格式都有明确降级与提示，
       检查失败不影响任何编辑与导出功能。
    ============================================================ */
-const IRIS_VERSION='1.0.21';             /* 页面版本：走 HTML 热更新，持续递增 */
+const IRIS_VERSION='1.0.29';             /* 页面版本：走 HTML 热更新，持续递增 */
 const IRIS_BUILD='2026-11-19';
 const IRIS_CHANNEL='hot';                /* hot = HTML 热更新通道 */
 const IRIS_APP_BASELINE='1.0.1.8';       /* 最终安装包 / Release 版本，已冻结 */
@@ -12295,7 +12915,9 @@ const IRIS_UIS=[
   {id:'classic',name:'原版界面',en:'CLASSIC',
    desc:'从第一版沿用到现在的紧凑布局：贴边顶栏、直角工作区、细线条层级，信息密度最高。'},
   {id:'nova',name:'Nova 全新界面',en:'NOVA',
-   desc:'完整重做的视觉语言：悬浮玻璃顶栏、浮起的大圆角工作卡、卡片化分组、药丸控件与柔和光影。所有功能与位置不变。'}
+   desc:'完整重做的视觉语言：悬浮玻璃顶栏、浮起的大圆角工作卡、卡片化分组、药丸控件与柔和光影。所有功能与位置不变。'},
+  {id:'focus',name:'沉浸大图',en:'FOCUS',
+   desc:'照片占满屏幕：顶栏左右对称（✕ ? ⋯ 在左、画质 ▾ / 导出 靠右），底部常驻只有一条大滑杆行；点「曝光 ▾」或「▦」展开固定高度工作区，参数 / 工具 / 完整参数 三段切换不收起、不跳，选完工具仍留在选项并有「‹ 返回」。'}
 ];
 const IRIS_RADII=[{id:'soft',name:'柔和',desc:'16px'},{id:'standard',name:'标准',desc:'26px'},
   {id:'max',name:'超大',desc:'38px'}];
@@ -12309,7 +12931,8 @@ let lastAppliedUI=null;
 function irisSkinApply(animate){
   const r=document.documentElement, t=irisTheme();
   r.dataset.theme=t.id;
-  r.dataset.ui=irisSkin.ui==='nova'?'nova':'classic';
+  r.dataset.ui=(irisSkin.ui==='nova'||irisSkin.ui==='focus')?irisSkin.ui:'classic';
+  r.dataset.focusGreen=irisSkin.focusGreen===false?'off':'on';
   r.dataset.radius=IRIS_RADII.some(x=>x.id===irisSkin.radius)?irisSkin.radius:'standard';
   r.dataset.glass=irisSkin.glass===false?'off':'on';
   /* 玻璃浓度：用户可调 0.20~0.90；旧存档没有这个字段时回落默认 */
@@ -12347,7 +12970,18 @@ function irisSkinApply(animate){
 }
 function setIrisSkin(patch,animate){
   Object.assign(irisSkin,patch||{});
+  if(irisSkin.ui!=='focus'){
+    const d=$('.dock'); if(d){ d.classList.remove('fd-open','focus-picker-open','focus-panel-open'); d.removeAttribute('data-view'); }
+    const b=$('#fxDrawer'); if(b) b.classList.remove('on');
+  }
   irisSkinApply(animate!==false);
+  /* 界面版本变了：工具 tab 数量、工具行位置、快捷条读数要「同一帧」跟上，
+     否则会出现 1 帧工具行还挂在零高度顶栏里。只重建 DOM，不动编辑状态。 */
+  try{ applyToolPos(); }catch(e){}
+  try{ buildTools(); }catch(e){}
+  try{ syncPanelFit(false); }catch(e){}
+  try{ fxBuildPicker(); fxBuildTools(); fxSync(true); }catch(e){}
+  requestAnimationFrame(()=>{ try{ render(); }catch(e){} });
 }
 function irisSkinLabel(){
   const t=irisTheme(), u=IRIS_UIS.find(x=>x.id===irisSkin.ui)||IRIS_UIS[0];
@@ -12366,7 +13000,7 @@ function renderAppearancePage(body){
     const keep=body.scrollTop;
     w.innerHTML='';
     asHero(w,'IRIS · APPEARANCE','外观与主题',
-      '9 套配色主题（含液态玻璃）、两套完整界面、三档圆角，以及<b>对全部主题生效</b>的高斯模糊玻璃与动效开关。切换只改外观，照片和全部编辑参数一个都不动。',
+      '9 套配色主题（含液态玻璃）、三套完整界面（原版 / Nova / 沉浸大图）、三档圆角，以及<b>对全部主题生效</b>的高斯模糊玻璃与动效开关。切换只改外观，照片和全部编辑参数一个都不动。',
       '偏好保存在本机 · 刷新后保留 · 网页 / 桌面 / 手机四端一致');
     const st=spEl('div','pc-stat');
     [[IRIS_THEMES.length,'配色主题'],[IRIS_UIS.length,'界面版本'],
@@ -12375,12 +13009,18 @@ function renderAppearancePage(body){
     w.append(st);
 
     /* 界面版本 */
-    const h1=spEl('div','sk-sec','界面版本 <em>两套完整设计，随时切回</em>'); w.append(h1);
-    const lead=spEl('p','sk-lead','两套界面共用同一套 DOM、事件、坐标与功能；Nova 只重做圆角、层级、留白、玻璃质感与光影。切换后所有滑杆、拖拽、裁剪手柄和导出行为完全一致。');
+    const h1=spEl('div','sk-sec','界面版本 <em>三套完整设计，随时切回</em>'); w.append(h1);
+    const lead=spEl('p','sk-lead','三套界面共用同一套 DOM、事件、坐标与功能：原版信息密度最高，Nova 是悬浮玻璃卡片，'
+      +'<b>沉浸大图</b>把照片放到最大，顶栏只留四个按钮；照片正下方是一根白点大滑杆，'
+      +'选「曝光 / 亮度 / 对比度」等参数后左右拖数值（写的是同一份 <code>state.base</code>）；'
+      +'顶栏在手机与桌面都<b>左右对称</b>：<code>✕ ? ⋯</code> 靠左、<code>画质 ▾ / 导出</code> 靠右，中间留白（v1.0.28 修掉了手机上整组按钮挤到左边的问题）。'
+      +'点左侧参数名或右端 <code>▦</code> 展开一个固定高度工作区，<b>参数 / 工具 / 完整参数</b> 三段切换只换内容、不收起、不跳；'
+      +'工具视图里点某个工具<b>只切换工具、选项列表不消失</b>，顶部另有 <code>‹ 返回</code> 一步回到参数选项、<code>已选 ›</code> 直达完整参数。底部常驻<b>只有这一条大滑杆行</b>并留了安全区。'
+      +'切换后所有滑杆、拖拽、裁剪手柄和导出行为完全一致，编辑状态一个字节不动。');
     w.append(lead);
     const ug=spEl('div','sk-ui-grid');
     IRIS_UIS.forEach(u=>{
-      const b=spEl('button','sk-ui'+(u.id==='nova'?' nova':'')+(irisSkin.ui===u.id?' on':''));
+      const b=spEl('button','sk-ui'+(u.id!=='classic'?' nova':'')+(irisSkin.ui===u.id?' on':''));
       b.innerHTML='<span class="sk-badge">'+(irisSkin.ui===u.id?'使用中':u.en)+'</span>'
         +'<div class="sk-mock"><div class="m-canvas"></div>'
         +'<div class="m-dock"><div class="m-row" style="top:14px"></div>'
@@ -12392,6 +13032,15 @@ function renderAppearancePage(body){
       ug.append(b);
     });
     w.append(ug);
+    /* 沉浸大图专用：亮绿强调色可关，关掉就跟随当前配色主题 */
+    const fg=spEl('div','sk-bar');
+    [['on','✦ 沉浸模式用亮绿强调'],['off','◐ 跟随当前主题配色']].forEach(([v,label])=>{
+      const cur=(irisSkin.focusGreen===false?'off':'on');
+      const b=spEl('button','sk-pill'+(cur===v?' on':''),label);
+      b.onclick=()=>{ setIrisSkin({focusGreen:v==='on'}); draw(); };
+      fg.append(b);
+    });
+    w.append(fg);
 
     /* 工具栏位置：默认回到底部编辑区，喜欢顶栏的可随时切回 */
     const htp=spEl('div','sk-sec','工具栏位置 <em>默认在编辑区底部 · 随时可切</em>'); w.append(htp);
@@ -12588,6 +13237,237 @@ function applyFrameIcons(){
   applyIrisBrand();
 }
 
+
+/* ============================================================
+   沉浸大图 · 单参数大滑杆（v1.0.24）
+   截图2 的交互：分类 → 选一个参数（曝光 / 亮度 / 对比度…）→
+   照片下方那根白点大滑杆就是这个参数的数值，左右拖动实时改画面。
+   写的是主编辑器同一份 state.base.<key>，不是另一套简化调色。
+   ============================================================ */
+const FOCUS_GROUPS=[
+  {name:'调色',keys:['exposure','brightness','contrast','saturation','temp','vibrance','highlights','shadows','tint','hue']},
+  {name:'质感',keys:['clarity','sharpen','noise','black','brilliance']},
+  {name:'氛围感',keys:['vignette','grain','fade','sepia','bw']},
+  {name:'光效',keys:['lift','gamma','gain','exposure','highlights','shadows']},
+  {name:'影调',keys:['lift','gamma','gain','contrast','black','brightness']}
+];
+/* 细线图标：与截图同一套几何语汇（三角 / 圆 / 太阳 / 半圆 / 曲线） */
+const FX_PATHS={
+  exposure:'M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M18.4 5.6L17 7M7 17l-1.4 1.4M12 8a4 4 0 100 8 4 4 0 000-8z',
+  brightness:'M12 4v2M12 18v2M4 12h2M18 12h2M6 6l1.5 1.5M16.5 16.5L18 18M18 6l-1.5 1.5M7.5 16.5L6 18M12 7.5a4.5 4.5 0 100 9 4.5 4.5 0 000-9z',
+  contrast:'M12 3a9 9 0 100 18 9 9 0 000-18zM12 3v18',
+  saturation:'M12 3s6 6.5 6 10.5a6 6 0 01-12 0C6 9.5 12 3 12 3z',
+  temp:'M10 14V5a2 2 0 014 0v9a4 4 0 11-4 0zM12 10v7',
+  vibrance:'M12 3l1.8 5.4L19 10l-5.2 1.6L12 17l-1.8-5.4L5 10l5.2-1.6L12 3zM19 16l.7 2.1L22 19l-2.3.9L19 22l-.7-2.1L16 19l2.3-.9L19 16z',
+  highlights:'M12 3a9 9 0 000 18 9 9 0 000-18zM3 12h18M12 3v6',
+  shadows:'M12 3a9 9 0 000 18 9 9 0 000-18zM3 12h18M12 15v6',
+  tint:'M8 12a4 4 0 108 0 4 4 0 00-8 0zM4 12a8 8 0 0116 0',
+  hue:'M12 3a9 9 0 100 18 9 9 0 000-18zM12 7a5 5 0 100 10 5 5 0 000-10zM12 3v2M21 12h-2M5 12H3M12 19v2',
+  clarity:'M12 4l9 16H3l9-16zM12 9v6M9 17h6',
+  sharpen:'M12 3l9 9-9 9-9-9 9-9zM12 8v8M8 12h8',
+  noise:'M4 6h.01M9 6h.01M14 6h.01M19 6h.01M6 11h.01M11 11h.01M16 11h.01M4 16h.01M9 16h.01M14 16h.01M19 16h.01',
+  black:'M12 3a9 9 0 100 18 9 9 0 000-18zM8 12a4 4 0 118 0 4 4 0 01-8 0z',
+  brilliance:'M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2M12 8a4 4 0 100 8 4 4 0 000-8z',
+  vignette:'M3 5h18v14H3zM7 9h10v6H7z',
+  grain:'M5 7h.01M10 7h.01M15 7h.01M19 7h.01M7 12h.01M12 12h.01M17 12h.01M5 17h.01M10 17h.01M15 17h.01M19 17h.01',
+  fade:'M3 18L21 6M3 6l18 12M3 12h18',
+  sepia:'M12 3a9 9 0 100 18 9 9 0 000-18zM3 12h18M12 3a9 9 0 010 18z',
+  bw:'M12 3a9 9 0 100 18 9 9 0 000-18zM12 3v18',
+  lift:'M3 19C7 19 8 7 12 7s5 6 9 6M3 19h18',
+  gamma:'M3 19C6 19 6 6 12 6s6 8 9 8M3 19h18',
+  gain:'M3 19c3-2 5-13 9-13s6 11 9 11M3 19h18'
+};
+function fxIcon(key){
+  const d=FX_PATHS[key]||FX_PATHS.brightness;
+  return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="'+d+'"/></svg>';
+}
+function fxDef(key){
+  if(typeof ADJ!=='undefined'){
+    const a=ADJ.find(x=>x[1]===key);
+    if(a) return {key,label:a[2],min:a[3],max:a[4]};
+  }
+  return {key,label:key,min:-1,max:1};
+}
+let fxGroup=0,fxKey='exposure',fxBefore=null,fxLast=null;
+function fxCur(){ return fxDef(fxKey); }
+function fxVal(){ const v=getPath('base.'+fxKey); return typeof v==='number'?v:0; }
+function fxSet(v){
+  const d=fxCur(); v=Math.max(d.min,Math.min(d.max,v));
+  setPath('base.'+fxKey,v); requestRender();
+}
+function fxBuildPicker(){
+  const box=$('#focusPicker'); if(!box) return;
+  box.innerHTML='';
+  const g=document.createElement('div'); g.className='fp-groups';
+  FOCUS_GROUPS.forEach((grp,i)=>{
+    const b=document.createElement('button');
+    b.className='fp-chip'+(i===fxGroup?' on':''); b.textContent=grp.name;
+    b.onclick=()=>{ fxGroup=i; fxKey=FOCUS_GROUPS[i].keys[0]; fxBuildPicker(); fxSync(true); };
+    g.append(b);
+  });
+  const grid=document.createElement('div'); grid.className='fp-grid';
+  FOCUS_GROUPS[fxGroup].keys.forEach(k=>{
+    const d=fxDef(k), b=document.createElement('button');
+    b.className='fp-item'+(k===fxKey?' on':''); b.dataset.key=k;
+    b.innerHTML=fxIcon(k)+'<span>'+d.label+'</span>';
+    b.onclick=()=>{ fxKey=k; fxBuildPicker(); fxSync(true); };  // 不收起：换选项零跳
+    grid.append(b);
+  });
+  const hint=document.createElement('div'); hint.className='fp-hint';
+  hint.textContent='选好参数后，拖上方那根白色圆点大滑杆调数值 · 选完不会收起';
+  box.append(g,grid,hint);
+}
+/* 工具网格：14 个工具。点一项只切工具，列表与分段选项不消失；
+   想看该工具完整参数点顶部「完整参数」或「已选 ›」，抽屉全程不收起、高度不变。 */
+const FT_ICONS={plate:'◉',filters:'✦',adjust:'☰',elements:'◇',local:'◐',grade:'◍',
+  light:'☀',hsl:'◈',curve:'⌁',crop:'▣',lightfield:'◎',bokeh:'◌',presets:'▤',guide:'?'};
+function fxBuildTools(){
+  const box=$('#focusToolGrid'); if(!box) return;
+  box.innerHTML='';
+  (typeof TOOLS!=='undefined'?TOOLS:[]).forEach(t=>{
+    const b=document.createElement('button');
+    b.className='ft-item'+(t.id===(typeof tool!=='undefined'?tool:'')?' on':'');
+    b.dataset.id=t.id;
+    b.innerHTML='<i>'+(FT_ICONS[t.id]||'◇')+'</i><span>'+t.name+'</span>';
+    b.onclick=()=>{
+      try{ gotoTool(t.id); }catch(e){}
+      fxDrawerView('tools'); fxBuildTools();   // 保持在工具选项，不跳走
+      try{ syncPanelFit(true); }catch(e){}
+    };
+    box.append(b);
+  });
+}
+function fxSyncToolSel(){
+  const b=$('#fdSel .fd-sel-name'); if(!b) return;
+  const t=(typeof TOOLS!=='undefined'?TOOLS:[]).find(x=>x.id===(typeof tool!=='undefined'?tool:''));
+  if(t) b.textContent=t.name;
+}
+function fxDrawerView(v){
+  const d=$('#focusDrawer'),dock=$('.dock'); if(!d) return;
+  d.dataset.view=v;
+  if(dock) dock.dataset.view=v;
+  d.querySelectorAll('.fd-tab').forEach(b=>b.classList.toggle('on',b.dataset.v===v));
+  fxSyncToolSel();
+  if(v==='tools') fxBuildTools();
+  if(v==='all'){ try{ syncPanelFit(true); }catch(e){} }
+  const nm=$('#fxName');
+  if(nm) nm.classList.toggle('on',d.parentElement.classList.contains('fd-open')&&v==='param');
+}
+function fxOpenDrawer(v){
+  const dock=$('.dock'); if(!dock) return;
+  dock.classList.add('fd-open');
+  const btn=$('#fxDrawer'); if(btn) btn.classList.add('on');
+  fxBuildPicker(); fxBuildTools();
+  fxDrawerView(v||'param');
+  try{ syncPanelFit(true); }catch(e){}
+  try{ render(); }catch(e){}
+}
+function fxCloseDrawer(){
+  const dock=$('.dock'); if(!dock) return;
+  dock.classList.remove('fd-open');
+  const btn=$('#fxDrawer'); if(btn) btn.classList.remove('on');
+  const nm=$('#fxName'); if(nm) nm.classList.remove('on');
+  try{ render(); }catch(e){}
+}
+function fxToggleDrawer(){
+  const dock=$('.dock'); if(!dock) return;
+  if(dock.classList.contains('fd-open')) fxCloseDrawer();
+  else fxOpenDrawer('param');
+}
+function fxNameClick(){
+  const dock=$('.dock'),d=$('#focusDrawer');
+  if(dock&&dock.classList.contains('fd-open')&&d&&d.dataset.view==='param') fxCloseDrawer();
+  else fxOpenDrawer('param');
+}
+function fxSync(force){
+  if(document.documentElement.dataset.ui!=='focus') return;
+  const d=fxCur(), v=fxVal();
+  if(force||fxLast===null||fxLast.k!==fxKey||Math.abs(fxLast.v-v)>.0005){
+    fxLast={k:fxKey,v};
+    const nm=$('#fxName'),val=$('#fxVal'),fill=$('#fxFill'),knob=$('#fxKnob'),zero=$('#fxZero');
+    if(nm) nm.textContent=d.label+' ▾';
+    if(val) val.textContent=(v>0?'+':'')+Math.round(v*100);
+    const p=(v-d.min)/(d.max-d.min);
+    if(knob) knob.style.left=(p*100)+'%';
+    if(fill){
+      /* 双极参数从中间零点向两边填充，单极参数从左端起 */
+      const z=(0-d.min)/(d.max-d.min);
+      fill.style.left=Math.min(p,z)*100+'%';
+      fill.style.width=Math.abs(p-z)*100+'%';
+    }
+    if(zero) zero.style.left=((0-d.min)/(d.max-d.min)*100)+'%';
+  }
+  const name=$('#fbName');
+  if(name){
+    const nm=(typeof imageName!=='undefined'&&imageName)||'沉浸看图 · 照片只在本机';
+    if(name.textContent!==nm) name.textContent=nm;
+  }
+}
+function fxTrackBind(){
+  const tr=$('#fxTrack'); if(!tr) return;
+  const fromX=x=>{
+    const r=tr.getBoundingClientRect(),d=fxCur();
+    return d.min+Math.max(0,Math.min(1,(x-r.left)/Math.max(1,r.width)))*(d.max-d.min);
+  };
+  tr.addEventListener('pointerdown',e=>{
+    e.preventDefault();
+    try{ tr.setPointerCapture(e.pointerId); }catch(err){}
+    tr.classList.add('act');
+    fxBefore=JSON.stringify(state); fxSet(fromX(e.clientX)); fxSync(true);
+  });
+  tr.addEventListener('pointermove',e=>{
+    if(fxBefore===null) return; fxSet(fromX(e.clientX)); fxSync();
+  });
+  const end=e=>{
+    if(fxBefore===null) return;
+    tr.classList.remove('act');
+    try{ commit(fxBefore); }catch(err){}
+    fxBefore=null;
+  };
+  tr.addEventListener('pointerup',end);
+  tr.addEventListener('pointercancel',end);
+  /* 捕获丢失 / 手指滑出 track 时，document 兜底保证 commit 一定发生 */
+  document.addEventListener('pointerup',end);
+  document.addEventListener('pointercancel',end);
+  tr.addEventListener('dblclick',()=>{
+    mutate(()=>{ fxSet(0); fxSync(true); });
+  });
+}
+function initFocusUI(){
+  const on=(id,fn)=>{ const e=document.getElementById(id); if(e) e.onclick=fn; };
+  on('fbExit',()=>{ setIrisSkin({ui:'classic'}); toast('已回到原版界面'); });
+  on('fbHelp',()=>openSubPage('guide'));
+  on('fbMenu',e=>{ e.stopPropagation(); toggleTbMenu(!tbMenuOpen); });
+  on('fbQuality',()=>openSubPage('export'));
+  on('fbExport',()=>{ setExportMenu(false); doExport(); });
+  on('fxUndo',()=>undo()); on('fxRedo',()=>redo());
+  on('fxName',e=>{ e.stopPropagation(); fxNameClick(); });
+  on('fxDrawer',()=>fxToggleDrawer());
+  on('fdClose',()=>fxCloseDrawer());
+  on('fdBack',()=>fxDrawerView('param'));
+  on('fdSel',()=>fxDrawerView('all'));
+  const tabs=$('#fdTabs');
+  if(tabs) tabs.querySelectorAll('.fd-tab').forEach(b=>b.onclick=()=>fxDrawerView(b.dataset.v));
+  on('fxFull',()=>{ const b=document.getElementById('btnFocus'); if(b) b.click(); });
+  const cmp=document.getElementById('fxCmp');
+  if(cmp){
+    cmp.addEventListener('pointerdown',e=>{ e.preventDefault(); setCompare(true); cmp.classList.add('on'); });
+    ['pointerup','pointercancel','pointerleave'].forEach(t=>
+      cmp.addEventListener(t,()=>{ setCompare(false); cmp.classList.remove('on'); }));
+  }
+  fxBuildPicker(); fxBuildTools(); fxTrackBind(); fxSync(true);
+}
+/* 版本首次提示：避免「装了新版本却完全没发现新界面」 */
+setTimeout(()=>{
+  try{
+    const k='iris_focus_hint_124';
+    if(localStorage.getItem(k)) return;
+    localStorage.setItem(k,'1');
+    if(document.documentElement.dataset.ui!=='focus')
+      toast('新增：沉浸大图 · 点 ⋯ → 沉浸大图，用一根大滑杆调曝光');
+  }catch(e){}
+},2800);
+
 const TOOLS=[
   {id:'plate',name:'调色盘',icon:'plate'}, {id:'filters',name:'滤镜',icon:'filters'},
   {id:'adjust',name:'调整',icon:'adjust'}, {id:'elements',name:'元素',icon:'elements'},
@@ -12622,10 +13502,13 @@ let irisToolPos=(()=>{ try{ const v=localStorage.getItem('iris_tool_pos');
   return v==='top'?'top':'dock'; }catch(e){ return 'dock'; } })();
 function applyToolPos(pos){
   if(pos) irisToolPos=(pos==='top'?'top':'dock');
+  /* 沉浸大图的工具条必须在底部工作区；用户若选过「顶栏」，
+     偏好原样保留，切回原版 / Nova 时自动恢复。 */
+  const eff=(typeof irisSkin!=='undefined'&&irisSkin.ui==='focus')?'dock':irisToolPos;
   const t=$('#tools'), bar=$('.topbar'), dock=$('.dock'),
         barEl=dock&&dock.querySelector('#cropBar'), menu=dock&&dock.querySelector('#moreMenu');
   if(!t||!bar||!dock) return;
-  if(irisToolPos==='top'){
+  if(eff==='top'){
     if(t.parentElement!==bar) bar.appendChild(t);
   }else{
     if(t.parentElement!==dock){
@@ -12635,7 +13518,7 @@ function applyToolPos(pos){
       else dock.appendChild(t);
     }
   }
-  document.documentElement.setAttribute('data-toolpos',irisToolPos);
+  document.documentElement.setAttribute('data-toolpos',eff);
   try{ localStorage.setItem('iris_tool_pos',irisToolPos); }catch(e){}
   if(typeof renderMoreMenu==='function') renderMoreMenu();
 }
@@ -12656,12 +13539,16 @@ applyBar();
 applyToolPos();
 function buildTools(){
   const t=$('#tools'); t.innerHTML='';
-  PRIMARY.forEach(id=>{
+  /* 沉浸大图：14 个工具全部铺成一条横向 tab，不再有「更多」二级弹层 */
+  const isFocus=(typeof irisSkin!=='undefined'&&irisSkin.ui==='focus');
+  const list=isFocus?TOOLS.map(x=>x.id):PRIMARY;
+  list.forEach(id=>{
     const x=TOOLS.find(v=>v.id===id), b=document.createElement('button');
     b.className='tool'+(tool===id?' active':''); b.innerHTML=`<i>${svg(x.icon,19)}</i>${x.name}`;
     b.onclick=()=>{ moreOpen=false; renderMoreMenu(); gotoTool(id); };
     t.append(b);
   });
+  if(isFocus){ moreOpen=false; renderMoreMenu(); return; }
   const inMore=!PRIMARY.includes(tool), cur=TOOLS.find(v=>v.id===tool);
   const m=document.createElement('button');
   m.className='tool'+(inMore?' active':''); m.innerHTML=`<i>${svg(cur&&inMore?cur.icon:'more',19)}</i>${inMore?cur.name:'更多'}`;
@@ -15836,9 +16723,21 @@ const GUIDE_CHAPTERS=[
    +'要真正零重编码，用「原始视频文件」直接下载源 .MOV/.MP4。'
    +'<br><b>GIF</b>：纯前端 GIF89a 编码，256 色自适应调色板 + 抖动，可调时长 / 帧率 / 尺寸 / 动效 / 循环次数。'
    +'<br><b>打包全格式</b>：一次出 PNG + JPG + WebP 的 ZIP。'},
- {id:'live',t:'14 · iOS 实况照片',k:'实况 Live Photo HEIC MOV 播放 进度条 选帧 配对素材 快捷指令',
+ {id:'live',t:'14 · iOS 实况照片',k:'实况 Live Photo HEIC MOV 播放 进度条 选帧 自定义封面 关键帧 抽帧 黑屏 遮挡 预览常驻 滑杆位置 配对素材 快捷指令',
   b:'同时导入同名 .HEIC + .MOV 会自动认成一组，画面左上出现 LIVE 标记；长按画面、点标记或按 L 播放。'
-   +'播放时所有滤镜、调色盘、文字贴纸与涂抹效果都逐帧生效。进度条可拖到任意帧并「设封面」。'
+   +'播放时所有滤镜、调色盘、文字贴纸与涂抹效果都逐帧生效。'
+   +'<br><b>v1.0.21 起，实况进度条移到编辑栏顶部</b>（桌面是右侧栏、手机是底部工作卡），'
+   +'不再是压在画面上方的浮层，照片任何一个像素都不被遮挡；只在检测到实况配对时显示，裁剪时自动收起。'
+   +'<br><b>「✦ 自定义封面」</b>是专门做这件事的入口：打开后最上面是<b>大预览 + 紧贴其下的精确选帧滑杆</b>，'
+   +'这两块组成一个常驻头 —— 往下翻 12 张均匀抽取的视频关键帧时，预览和滑杆都不会滚走，'
+   +'左右拖滑杆时正上方就是正在挑的封面，可精确到 0.01 秒。'
+   +'点任意一张候选帧也能看大预览，「＋」把滑杆当前时刻加进候选。'
+   +'<br>滑动时只抓 960px 的预览帧（一次 seek、一次绘制），点「✓ 设为封面」才按当前时刻抓一张全尺寸封面，'
+   +'所以来回拖不卡、不发热。确认后那一帧成为新的静态封面，现有滤镜 / 调色盘 / 文字贴纸 / 涂抹全部照常生效，可撤销、可自动保存。'
+   +'抽帧走独立的视频解码器，不改动主画面，也不打断正在播放的实况。'
+   +'<br><b>拖进度条不再卡、不再黑屏</b>：拖动时只更新时间码并把目标合并到一帧，'
+   +'上一次 seek 没完成就不发下一次；纹理只在「解码完成」后上传，没准备好就保留上一张有效帧。'
+   +'想快一点，直接按「◉ 当前帧作封面」把当前位置设成封面。'
    +'<br><b>限制</b>：网页不能把结果写回 iOS 相册变成原生实况照片，需用「快捷指令 → 将图像和视频转换为实况照片」把封面与视频重新配对；'
    +'动态片段不含原音频，最长 6 秒；部分浏览器打不开 HEIC 时会自动用视频中间帧作封面。'},
  {id:'search',t:'15 · 全局搜索与快捷键',k:'搜索 Ctrl K 快捷键 命令面板 1-9 空格 对比 Esc',
@@ -15908,9 +16807,20 @@ const GUIDE_CHAPTERS=[
    +'晨雾白、纸白暖两套浅色，外加一套<b>液态玻璃</b>（高斯模糊玻璃 + 折射高光 + 冷蓝虹彩）。'
    +'主题只覆盖 CSS 变量（底色 / 面板 / 文字 / 强调色 / 玻璃层），'
    +'界面里每一处颜色都跟着变，包括选中态、滑杆、浮层、二级页面与导引卡。'
-   +'<br><b>② 两套完整界面</b>：<b>原版</b>是从第一版沿用到现在的紧凑布局；'
+   +'<br><b>② 三套完整界面</b>：<b>原版</b>是从第一版沿用到现在的紧凑布局；'
    +'<b>Nova</b> 是全新重做的视觉语言 —— 悬浮玻璃顶栏、浮起的大圆角工作卡、卡片化分组、药丸控件、柔和光影与更宽的留白。'
-   +'两套共用同一套 DOM、事件、坐标与着色器，所有滑杆、拖拽、裁剪手柄、涂抹、导出在任意一套下逐项一致，随时可切回。'
+   +'<b>沉浸大图</b>是第三套：顶栏只留「✕ 退出 / ? 说明书 / ⋯ / 画质 / 导出」，'
+   +'且在手机与桌面都<b>左右对称</b> —— <code>✕ ? ⋯</code> 靠左、<code>画质 ▾ / 导出</code> 靠右、中间留白'
+   +'（<b>v1.0.28</b> 修掉了手机上整组按钮挤到左边）；照片占满中间全部可用高度，'
+   +'照片正下方是一条独立实心条：<b>撤销 / 重做 · 参数名 · 一根白色圆点大滑杆 · 数值 · 对比 / 全屏 / ▤</b>。'
+   +'点滑杆左侧的<b>参数名（默认「曝光 ▾」）</b>或右端 <b>▦</b>，展开底部工作区：分类胶囊（调色 / 质感 / 氛围感 / 光效 / 影调）与细线图标参数项，'
+   +'选完<b>不收起</b>、大滑杆立刻变成该参数的数值；左右拖动实时改画面、松手进一条撤销历史、双击归零。'
+   +'写的是主编辑器同一份 <code>state.base.&lt;key&gt;</code>，范围沿用 <code>ADJ</code> 表，不是另一套简化调色。'
+   +'底部<b>常驻只有这一条大滑杆行</b>（带安全区留白，不会被系统手势区吃掉），工作区里 <code>参数 / 工具 / 完整参数</code> 三段共用一块固定高度槽，'
+   +'切参数、切工具、展开完整面板都<b>不改变高度、不收起、不跳</b>。点某个工具后<b>仍停在工具选项列表</b>，'
+   +'可以继续换别的工具；顶部 <code>‹ 返回</code> 回到参数选项、<code>已选 ›</code> 显示当前工具并直达它的完整参数。'
+   +'三套共用同一套 DOM、事件、坐标与着色器，所有滑杆、拖拽、裁剪手柄、涂抹、导出在任意一套下逐项一致，随时可切回。'
+   +'外观页还能把沉浸模式的亮绿强调色改成「跟随当前主题」。'
    +'<br><b>②b 工具栏位置</b>：5 个工具切换（调色盘 / 滤镜 / 调整 / 元素 / 更多）默认在<b>编辑区底部</b>，这是从第一版沿用至今的布局；切到「顶栏」时宽屏与品牌、导出按钮同排，窄屏自动变成顶栏第二行。两种位置功能完全一致，偏好存本机、刷新后保留，点「↺ 恢复默认外观」也会一并回到底部。'
    +'<br><b>②c 顶栏留白</b>：搜索 / ⋯ 更多 / 换照片 / 导出那一整条，默认<b>悬浮留白</b> —— 四边离屏幕边缘留出空隙、变成一张圆角卡片，不再贴着上边与左右边；切「贴边」可回到最早的全宽顶栏。顶栏是浮在画面上的独立层，与底部 5 个工具的位置互不影响，偏好存本机、刷新保留。Nova 界面本身就是悬浮胶囊，这一项只作用于原版界面。'
    +'<br><b>③ 三档圆角、玻璃模糊与动效开关</b>：圆角只作用于 Nova（柔和 16px / 标准 26px / 超大 38px）；'
@@ -16662,7 +17572,7 @@ const AB_CHAPTERS=[
  <div class="ab-item"><b>◉ 色彩系统</b><small>iPhone 式二维调色盘（Tone × Color + 强度，盘面随照片主色变化）、12 种独立色调、每层滤镜各自的调色盘、433 款分类滤镜、78 套模板、语义保肤渲染、<b>区域工作台（matte 可视化 + 四区独立调色 + 一键生成蒙版 / 虚化）</b>、色彩迁移（Lab 均值方差 → 16³ 3D LUT）、HSL 分色、曲线、三色轮、通道混合与 .cube LUT。</small></div>
  <div class="ab-item"><b>◐ 局部与空间</b><small>涂抹式局部蒙版（直接刷出选区，可擦除 / 撤销 / 伪彩预览，形状渐变保留为可选）、背景虚化（一键检测人物或物品 + 涂抹选取主体或虚化区域 + 六种模糊）、光场计算（重聚焦、视差微动、方向重打光）、涂抹式马赛克 / 柔焦 / 动态 / 径向模糊，最多 6 块区域、可调范围与羽化。</small></div>
  <div class="ab-item"><b>▣ 构图与元素</b><small>可视化拖拽裁剪（角点、边框、比例锁、精确数值兜底）、裁剪页首屏的<b>左右 / 上下透视倾斜</b>（两根 −45°~+45° 度数滑杆、斜切与梯形两种模式、照片上横拖纵拖、自动裁切填满不露黑角）、折叠里的任意角度拉直、90° 步进与水平 / 垂直翻转（无损、导出按旋转后尺寸）、构图缩放与位移、文字 / 贴纸 / 形状 / 涂鸦（可拖动、缩放、旋转、改字体颜色描边）、留白画框、旋转翻转与透视矫正。</small></div>
- <div class="ab-item"><b>▷ 动态与输出</b><small>iOS 实况照片逐帧编辑与选封面、GIF 动图、PNG / JPG / WebP、实况配对素材与全格式 ZIP 打包。视频工作台与视频导出暂未开放，待打磨完成后恢复。</small></div>
+ <div class="ab-item"><b>▷ 动态与输出</b><small>iOS 实况照片逐帧编辑、编辑栏内的实况进度条、自定义封面工作台（12 张关键帧 + 0.01s 精确选帧）、GIF 动图、PNG / JPG / WebP、实况配对素材与全格式 ZIP 打包。视频工作台与视频导出暂未开放，待打磨完成后恢复。</small></div>
  <div class="ab-item"><b>⌕ 效率</b><small>全局搜索（工具 / 滤镜 / 参数 / 模板 / 操作一处直达）、12 个一键快捷、23 章说明书 + 18 章技术实现、22 个独立二级页面（收拢进「页面中心」分组浏览）、本机自动保存与恢复、撤销重做、参数复制与 JSON 存档、自定义滤镜与我的色调、30 种主盘模式、「我的空间」历史图片与一键保存整套参数。视频工作台暂未开放，待打磨完成后再恢复入口。</small></div>
  <div class="ab-item"><b>◇ 体验</b><small>移动端大图优先、编辑栏可拖动可收起、25%–800% 缩放、按住看原图与可拖动分屏线、直方图三模式、轻动画（尊重系统「减少动画」）、统一细线图标、桌面与手机自适应。</small></div>
 </div>`},
@@ -16699,7 +17609,7 @@ const AB_CHAPTERS=[
 <p>唯一的硬性要求是浏览器支持 <b>WebGL</b>；不支持时页面会明确提示。不读取相册、不请求相机或定位权限，除非你主动点「换照片」从设备里选一张。</p>
 <p class="ab-dim">关于「照片不上传」：自动保存写的是本机存储，不是服务器。桌面版写在这台电脑的用户数据目录，移动版写在 App 自己的沙盒里，网页版写在当前浏览器的站点存储 —— 四端行为一致，但快照<b>不会跨设备同步</b>。想彻底不留痕，到「自动保存」页点「清除上次的编辑」，或清除站点数据。</p>`},
 {id:'version',n:'06',eyebrow:'RELEASE',t:'版本状态 · 安装包冻结 / 页面热更新',html:`
-<p>外观系统加入后，界面提供<b>原版 / Nova 双版本</b>与<b>9 套配色主题（含液态玻璃）</b>，可在「外观与主题」页随时切换或一键还原，照片与编辑参数不受影响。</p>
+<p>外观系统加入后，界面提供<b>原版 / Nova / 沉浸大图三版本</b>与<b>9 套配色主题（含液态玻璃）</b>，可在「外观与主题」页随时切换或一键还原，照片与编辑参数不受影响。</p>
 <p>当前版本是 <b>Release Candidate（近乎最终版）</b>。功能面已经完整，接下来<b>只会小修小改</b>：兼容性、边界情况、文案与手感、性能、以及 bug 修复，不再堆叠新模块。</p>
 <p>理由很简单：一个工具的价值不在于功能数量，而在于每次打开都稳定、可预期、不会在你赶时间的时候出岔子。所以这一版把力气花在了收敛上 —— 界面分组、目录式说明书、独立二级页面、逐项回归与像素级验证，而不是再加一层新东西。</p>
 <div class="ab-steps">
@@ -17078,7 +17988,12 @@ c = mix(shifted, clampToSkin(shifted, src), skinMask * u_semLock);</pre>
  <div><b>实况配对素材</b><span>封面 + 已逐帧调色的视频 + 配对说明打成一个 ZIP。网页不能把结果写回 iOS 相册，说明里写了用快捷指令重新配对的步骤。</span></div>
  <div><b>零重编码直出</b><span>「原始视频文件」按钮直接下载用户导入的原片，不经过录制管线。</span></div>
 </div>
-<p>实况照片导入时按同名配对 HEIC + MOV：静态封面走纹理 0，视频解码到隐藏 <code>&lt;video&gt;</code>；长按画面 / 点 LIVE / 按 L 播放，播放期间每一帧都重新走同一套着色器，因此调色盘、文字贴纸、马赛克都会跟着动。进度条可以挑一帧「设为封面」；它移到画面上方，打开「更多」时自动收起，不挡工具栏。</p>
+<p>实况照片导入时按同名配对 HEIC + MOV：静态封面走纹理 0，视频解码到隐藏 <code>&lt;video&gt;</code>；长按画面 / 点 LIVE / 按 L 播放，播放期间每一帧都重新走同一套着色器，因此调色盘、文字贴纸、马赛克都会跟着动。</p>
+<p><b>v1.0.21 · 进度条归位</b>：<code>#liveBar</code> 从 <code>.stage</code> 的绝对定位浮层（<code>top:60px</code>）移进 <code>.dock</code>，排在裁剪完成条与工具行之间，改成普通 flex 行。桌面是右侧栏顶部、手机是底部工作卡顶部，只在 <code>LIVE.pair</code> 为真时显示，裁剪模式隐藏；原先为避开顶栏而写的 5 组 <code>top</code> 断点、Nova 与悬浮顶栏的补偿规则全部撤掉，九套主题与两套界面共用同一条布局。</p>
+<p><b>拖进度条不黑屏</b>：旧实现在 <code>input</code> 里直接写 <code>video.currentTime</code>，再用 140ms 定时器无条件 <code>texImage2D(..., video)</code>。此时解码器往往还在 <code>seeking</code>，上传上去的是一张空帧；而 <code>LIVE.playing=false</code> 时 <code>paintFrame()</code> 不再上传视频，黑帧就永久留在纹理 0 上。现在改成三段式：<code>input</code> 只记 <code>LIVE.seekWant</code> 并更新读数 → <code>liveFlushSeek()</code> 经 rAF 合并、且必须 <code>!video.seeking</code> 才发起下一次 → <code>seeked</code> 事件里 <code>previewLiveFrame()</code> 先校验 <code>!seeking &amp;&amp; readyState≥2 &amp;&amp; videoWidth</code>，不过就返回 <code>false</code> 并<b>保留上一张好纹理</b>。播放中拖动先 <code>livePause()</code>，<code>restoreLiveStill()</code> 把纹理还原成确定有效的静态封面。</p>
+<p><b>自定义封面工作台</b>：独立的 <code>&lt;video&gt;</code> 复用同一个 blob URL 串行 seek 抽 12 张关键帧（每张 <code>await requestAnimationFrame</code> 让出主线程），<code>cvGrab()</code> 同样只在解码完成后 <code>drawImage</code>，超时仍在 seeking 就返回 null。主播放器的 <code>currentTime</code> 与纹理完全不动，所以挑封面时画面不闪不黑、正在播放也不被打断。</p>
+<p><b>v1.0.22 · 预览与滑杆常驻</b>：初版把精确滑杆放在候选帧网格<b>下面</b>，拖滑杆时视线要在「顶部预览」与「底部滑杆」之间来回跳，往下滚网格预览还会整个滚出视口。现在把 <code>.cv-preview</code> 与 <code>.cv-scrub</code> 包进 <code>.cv-stage</code>，设 <code>position:sticky; top:0; z-index:3</code>，配不透明（半透明主题另叠 <code>backdrop-filter:blur(18px)</code>）背景与底部分隔线；<code>.cv-body</code> 的上内边距移到 stage 内部，让 sticky 从滚动容器顶部自然贴合。滑杆改成独占一整行、时间码提到上方右侧，行程更长更好拖；手机端大预览限高 <code>min(32dvh,240px)</code>，保证常驻头下方还能同时看到两行候选帧。</p>
+<p><b>拖动只抓小图</b>：初版 <code>cvSelect()</code> 每次都 <code>cvGrab(v,t,4096)</code>，即拖一下就分配一张 4K canvas 再缩放编码预览。现在拖动 / 点候选只抓 <code>960px</code>，<code>cvShowPreview()</code> 在来源已 ≤960 时<b>零额外 drawImage</b>，直接 <code>toDataURL</code>；<code>okBtn</code> 里先 <code>cvGrab(COVER.video,t,4096)</code> 拿全尺寸封面（必须在 <code>cvClose()</code> 释放独立 <code>&lt;video&gt;</code> 之前），失败则退回 <code>COVER.preview</code> 或主播放器。整轮挑封面只在确认那一刻做一次大抓取，滑动全程是轻量帧。</p>
 <div class="tech-note">诚实边界：MediaRecorder 一律<b>有损编码</b>，「原画质」指的是不主动降分辨率与不限码率；HEIC 与部分专利编解码器在 Chromium 里未必可解码，失败时会用视频中间帧作封面并提示；GIF 上限 400 帧、256 色；桌面浏览器导出的 WebM 需要转 H.264 才能在 iOS 相册里重新配对。</div>`},
 
 {id:'perf',n:'16',eyebrow:'PERFORMANCE',t:'性能与流畅度 · 让拖动手不顿',k:'性能 降采样 拖动 140ms uniform 缓存 跳过叠加层 缩略图懒生成 增量指纹 DOM 复用',html:`
@@ -17165,6 +18080,14 @@ c = mix(shifted, clampToSkin(shifted, src), skinMask * u_semLock);</pre>
  <li>超长视频、60fps + 4K 同时开启很吃内存与电量，手机端注意发热。</li>
  <li>单文件、零构建换来的是可移植性，代价是没有模块隔离、没有类型检查、没有单元测试框架 —— 所以才用上面那套外部回归脚本补上。</li>
 </ul>
+<p><b>v1.0.23 · 沉浸大图是第三套界面版本，不是第三个编辑器</b>：<code>IRIS_UIS</code> 增加 <code>focus</code>，<code>irisSkinApply()</code> 把 <code>data-ui="focus"</code> 写到根元素，head 内联脚本在首屏绘制前读取同一个 <code>iris_skin</code> 键，刷新不闪回。所有差异都在 CSS：原顶栏退成 <code>height:0</code> 的浮层宿主（<code>⋯</code> 与导出菜单仍挂在它下面，重新指定 <code>top</code>），新增的 <code>.focus-bar</code> 只放五个按钮；桌面 <code>#app</code> 强制回 <code>column</code>，<code>.stage</code> 吃掉顶栏与底部工作区之间的全部高度，<code>.dock</code> 限高 36dvh、横向全宽。</p>
+<p>功能不靠「藏按钮」实现：<code>buildTools()</code> 在 focus 下把 14 个工具全铺成横向 tab（不再需要「更多」弹层），<code>applyToolPos()</code> 用 <code>eff</code> 变量把工具行强制放回 dock 但不改写用户的「顶栏」偏好，切回原版自动恢复。大滑杆的 <code>fxSet()</code> 直接读写同一份 <code>state.base.&lt;key&gt;</code>，<code>commit(before)</code> 保证一次拖动只进一条撤销历史；<code>fxSync()</code> 挂在 <code>paintFrame</code> 末尾，带值去重，静止帧零 DOM 写入。导出、撤销、重做、对比、全屏、画质设置全部调用主编辑器已有的函数。</p>
+<p><b>v1.0.28 · 顶栏按钮不再偏左</b>：手机端 <code>@media(max-width:560px)</code> 里写了 <code>.fb-mid{display:none}</code>，而 <code>#fbMid</code> 是 <code>.focus-bar</code> 中唯一 <code>flex:1</code> 的撑开元素 —— 它一消失，<code>#fbQuality</code> / <code>#fbExport</code> 失去向右的推力，390px 视口下最后一个按钮右边缘只到 247px、右侧空 143px，整组看起来偏左（桌面 1280px 下 fbMid 正常，所以只在手机上明显）。现在改成 <code>display:block;flex:1 1 auto</code> 保留占位、<code>.fb-mid&gt;*{display:none}</code> 只隐藏文字，并给 <code>.fb-quality</code> 在手机端加 <code>margin-left:auto</code> 双保险；顺手把 <code>⋯</code> / 导出菜单的左右定位写死，弹层不再沿用原版顶栏的居中位置。实测 360 / 390 / 414 / 560 / 768 / 1280 六种宽度下「退出键离左边缘」与「导出键离右边缘」误差 ≤2px。</p>
+<p><b>v1.0.27 · 按工具之后仍有返回选项</b>：v1.0.26 的 <code>fxBuildTools()</code> 在点工具项后调 <code>fxDrawerView('all')</code>，把 14 项工具网格整块换成完整面板 —— 用户选完工具就「没有返回选项」，只能靠顶部不起眼的分段 chip 找回去。现在点工具项只走 <code>gotoTool()</code> + 保持 <code>tools</code> 视图并重建高亮，列表与分段选项始终在；<code>#fdTabs</code> 新增 <code>‹ 返回</code>（一步回参数选项）与 <code>已选：X ›</code>（显示当前工具、点它进完整参数），第三个分段改名为更直白的「完整参数」。<code>fxSyncToolSel()</code> 同时挂在 <code>gotoTool()</code> 末尾，命令面板等外部切工具时读数也跟着变。手机 390px 下隐藏「已选」名称只留箭头，tabs 行零溢出；三视图高度仍逐像素恒定。</p>
+<p><b>v1.0.26 · 真正一条、切换不跳</b>：v1.0.25 仍留了「大滑杆行 + 14 工具 tab」两条并列工具栏，且 <code>fxBuildPicker</code> 点参数项后调 <code>fxTogglePicker(false)</code> 让 dock 从 56dvh 瞬间缩回 30dvh —— 这就是「换一个选项跳一下、工具栏收起」。现在 <code>#focusDrawer</code> 提供一块 <code>flex:0 0 196px</code> 固定槽与 <code>参数 / 工具 / 全部</code> 分段 tab；<code>#focusPicker</code> 与 <code>#panel</code> 以 <code>position:absolute;bottom:0;height:162px</code> 投影进同一块槽，工具网格在 <code>.fd-body</code> 内 <code>inset:0</code>，<code>data-view</code> 切换只换 display，全程零高度变化。参数项不再收起，工具项点击走 <code>gotoTool()</code> + 切 <code>all</code> 视图。<code>.tools</code> 在 focus 下彻底隐藏，常驻只剩 <code>#focusScrub</code> 一条；classic / Nova 下抽屉直接隐藏，<code>#tools</code> / <code>#panel</code> 仍是 dock 直接子项且顺序一字未动，<code>applyToolPos()</code> 照样能把工具行搬到顶栏（这正是不能把 #tools 包进抽屉的原因）。折叠态控件 106px → 约 60px，照片占比约 86%。</p>
+<p><b>v1.0.25 · 底部只留一行</b>：上一版把分类胶囊、参数图标、14 工具 tab 三行全常驻，等于叠了三行工具栏，最底那行 rect 正好贴 <code>innerHeight</code>，在手机 App 里落进 home indicator 手势区而点不到。现在参数选择收进 <code>#focusPicker</code>，由大滑杆左侧 <code>#fxName</code> 按需展开（与 <code>▤</code> 面板互斥），dock 常驻只有 <code>.tools</code> 一行；<code>padding-bottom:calc(env(safe-area-inset-bottom,0px) + 6px)</code> 把 tab 抬离系统手势区，<code>position:relative;z-index:2;pointer-events:auto</code> 保证可点。折叠态控件从 172px 降到约 106px，照片更大。</p>
+<p><b>v1.0.24 · 单参数大滑杆</b>：<code>FOCUS_GROUPS</code> 复用 <code>ADJ</code> 表的 23 个真实基础参数，按五组分桶；<code>fxDef()</code> 拿到每个参数的 label 与 min/max，<code>fxSet()</code> 用 <code>setPath('base.'+key, v)</code> + <code>requestRender()</code> 写同一份状态。<code>#fxTrack</code> 是自定义 div 而不是 <code>input[type=range]</code>：pointer 事件把 x 线性映射到 [min,max]，双极参数从零点向两侧填充，白色圆点 18px、按下放大到 22px；<code>pointerdown</code> 记快照、<code>pointerup</code> 调 <code>commit()</code>，一次拖动一条撤销。<code>fxSync()</code> 挂在 <code>paintFrame</code> 末尾，按「参数键 + 值」去重，静止帧零 DOM 写入；折叠态 dock 只有 42+78+52=172px，照片拿到约 67% 高度。</p>
+<p>亮绿强调是独立变量 <code>--fx</code>，只在 focus 下生效，<code>data-focus-green="off"</code> 时回落到当前主题的 <code>--accent</code>，所以 9 套配色仍然逐套成立。切换只触发一次 <code>buildTools()</code> + <code>render()</code>，不重建面板内容、不重编译着色器、不碰编辑状态。</p>
 <div class="tech-note">这篇文章本身也是「零构建」思路的一部分：内容存在 <code>TECH_CHAPTERS</code> 数组里，由和说明书、关于页完全相同的渲染函数画出来。加一章就是往数组里加一个对象。</div>`}
 ];
 function renderTechPage(body){
@@ -18345,6 +19268,33 @@ function renderDiagnosticsPage(body){
 
 /* ---------- 16 版本演进 ---------- */
 const AS_CHANGELOG=[
+ {v:'v1.0.28',t:'沉浸大图 · 顶栏按钮不再偏左',d:'修掉手机端顶栏整组按钮挤到左边：'
+    +'560px 断点把唯一的 flex:1 占位元素 #fbMid 设为 display:none，画质 / 导出失去向右推力。'
+    +'现在保留占位只隐藏文字，并加 margin-left:auto 兜底；⋯ 与导出菜单左右定位也写死。'
+    +'六种宽度 × 9 套主题实测左右留白误差 ≤2px。'},
+ {v:'v1.0.27',t:'沉浸大图 · 按工具之后仍有返回选项',d:'修掉「按工具之后没有返回选项」：'
+    +'点工具项原本自动跳到完整面板、14 项列表整块消失。现在只切工具、留在工具选项列表，'
+    +'顶部新增「‹ 返回」与「已选：X ›」，第三个分段改名「完整参数」；手机 tabs 行零溢出，三视图高度仍恒定。'},
+ {v:'v1.0.26',t:'沉浸大图 · 真正一条、切换不跳',d:'修掉「换一个选项就收起跳一下」与「两个工具栏同时很乱」：'
+    +'大滑杆行下方那条 14 工具 tab 彻底移除，常驻只剩一条；参数 / 工具 / 全部 收进一个固定 196px 的工作区，'
+    +'三视图共用同一槽、切换只换内容、点参数项不再自动收起，画面全程零跳。'
+    +'classic / Nova 下抽屉直接隐藏，#tools / #panel 位置与顺序一字未动、applyToolPos 仍可搬工具行；折叠态控件约 60px，照片占比约 86%。'},
+ {v:'v1.0.25',t:'沉浸大图 · 底部只留一行',d:'修掉「两行工具栏 + 最底那层按不了」：'
+    +'分类胶囊 / 参数图标 / 14 工具 tab 原本三行常驻，现在参数选择收进「曝光 ▾」按需展开，'
+    +'与 ▤ 完整面板互斥；底部常驻只剩一行 14 工具 tab，并加安全区 padding 把它抬离系统手势区，'
+    +'真实点击逐项验证。折叠态控件 172px → 约 106px，照片更大，思路（选参数 → 拖大滑杆）不变。'},
+ {v:'v1.0.24',t:'沉浸大图 · 选参数用大滑杆调数值',d:'上一版只换了外壳，参数区还是原来一堆小滑杆，等于没变。'
+    +'这一版按截图重做交互：照片正下方一条独立实心条放撤销 / 重做 + 白色圆点大滑杆 + 数值，'
+    +'下面分类胶囊（调色 / 质感 / 氛围感 / 光效 / 影调）+ 23 个细线图标参数项 + 14 工具 tab。'
+    +'选「曝光」就拖它，写的是同一份 state.base.exposure，实时渲染、松手一条撤销、双击归零。'
+    +'完整面板收进 ▤，功能一个不少；dock 折叠态只有 172px，照片从 57% 升到约 67% 高度。'
+    +'⋯ 菜单首项加了一键入口，新版本首次启动会提示一次。'},
+ {v:'v1.0.23',t:'沉浸大图 · 第三套界面',d:'按手机修图 App 的观感新增可选界面版本：'
+    +'极简顶栏只留关闭 / 帮助 / ⋯ / 画质 / 亮绿导出，照片占满中间全部可用高度，'
+    +'底部是 14 个工具铺成的横向 tab + 撤销 / 重做 / 效果强度 / 对比 / 全屏快捷条。'
+    +'不是砍功能的独立页面：buildTools 铺满全部工具，applyToolPos 强制回底部但保留原偏好，'
+    +'强度滑杆读写主调色盘同一份 state，导出 / 撤销 / 菜单全复用主编辑器函数。'
+    +'与 9 套配色、原版 / Nova 任意组合，随时切回；亮绿强调可改为跟随主题。'},
   {v:'v0.1',t:'起点 · 还原那块盘',d:'复刻 iPhone 摄影风格的二维调色盘：白点拖拽、强度滑杆、实时数值，外加放大照片。单文件网页，双击即用。'},
   {v:'v0.2',t:'大图优先',d:'按「图片太小、编辑区太大」重排：画布放大、编辑栏可拖动可收起、填满 / 适应切换，手机竖屏重做。'},
   {v:'v0.3',t:'拆掉滤镜绑定',d:'滤镜扩到 95 款、最多叠 4 层，每层拥有自己独立的 12 色调调色盘；补局部蒙版、三色轮、LUT、去雾、光晕。'},
@@ -18361,6 +19311,24 @@ const AS_CHANGELOG=[
  {v:'v1.0.5',t:'视频工作台',d:'多片段时间线、关键帧调色、四种转场与六种运镜、五套成片模板；导出改为手工推帧 + 画面签名跳过重绘，静止段几乎零 CPU，预览与缩略图分批让帧；四端同源。'},
  {v:'v1.0.6',t:'视频风格库',d:'视频工作台接入完整色彩引擎：433 款滤镜、78 套模板、20 种盘模式可作为片段风格 A/B；新增可拖二维盘与盘动画、11 项关键帧参数、风格帧预生成导出；四端同源。'},
  {v:'v1.0.7',t:'一键滤镜',d:'预览正下方新增常驻滤镜速贴条：分类 + 搜索 + 缩略图横排，点一下就整段套用，也可拖到时间线片段；修复改滤镜后预览不重绘、只换终点导致半段渐显两个真 bug；签名改用轻量标签避免每帧序列化整份编辑状态；四端同源。'},
+ {v:'v1.0.22',t:'自定义封面：预览与滑杆常驻、拖动轻量化',d:'上一版把精确选帧滑杆放在候选关键帧网格下面，'
+    +'拖滑杆时眼睛要在顶部预览与底部滑杆之间来回跳，往下滚 12 张候选帧时预览还会整个滚出视口。'
+    +'这一版把大预览与滑杆包进 sticky 常驻头（top:0，半透明主题另叠 18px 高斯模糊），'
+    +'滚网格时二者都不跑掉；滑杆独占整行、时间码提到上方右侧，行程更长更好拖；手机端预览限高 32dvh。'
+    +'同时把拖动时的抓帧从 4096px 全尺寸降到 960px 预览帧，cvShowPreview 零额外 drawImage，'
+    +'全尺寸封面只在点「✓ 设为封面」时抓一次（且在释放独立解码器之前），来回拖不再反复分配 4K canvas。'
+    +'说明书第 14 章、技术实现实况段、README 与 version.json 全部同步；实况进度条归位与黑屏修复保持不变。'},
+ {v:'v1.0.21',t:'实况进度条归位 · 自定义封面 · 修复黑屏',d:'三件都是实况照片编辑的手感问题：'
+    +'① 进度条从画面上方的绝对定位浮层（top:60px，会盖住照片顶部、与悬浮顶栏打架）'
+    +'整体移进编辑栏，桌面在右侧栏顶部、手机在底部工作卡顶部，只在有实况配对时显示；'
+    +'5 组 top 断点、Nova 与悬浮顶栏补偿规则一并撤掉，九套主题零溢出。'
+    +'② 新增专门的「✦ 自定义封面」：独立浮层，12 张均匀关键帧 + 0.01s 精确滑杆 + 任意时刻加入候选，'
+    +'抽帧用独立 <video> 不碰主播放器，确认时直接用已抓好的全尺寸帧，零额外 seek；'
+    +'入口在实况控件、导出设置、命令面板与全局搜索。'
+    +'③ 修掉「拖进度条卡 / 照片黑屏」：根因是 input 每次直接写 currentTime，140ms 后无条件把'
+    +'还在 seeking 的 <video> 上传成纹理 0，而暂停态不会再重传，黑帧就一直留着。'
+    +'现在 rAF 合并 seek、必须等上次完成、seeked 后才校验上传，未解码好就保留上一张有效帧；'
+    +'播放中拖动先暂停并还原静态封面纹理。说明书第 14 章、技术实现实况段、关于页与 README 全部同步。'},
  {v:'v1.0.20',t:'缩放手感 · 盘面微调 · 30 种盘模式',d:'三处手感问题一起修：'
     +'① 手机双指缩放时一根手指先松开，画面会突然飘走 —— 根因是指针数从 2 变 1 后仍留着第一根手指'
     +'最初按下的 dragStart 基准，捏合过程的位移与 pan 变化被一次性算进单指拖动；现在指针数一变就用'
@@ -18873,13 +19841,18 @@ function initSubPages(){
   $('#spBack').onclick=closeSubPage; $('#spClose').onclick=closeSubPage;
   $('#btnMenu').onclick=e=>{ e.stopPropagation(); toggleTbMenu(!tbMenuOpen); };
   const bst=$('#btnSaveTone'); if(bst) bst.onclick=()=>{ toggleTbMenu(false); saveCurrentTone(); };
+  const bf=$('#tbmFocus'); if(bf) bf.onclick=()=>{
+    toggleTbMenu(false); setIrisSkin({ui:irisSkin.ui==='focus'?'classic':'focus'});
+    toast(irisSkin.ui==='focus'?'已切换：沉浸大图':'已回到原版界面');
+  };
   $('#btnUndoM').onclick=()=>{ undo(); toggleTbMenu(false); };
   $('#btnRedoM').onclick=()=>{ redo(); toggleTbMenu(false); };
   $('#tbMenu').addEventListener('click',e=>{
     if(e.target.closest('.tbm-item,.tbm-page')) toggleTbMenu(false);
   });
   document.addEventListener('click',e=>{
-    if(tbMenuOpen&&!e.target.closest('#tbMenu')&&!e.target.closest('#btnMenu')) toggleTbMenu(false);
+    if(tbMenuOpen&&!e.target.closest('#tbMenu')&&!e.target.closest('#btnMenu')
+       &&!e.target.closest('#fbMenu')) toggleTbMenu(false);
   });
   buildTbPages();
 }
@@ -19457,8 +20430,9 @@ function buildPresets(p){
     const lr=document.createElement('div'); lr.className='row';
     lr.append(button(LIVE.playing?'❚❚ 暂停实况':'▶ 播放实况',()=>{
       LIVE.playing?livePause():livePlay(); buildPanel(true);
-    }),button('◉ 当前帧作封面',()=>useLiveFrameAsCover()),
-      button('⬇ 导出配对素材',()=>exportLivePair(),'accent'));
+    }),button('✦ 自定义封面…',()=>openCoverPicker(),'accent'),
+      button('◉ 当前帧作封面',()=>useLiveFrameAsCover()),
+      button('⬇ 导出配对素材',()=>exportLivePair()));
     sl.append(lr);
   } else {
     sl.append(hint('未检测到实况视频。导入 iOS 实况照片时，请同时选中同名的 .HEIC 与 .MOV（可多选或一起拖进画面）；只有 .HEIC 时按普通静态照片编辑。'));
@@ -19933,6 +20907,7 @@ function gotoTool(id){
     selElId=null; elDrag=null;
   }
   buildTools(); buildPanel(); syncCropMode(); requestRender();
+  try{ if(typeof fxSyncToolSel==='function') fxSyncToolSel(); }catch(e){}
   if(id==='guide') setTimeout(()=>openSubPage('guide'),0);
 }
 function applyFilterGlobal(name){
@@ -19966,6 +20941,10 @@ function gotoParam(label,group,key){
 }
 function cmdActions(){
   return [
+    {name:'沉浸大图模式',desc:'照片占满屏幕 · 极简顶栏 · 14 工具横向 tab · 随时切回原版',
+     key:'沉浸 大图 看图 focus 主题 界面 全屏 手机 修图 醒目',hint:'',icon:'▣',
+     run:()=>{ setIrisSkin({ui:irisSkin.ui==='focus'?'classic':'focus'});
+       toast(irisSkin.ui==='focus'?'已切换：沉浸大图':'已回到原版界面'); }},
     {name:'区域工作台',desc:'语义 matte 可视化 · 四区独立调色 · 一键生成蒙版与虚化',
      key:'区域 工作台 matte 分割 语义 皮肤 天空 背景 亮部 zone',hint:'',icon:'◈',
      run:()=>openSubPage('zones')},
@@ -20129,6 +21108,12 @@ function cmdActions(){
      key:'裁剪 旋转 翻转 方向 crop rotate 拉直 构图',hint:'',icon:'▣',
      run:()=>{ gotoTool('crop'); toast('在「照片方向」里旋转或翻转照片'); }},
     {name:'分屏对比',desc:'开启 / 关闭左右分屏对比',key:'split 对比',hint:'R',icon:'◫',run:()=>{mutate(()=>{state.splitOn=!state.splitOn;buildPanel();});}},
+    {name:'自定义封面',desc:'从实况视频的关键帧里挑一帧作静态封面，精确到 0.01s',
+     key:'自定义封面 选封面 关键帧 封面 cover frame poster 实况 live 抽帧 选帧',hint:'',icon:'✦',
+     run:()=>openCoverPicker()},
+    {name:'当前帧作封面',desc:'把实况进度条当前位置那一帧直接设为静态封面',
+     key:'当前帧 设封面 封面 快捷 cover live',hint:'',icon:'◉',
+     run:()=>useLiveFrameAsCover()},
     {name:'播放 / 暂停实况',desc:'播放实况片段，编辑逐帧生效',key:'live play 播放',hint:'L',icon:'●',run:()=>{LIVE.playing?livePause():livePlay();}},
     {name:'切换填满 / 适应',desc:'切换照片在画面里的预览方式',key:'fit cover 填满 适应',hint:'\\',icon:'⤢',run:()=>$('#zMode').click()},
     {name:'缩放回到 100%',desc:'复位缩放与平移',key:'zoom 100 缩放',hint:'',icon:'◎',run:()=>resetZoom()},
@@ -20424,6 +21409,7 @@ applyFrameIcons();
 initIrisTones();
 applyMobileUI();
 initSubPages();
+try{ initFocusUI(); }catch(e){ console.warn('[Iris] focus UI',e); }
 buildTools(); buildPanel(); updateFitBtn();
 try{ const v=localStorage.getItem(dockKey()); if(v) setDock(parseFloat(v),false); }catch(e){}
 new ResizeObserver(()=>{ invalidateOvSize(); render(); }).observe(stage);
