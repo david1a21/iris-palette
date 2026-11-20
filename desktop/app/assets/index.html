@@ -7951,7 +7951,7 @@ function draw(w,h,opts={}){
   };
   /* 预览纹理被降采样过、而这一帧是导出（尺寸更大或显式 fullRes）时，
      临时把完整原图上传为纹理；下一次预览帧会自动换回轻量预览纹理。 */
-  if(LIVE.texNeedsFull&&!LIVE.fullTexActive&&
+  if(LIVE.texNeedsFull&&!LIVE.fullTexActive&&!opts.noFullSwap&&
      (o.fullRes||o.w>LIVE.texW*1.01||o.h>LIVE.texH*1.01)){
     try{
       gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D,tex);
@@ -8023,7 +8023,20 @@ function paintFrame(){
   }
   if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;}
   /* 裁剪工具由 2D 画布接管画面，跳过 WebGL 主绘制省一帧 GPU */
-  if(tool!=='crop') draw(w,h,{original:comparing,outSize:[fw,fh]});
+  if(tool!=='crop'){
+    if(er){
+      /* v1.0.37：导出帧必须丢掉预览的手势缩放 / 平移。
+         draw() 默认 `pan:state.pan, zoom:state.zoom` —— 不显式覆盖的话，
+         你在预览里把照片放大一倍，录出来的帧就跟着放大一倍，
+         播放时自然「就是预览时的大小」。这里固定成 viewAspect + 居中 100%。 */
+      /* noFullSwap：实况逐帧时纹理槽里放的是「视频当前帧」，
+         绝不能因为尺寸变大就换成整张照片的原图纹理，否则抓到的是静止封面。 */
+      draw(w,h,{e:effective(),pan:[0,0],zoom:1,viewAspect:imageAspect(),
+                original:false,thumb:true,fullRes:false,noFullSwap:true});
+    }else{
+      draw(w,h,{original:comparing,outSize:[fw,fh]});
+    }
+  }
   if(!er) paintOverlay(dpr);
   syncCropMode();
   if(tool==='crop') drawCropEditor();
@@ -12689,7 +12702,7 @@ function renderVideoPage(body){
    4) 断网、限流、404、旧版页面格式都有明确降级与提示，
       检查失败不影响任何编辑与导出功能。
    ============================================================ */
-const IRIS_VERSION='1.0.36';             /* 页面版本：走 HTML 热更新，持续递增 */
+const IRIS_VERSION='1.0.37';             /* 页面版本：走 HTML 热更新，持续递增 */
 const IRIS_BUILD='2026-11-19';
 const IRIS_CHANNEL='hot';                /* hot = HTML 热更新通道 */
 const IRIS_APP_BASELINE='1.0.1.8';       /* 最终安装包 / Release 版本，已冻结 */
@@ -19918,6 +19931,15 @@ function renderDiagnosticsPage(body){
 
 /* ---------- 16 版本演进 ---------- */
 const AS_CHANGELOG=[
+ {v:'v1.0.37',t:'实况帧与预览手势彻底解耦',d:''
+  +'1.0.36 把画布尺寸修对了，但逐帧渲染还有一处漏网：<code>draw()</code> 的默认参数是 '
+  +'<code>pan:state.pan, zoom:state.zoom</code>，而逐帧调用时<b>没有显式覆盖</b>。'
+  +'结果你在预览里双指放大 1.6 倍、或平移过画面，录出来的每一帧就跟着放大 / 偏移，'
+  +'播放时自然「就是预览时的大小」。现在导出模式固定 '
+  +'<code>pan:[0,0] · zoom:1 · viewAspect:imageAspect()</code>，与封面同口径。'
+  +'另加 <code>noFullSwap</code>：逐帧时纹理槽里放的是视频当前帧，不能因为尺寸变大就换成整张照片，'
+  +'否则抓到的会是静止封面。实测：预览放大 1.6 倍并平移后，导出帧与 100% 状态下的帧'
+  +'<b>逐字节相同</b>（PNG 数据完全一致），而预览画面本身照常随缩放变化。'},
  {v:'v1.0.36',t:'实况画质：逐帧按目标尺寸全分辨率渲染',d:''
   +'比例修好之后暴露出来的下一层问题：动态轨尺寸变成 1440 了，但每一帧是从<b>预览画布</b>抓的，'
   +'而预览画布只有 <code>canvas.clientWidth×dpr</code>（手机竖屏约 390 宽）。'
