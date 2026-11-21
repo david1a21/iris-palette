@@ -6,10 +6,10 @@
 <title>Iris 调色盘 · 语义感知的在线照片编辑器</title>
 <meta name="theme-color" content="#0b0b0d">
 <!-- 版本元数据：检查更新时远端只需读取文件头部即可比对，不必下载整份页面 -->
-<meta name="iris-version" content="1.0.38">
+<meta name="iris-version" content="1.0.39">
 <meta name="iris-build" content="2026-11-19">
 <meta name="iris-repo" content="david1a21/iris-palette">
-<meta name="description" content="Iris 调色盘：语义感知的二维色彩控制器。Tone × Color 两轴、端侧区域分割与肤色锁，433 款滤镜、78 套模板，支持照片 / 视频 / GIF 导出，纯前端不上传。">
+<meta name="description" content="Iris 调色盘：语义感知的二维色彩控制器。Tone × Color 两轴、端侧区域分割与肤色锁，443 款滤镜、78 套模板，支持照片 / 视频 / GIF 导出，纯前端不上传。">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="icon" id="irisFavicon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='15' fill='%23101014'/%3E%3Ccircle cx='32' cy='32' r='22' fill='none' stroke='%23e3b65c' stroke-width='5' stroke-dasharray='9 3'/%3E%3Ccircle cx='32' cy='32' r='4' fill='%23fff'/%3E%3C/svg%3E">
@@ -461,7 +461,7 @@ html[data-motion="off"] .dock-grip.gh-on::after{animation:none!important}
   border:1px solid var(--w11);background:var(--w028);
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .chip-line .chips .chip{font-size:11.5px}
-/* 30 种盘模式：默认整体折叠成一行，展开才按 7 组显示，收起时连 DOM 都不建 */
+/* 35 种盘模式：默认整体折叠成一行，展开才按 8 组显示，收起时连 DOM 都不建 */
 .pm-fold{margin:0 0 7px;border:1px solid var(--w11);border-radius:10px;
   background:var(--w022);overflow:hidden}
 .pm-fold>summary{list-style:none;display:flex;align-items:center;gap:7px;
@@ -2277,7 +2277,7 @@ html[data-theme="mist"] .tb-menu,html[data-theme="paper"] .tb-menu{
 html[data-theme="mist"] .toast,html[data-theme="paper"] .toast{color:var(--txt)}
 html[data-theme="mist"] .fcat-arrow,html[data-theme="paper"] .fcat-arrow{color:rgba(255,255,255,.92)}
 
-/* 面板内部重排不外溢；滤镜平铺 433 张时滚动更稳 */
+/* 面板内部重排不外溢；滤镜平铺 443 张时滚动更稳 */
 .panel{contain:layout style}
 /* ==================================================================
    NOVA · 全新界面
@@ -3269,7 +3269,7 @@ html[data-theme="liquid"] .subpage{
              radial-gradient(700px 500px at 100% 100%,rgba(180,140,255,.16),transparent 70%),
              var(--bg)!important}
 
-/* 433 款平铺时，视口外的卡片不参与布局与绘制；intrinsic 尺寸保证滚动条稳定 */
+/* 443 款平铺时，视口外的卡片不参与布局与绘制；intrinsic 尺寸保证滚动条稳定 */
 .fitem{content-visibility:auto;contain-intrinsic-size:auto 86px}
 
 /* ==================================================================
@@ -4037,7 +4037,7 @@ html[data-motion="off"] .fx-btn,html[data-motion="off"] .fx-knob{transition:none
       <b>Iris <span>调色盘</span></b>
       <small>把照片拖进画面，或点下方按钮开始<br>JPG / PNG / WebP / HEIC · 实况照片请同时选中 .HEIC 与 .MOV<br>照片只在本机处理，不上传</small>
       <span class="ic-cta">选择照片</span>
-      <div class="ic-foot">433 款滤镜 · 78 套模板 · 色调可迁移 · 视频 / GIF 导出</div>
+      <div class="ic-foot">443 款滤镜 · 78 套模板 · 色调可迁移 · 视频 / GIF 导出</div>
     </div>
     <div class="err" id="err"></div>
   </div>
@@ -4256,7 +4256,7 @@ function xpNextPaint(){
 
 
 /* ============================================================
-   主调色盘 30 种模式 · 7 组（5×4 + 2×5）
+   主调色盘 35 种模式 · 8 组（5×4 + 3×5）
    同一个二维 pad（x = 横向 / y = 纵向）+ 强度条，但两轴被解释成
    完全不同的渲染语义。全部复用已有 uniform，不新增纹理 / 着色器分支，
    所以切换与拖动都不掉帧；零位严格等于原图。
@@ -4274,7 +4274,9 @@ const PAD_GROUPS=[
   {id:'style',name:'风格',grad:'linear-gradient(to right,#6b5a78 0%,#8d6f8c 22%,#b58a86 45%,#d4a487 68%,#e2bb92 86%,#e9cda4 100%)'},
   {id:'pro',name:'专项',grad:'linear-gradient(to right,#4f6b62 0%,#668274 22%,#8a9a84 45%,#b1ae90 68%,#ccbb96 86%,#dbc9a6 100%)'},
   {id:'vibrant',name:'鲜活',grad:'linear-gradient(to right,#2f7f8a 0%,#4fa2a0 20%,#8ec06a 42%,#e2b34e 66%,#ef7a4a 84%,#e8486a 100%)'},
-  {id:'craft',name:'工艺',grad:'linear-gradient(to right,#4a4a52 0%,#6b6570 22%,#8e8078 45%,#b19a80 68%,#c9ad8c 86%,#d9c2a2 100%)'}
+  {id:'craft',name:'工艺',grad:'linear-gradient(to right,#4a4a52 0%,#6b6570 22%,#8e8078 45%,#b19a80 68%,#c9ad8c 86%,#d9c2a2 100%)'},
+  /* v1.0.37 「恒美」组：五款都挂 guard 护盾，四个角 + 四条边怎么推都是成片 */
+  {id:'safe',name:'恒美',grad:'linear-gradient(to right,#6d7f8c 0%,#9aa7a0 20%,#d9c3a2 42%,#e8b58c 64%,#e3a58f 84%,#cf8f96 100%)'}
 ];
 const PAD_MODES=[
   /* ① 直觉 */
@@ -4464,8 +4466,42 @@ const PAD_MODES=[
    desc:'只染阴影与高光两端、中间调原样保留；和「电影双色」「青橙分离」的区别是中点完全不动',
    corners:[['lt','淡印 · 亮'],['rt','浓印 · 亮'],['lb','淡印 · 沉'],['rb','浓印 · 沉']],
    axis:'<span>← 淡印　DUOTONE　浓印 →</span><span>↑ 清亮　影调　深稳 ↓</span>',
-   map:{splitBalance:[.32,0,0],'shadowTint[1]':[.12,0,0],'highTint[2]':[.12,0,0],
-        saturation:[-.06,0,0],contrast:[0,-.10,0]}}
+    map:{splitBalance:[.32,0,0],'shadowTint[1]':[.12,0,0],'highTint[2]':[.12,0,0],
+         saturation:[-.06,0,0],contrast:[0,-.10,0]}},
+  /* ⑧ 恒美 · v1.0.37：五款全部 guard:true。
+     两轴统一解释成「横向 清淡→浓郁 / 纵向 通透→沉稳」，四个角都是协调成片；
+     irisPadGuard() 再对本次增量做软膝限幅 + 肤色锁 / 防过曝 / 防死黑，
+     所以推到边角也不会爆色、糊白、死黑或把脸染脏。零位仍严格恒等。 */
+  {id:'dawnveil',grp:'safe',name:'薄金晨光',short:'薄金',guard:true,
+   desc:'晨光薄金：横推从清透到金雾，纵推从明亮到沉稳；护盾始终压住高光、锁住肤色',
+   corners:[['lt','清透 · 亮'],['rt','金雾 · 亮'],['lb','清透 · 稳'],['rb','金雾 · 稳']],
+   axis:'<span>← 清透　DAWN　金雾 →</span><span>↑ 明亮　影调　沉稳 ↓</span>',
+   map:{temp:[.18,0,0],brilliance:[0,.20,0],glow:[.12,0,0],fade:[0,.09,0],
+        vibrance:[.12,0,0],lift:[0,.09,0],highlights:[0,-.07,0]}},
+  {id:'stillbay',grp:'safe',name:'静海深蓝',short:'静海',guard:true,
+   desc:'冷蓝静谧：横推冷度与青影，纵推影调深度；去雾只走轻档，不会把天空压成塑料蓝',
+   corners:[['lt','浅蓝 · 亮'],['rt','深蓝 · 亮'],['lb','浅蓝 · 稳'],['rb','深蓝 · 稳']],
+   axis:'<span>← 浅蓝　BAY　深蓝 →</span><span>↑ 通透　影调　沉静 ↓</span>',
+   map:{temp:[-.20,0,0],contrast:[0,-.16,0],dehaze:[0,.11,0],
+        saturation:[-.09,0,0],'shadowTint[2]':[.11,0,0],fade:[0,.07,0],vibrance:[.09,0,0]}},
+  {id:'peachveil',grp:'safe',name:'蜜桃奶霜',short:'奶霜',guard:true,
+   desc:'暖粉奶霜：横推蜜桃暖度，纵推柔光厚度；肤色锁随幅度自动加强，人像怎么推都干净',
+   corners:[['lt','素净 · 亮'],['rt','蜜桃 · 亮'],['lb','素净 · 柔'],['rb','蜜桃 · 柔']],
+   axis:'<span>← 素净　PEACH　蜜桃 →</span><span>↑ 清亮　影调　柔厚 ↓</span>',
+   map:{temp:[.14,0,0],tint:[.07,0,0],brilliance:[0,.17,0],glow:[.13,0,0],
+        lift:[0,.11,0],contrast:[0,-.13,0],highlights:[0,-.08,0]}},
+  {id:'pinehaze',grp:'safe',name:'松林薄暮',short:'松林',guard:true,
+   desc:'松林薄暮：横推绿影与通透，纵推沉稳；只提鲜明度不堆饱和，树叶不会荧光绿',
+   corners:[['lt','浅绿 · 亮'],['rt','深绿 · 亮'],['lb','浅绿 · 稳'],['rb','深绿 · 稳']],
+   axis:'<span>← 浅绿　PINE　深绿 →</span><span>↑ 通透　影调　沉静 ↓</span>',
+   map:{temp:[-.07,0,0],'shadowTint[1]':[.11,0,0],vibrance:[.13,0,0],
+        dehaze:[0,.13,0],clarity:[0,.07,0],saturation:[-.07,0,0],fade:[0,.07,0]}},
+  {id:'emberdusk',grp:'safe',name:'琥珀余晖',short:'余晖',guard:true,
+   desc:'琥珀余晖：横推暖金高光与冷影分离，纵推暮色浓度；高光自动收边，不会烧成一片橙',
+   corners:[['lt','淡金 · 亮'],['rt','琥珀 · 亮'],['lb','淡金 · 稳'],['rb','琥珀 · 稳']],
+   axis:'<span>← 淡金　EMBER　琥珀 →</span><span>↑ 明亮　影调　浓郁 ↓</span>',
+   map:{temp:[.20,0,0],'highTint[0]':[.11,0,0],'shadowTint[2]':[-.09,0,0],
+        contrast:[0,-.11,0],glow:[.11,0,0],fade:[0,.09,0],vibrance:[.11,0,0]}}
 ];
 /* 启动时一次性预编译：把对象表拍平成 [kind, key, idx, ax, ay, aa] 数组。
    kind 0 = 标量、1 = 数组元素（key[idx]）、2 = 只对 max(0,x) 生效。
@@ -4494,6 +4530,41 @@ function padValsZero(){
 function padVals(){ return (state.padVals&&state.padVals[state.padMode])||{x:0,y:0,s:1}; }
 /* 表驱动展开：只改 e 里已有的字段，O(表长)、零分配、零位严格恒等。
    semantic 走原本的 matte + 肤色锁通道，这里直接跳过。 */
+/* ============================================================
+   v1.0.37 · 恒美护盾（guard 模式专用）
+   旧盘模式是纯线性展开：把白点推到边角，saturation / contrast / temp
+   会一路叠到 0.6~0.9，于是爆色、糊白、死黑、脸染橘 —— 用户要的是
+   「明显变化，但怎么调都好看」。护盾只做三件事，且严格只作用于
+   本次盘模式带来的增量，滤镜层本身的参数一个字节不动：
+     1. 对增量做 tanh 软膝：|soft| < cap，越往极端越收敛，变化仍明显；
+     2. 追加肤色锁（skinProtect 随幅度上升），脸不会被染脏；
+     3. 高光防溢 / 暗部防死黑，只朝安全方向补一点。
+   GUARD_BUF 预分配，逐帧零 GC；零位 x=y=0 时上层直接 return，护盾不跑。
+   ============================================================ */
+const GUARD_BUF=new Float64Array(48);
+const GUARD_CAP={saturation:.40,vibrance:.38,contrast:.38,temp:.34,tint:.28,
+  brilliance:.32,exposure:.24,highlights:.28,shadows:.28,black:.30,lift:.26,
+  fade:.30,glow:.30,halation:.26,clarity:.26,dehaze:.28,gain:.24,gamma:.24,
+  skinProtect:.60,vignette:.26,grain:.28,leak:.24,splitBalance:.30};
+function irisPadGuard(e,F,amt){
+  for(let i=0;i<F.length;i++){
+    const r=F[i], k=r[1], idx=r[2], before=GUARD_BUF[i];
+    const now=idx>=0?(e[k]?e[k][idx]:0):(typeof e[k]==='number'?e[k]:0);
+    const d=now-before;
+    if(!d) continue;
+    const cap=GUARD_CAP[k]||.32;
+    const soft=cap*Math.tanh(d/cap);
+    const v=clamp(before+soft, idx>=0?-1:-2, idx>=0?1:2);
+    if(idx>=0){ if(e[k]) e[k][idx]=v; }
+    else if(typeof e[k]==='number') e[k]=v;
+  }
+  e.skinProtect=clamp((e.skinProtect||0)+.30*amt,0,1);
+  const hot=Math.max(0,e.brilliance||0)+Math.max(0,e.exposure||0)
+           +Math.max(0,e.highlights||0)*.5;
+  if(hot>.34) e.highlights=clamp((e.highlights||0)-(hot-.34)*.30,-2,2);
+  const dark=Math.max(0,e.black||0)+Math.max(0,e.contrast||0)*.45;
+  if(dark>.40) e.lift=clamp((e.lift||0)+(dark-.40)*.16,-2,2);
+}
 function applyPadModeToEffective(e){
   const m=padModeMeta();
   if(m.id==='semantic'||!m.flat.length) return e;
@@ -4504,6 +4575,15 @@ function applyPadModeToEffective(e){
   if(!st||(!x&&!y)) return e;
   const amt=Math.min(1,Math.hypot(x,y))*st;
   const F=m.flat;
+  const guarded=!!m.guard;
+  if(guarded){
+    /* 展开前只快照本模式 flat 里出现的键，护盾之后只对「增量」限幅 */
+    for(let i=0;i<F.length;i++){
+      const r=F[i];
+      GUARD_BUF[i]=r[2]>=0?(e[r[1]]?e[r[1]][r[2]]:0)
+                          :(typeof e[r[1]]==='number'?e[r[1]]:0);
+    }
+  }
   for(let i=0;i<F.length;i++){
     const r=F[i], xx=r[0]===2?Math.max(0,x):x;
     const d=(r[3]*xx+r[4]*y)*st+r[5]*amt;
@@ -4515,6 +4595,7 @@ function applyPadModeToEffective(e){
       if(typeof e[k]==='number') e[k]=clamp(e[k]+d,-2,2);
     }
   }
+  if(guarded) irisPadGuard(e,F,amt);
   if(m.post) m.post(e,x,y,amt,st);
   return e;
 }
@@ -4579,7 +4660,7 @@ function defaultState(){
     editLayer:0, editLayerName:'原图',
     globalPlates:platesZero(),
     plateScope:'global',
-    /* 主调色盘 30 种模式：每种独立记住自己的 (x, y, 强度)，切回来数值还在。
+    /* 主调色盘 35 种模式：每种独立记住自己的 (x, y, 强度)，切回来数值还在。
        只有当前模式参与渲染，零位严格等于原图；不新增着色器通道。 */
     padMode:'semantic',
     padVals:padValsZero(),
@@ -5431,7 +5512,18 @@ const RAW=[
  ['蓝调时刻 · 深','夜景',{te:-.24,co:.20,vg:.18,gl:.10,st:[-.10,0,.16],pl:{bl:[.08,.04,1]}}],
  ['霓虹雨夜 · 柔','夜景',{vi:.18,gl:.16,te:-.10,co:.12,pl:{mg:[.08,.04,1],bl:[.06,.04,1]}}],
  // 城市
- ['玻璃幕墙冷灰','城市',{sa:-.16,co:.18,cl:.14,dz:.12,pl:{bl:[.08,.04,1]}}]
+  ['玻璃幕墙冷灰','城市',{sa:-.16,co:.18,cl:.14,dz:.12,pl:{bl:[.08,.04,1]}}],
+  // v1.0.37 · 十款高级向：克制低饱和、有影调层次、每款都带肤色保护，不新增分类
+  ['雾面银灰','极简高级',{sa:-.18,co:.10,br:.10,li:.10,fa:.10,sk:.34,gr:.10,pl:{hi:[0,.03,1]}}],
+  ['丝光暖白','极简高级',{te:.14,br:.14,li:.12,sa:-.10,gl:.12,sk:.30,fa:.06,pl:{hi:[.05,.02,1]}}],
+  ['雾面裸肌','人像',{te:.10,sa:-.08,br:.10,fa:.08,gl:.10,sk:.52,pl:{or:[.05,.02,1]}}],
+  ['冷瓷雾光','人像',{te:-.12,br:.12,sa:-.12,sk:.48,gl:.10,li:.06,pl:{bl:[.05,.02,1]}}],
+  ['雨后松绿','山野',{sa:-.06,vi:.10,dz:.14,co:.10,sk:.22,cl:.06,pl:{gn:[.06,.03,1]}}],
+  ['暮色琥珀','晨昏光',{te:.20,vi:.08,br:.08,fa:.10,sk:.30,gl:.08,pl:{hi:[.08,.03,1],sh:[-.06,.02,1]}}],
+  ['和纸灰蓝','日系',{te:-.10,sa:-.14,fa:.14,li:.10,sk:.28,gl:.06,pl:{bl:[.05,.02,1]}}],
+  ['Deakins 窗光','大师影调',{te:.08,co:.10,br:.10,hl:.10,sk:.36,gl:.08,li:.06}],
+  ['湿版淡银','黑白',{bw:1,co:.14,li:.12,gr:.20,fa:.10,sk:.20,pl:{hi:[0,.03,1]}}],
+  ['哈苏柔金','相机厂商',{te:.12,vi:.08,br:.10,sk:.34,fa:.08,gl:.06,pl:{or:[.05,.02,1]}}]
 ];
 RAW.forEach(([n,g,p])=>F(n,g,p));
 state = defaultState();
@@ -5611,7 +5703,7 @@ function toggleFav(name){
 }
 
 /* ============================================================
-   主调色盘的 30 种模式
+   主调色盘的 35 种模式
    同一个二维 pad（x = 横向 / y = 纵向）+ 强度条，但两轴被解释成
    完全不同的渲染语义。全部复用现有 uniform，不新增纹理、不新增
    着色器分支，所以切换与拖动都不掉帧；零位严格等于原图。
@@ -5661,7 +5753,7 @@ function effectiveRaw(overFilter, overStrength){
   return e;
 }
 /* 缩略图用「单款滤镜」的结果是常量，按 (名称,强度) 缓存；
-   433 款滤镜滚动浏览时不再每次重算 30 项参数叠加。 */
+   443 款滤镜滚动浏览时不再每次重算 30 项参数叠加。 */
 const EFF_SOLO=new Map();
 function effective(overFilter,overStrength){
   if(overFilter===undefined) return effectiveRaw();
@@ -7968,7 +8060,7 @@ function stageRect(){
 function invalidateStageRect(){ _stageRect=null; }
 
 let imgW=1600,imgH=1200, imageReady=false;
-/* v1.0.38：导出尺寸唯一依据 = 原始图源像素。
+/* v1.0.39：导出尺寸唯一依据 = 原始图源像素。
    预览尺寸 / 预览帧 / 视频中间帧都不许再影响导出，避免「预览缩一点、导出跟着缩」。 */
 let imgSrcW=1600,imgSrcH=1200,imgSrcKind='demo',imgSrcLow=false;
 let comparing=false, picking=false, pickCb=null;
@@ -8368,7 +8460,7 @@ const FONT_GROUPS=[
 ];
 /* 20 款字体：每款都有「真实候选字体 + 明确不同的通用族兜底 + 字重/斜体/字距」
    三层差异，任何平台上切换都看得出变化，不会出现两款长得一样。
-   grp 用于面板里折叠分组，避免 30 个 chip 一次平铺把首屏挤满。 */
+   grp 用于面板里折叠分组，避免 35 个 chip 一次平铺把首屏挤满。 */
 const FONTS=[
   /* 中文正文 */
   {id:'sans',    name:'黑体',      grp:'cn', generic:'sans-serif', weight:0,    italic:false, trackPx:0,
@@ -8885,7 +8977,7 @@ function scheduleThumbRender(){
 }
 /* ============================================================
    滤镜缩略图懒加载
-   renderSmall 每张都要一次同步 gl.readPixels + toDataURL。433 款平铺或
+   renderSmall 每张都要一次同步 gl.readPixels + toDataURL。443 款平铺或
    25 个分类卡 × 3 张预览，一次性全算会阻塞主线程上百毫秒。
    现在图片先挂 1×1 占位，进入视口（提前 180px）才真正生成，并且每批
    最多 3 张、批间让出一帧 —— 滚动时始终不卡，看到的又总是有图。
@@ -8940,9 +9032,9 @@ function pumpThumbs(){
     const batch=THUMB_TODO.splice(0,3);   // 一帧最多 3 次同步 readPixels
     batch.forEach(applyRealThumb);
     /* 缩略图走独立 FBO，主画面不需要每批重绘（旧版每批一次 render，
-       433 款平铺就是上百次全分辨率重绘，是打开滤镜页卡顿的第二个来源）。
+       443 款平铺就是上百次全分辨率重绘，是打开滤镜页卡顿的第二个来源）。
        但 drawing buffer 未 preserve 的 WebView 可能在合成后丢掉主画面，
-       所以每 6 批补一次，整批结束再补一次：433 张也只要十几次重绘。 */
+       所以每 6 批补一次，整批结束再补一次：443 张也只要十几次重绘。 */
     thumbBatchCount++;
     if(THUMB_TODO.length){
       pumpThumbs();
@@ -8970,7 +9062,7 @@ function lazyThumb(img,name){
     try{ thumbObserver.observe(img); }catch(e){ scheduleThumbs([img]); }
   }
   /* 最后一道保险：IO 因面板重建 / 折叠 / 滚动容器而没回调时仍能补上。
-     旧版给「每一张」都挂一个 1200ms 定时器并直接同步生成 —— 433 款平铺时
+     旧版给「每一张」都挂一个 1200ms 定时器并直接同步生成 —— 443 款平铺时
      1.2 秒后会一次性同步跑几百次 readPixels+toDataURL，主线程直接卡死，
      这正是打开滤镜页后「还是卡」的主因。现在全页只挂一个定时器，
      把漏掉的统一入队，依旧每帧最多 3 张。 */
@@ -9108,7 +9200,7 @@ function hslCss(h,s,l){
 }
 function padGradient(t){
   const m=(typeof state!=='undefined'&&state&&padModeMeta)?padModeMeta():PAD_MODES[0];
-  /* 盘面只改观感，不参与任何像素运算。30 款按 7 组各用一套低饱和渐变，
+  /* 盘面只改观感，不参与任何像素运算。35 款按 8 组各用一套低饱和渐变，
      语义盘仍可跟着照片主色走，经典盘固定 iPhone 原生黄橙。 */
   if(m.id==='classic') return null;
   if(m.id!=='semantic'){
@@ -9528,7 +9620,7 @@ async function openCoverPicker(){
        必须在 cvClose() 释放独立 <video> 之前完成。 */
     let c=null;
     try{ if(COVER.video) c=await cvGrab(COVER.video,t,4096); }catch(e){}
-    /* v1.0.38：这里以前有 `if(!c) c=COVER.preview;` 的降级 —— 会把 960px 预览帧
+    /* v1.0.39：这里以前有 `if(!c) c=COVER.preview;` 的降级 —— 会把 960px 预览帧
        当成整张照片的图源，导出尺寸从此被锁在 960。现在宁可失败也不再静默降质。 */
     cvClose();
     /* 独立解码器万一完全抽不出帧（专利编码 / 权限），退回主播放器抓一帧，
@@ -9828,9 +9920,6 @@ function buildCloudSection(){
   s.append(stat);
   return s;
 }
-
-/* --- 预设 / 参数管理 --- */
-function copyParams(){ navigator.clipboard?.writeText(JSON.stringify(state,null,2)).then(()=>toast('编辑参数已复制')).catch(()=>toast('复制失败，可用导出 JSON')); }
 
 function renderExportCanvas(noFrame){
   const [ew,eh]=exportDims(), oldW=canvas.width, oldH=canvas.height;
@@ -10256,7 +10345,7 @@ async function exportLivePair(){
     ExportProgress.set(6,'渲染封面',base+ext+' · 全分辨率重算');
     ExportProgress.softTo(6,40,1200,'渲染封面',base+ext);
     await xpNextPaint();
-    /* v1.0.38：配对素材封面与动态轨同比例，不叠画框 */
+    /* v1.0.39：配对素材封面与动态轨同比例，不叠画框 */
     const cv=liveCoverCanvas();
     ExportProgress.stopSoft();
     ExportProgress.set(44,'编码封面',base+ext);
@@ -11339,7 +11428,7 @@ function vstPickPad(id){
 }
 /* 用「当前 state 的深拷贝 + 默认色彩字段」构造一套独立渲染状态：
    构图、元素、蒙版、虚化、光场、画框、导出规格全部保留，
-   只把色彩参数换成目标风格 —— 所以 433 款滤镜 / 78 套模板 / 20 种盘
+   只把色彩参数换成目标风格 —— 所以 443 款滤镜 / 78 套模板 / 20 种盘
    走的都是主画面那同一套 shader，不是另写的近似算法。 */
 const VST_COLOR_KEYS=['layers','base','globalPlates','plateScope','padMode','padVals',
   'sem','splitShadow','splitHigh','cross','splitBalance','grade','hsl','hslChannel',
@@ -12472,8 +12561,8 @@ function vstBuildInspector(body){
 /* ---------- 页面 ---------- */
 /* ============================================================
    风格库：片段可以绑定「任意一套色彩方案」。
-   不是另写一套简化调色，而是把主画面的完整渲染管线（433 款滤镜 /
-   78 套模板 / 30 种盘模式 / 当前编辑 / 原图）预渲染成基准帧，
+   不是另写一套简化调色，而是把主画面的完整渲染管线（443 款滤镜 /
+   78 套模板 / 35 种盘模式 / 当前编辑 / 原图）预渲染成基准帧，
    导出时只在两张基准帧之间做 2D 合成 —— 效果与主编辑器逐像素一致。
    ============================================================ */
 const VST_LIB_TABS=[
@@ -12590,7 +12679,7 @@ function vstRenderLibBody(body){
       {k:'template',id:t.name,a:1})));
     body.append(grid);
   }
-  /* ---------- 调色盘：30 种模式 + 可拖二维盘 ---------- */
+  /* ---------- 调色盘：35 种模式 + 可拖二维盘 ---------- */
   else if(VST.libTab==='pad'){
     const wrap=spEl('div','vst-pad-wrap');
     const info=spEl('div','vst-pad-info');
@@ -12945,7 +13034,7 @@ function vstQSyncSel(){
   });
 }
 /* 只生成横向可视区附近的缩略图：滚动节流 + 每帧最多 4 张 + 批末一次 render，
-   433 款不会一口气把主线程堵死 */
+   443 款不会一口气把主线程堵死 */
 function vstQFillThumbs(force){
   const strip=document.getElementById('vstQStrip'); if(!strip) return;
   if(vstQBusy&&!force) return;
@@ -13003,7 +13092,7 @@ function vstQBuild(){
   acts.append(all);
   const clr=spEl('button','vst-q-btn','↺ 清除'); clr.onclick=vstClearFilterQuick; acts.append(clr);
   const more=spEl('button','vst-q-btn','模板 / 调色盘 ›');
-  more.title='78 套模板、30 种盘模式、A-B 高级设置';
+  more.title='78 套模板、35 种盘模式、A-B 高级设置';
   more.onclick=()=>vstOpenStyleLibrary('B'); acts.append(more);
   head.append(acts); box.append(head);
   const bar=spEl('div','vst-q-bar');
@@ -13220,7 +13309,7 @@ function renderVideoPage(body){
    4) 断网、限流、404、旧版页面格式都有明确降级与提示，
       检查失败不影响任何编辑与导出功能。
    ============================================================ */
-const IRIS_VERSION='1.0.38';             /* 页面版本：走 HTML 热更新，持续递增 */
+const IRIS_VERSION='1.0.39';             /* 页面版本：走 HTML 热更新，持续递增 */
 const IRIS_BUILD='2026-11-19';
 const IRIS_CHANNEL='hot';                /* hot = HTML 热更新通道 */
 const IRIS_APP_BASELINE='1.0.1.8';       /* 最终安装包 / Release 版本，已冻结 */
@@ -13519,7 +13608,7 @@ function irisPolicyCard(){
     'apk / ipa / exe / dmg / AppImage 等安装包，以及 GitHub Releases 页面。'
     +'只有系统级适配（签名、权限、原生菜单）需要变化时才可能重新打包。',true],
    ['页面 / HTML 热更新通道',IRIS_VERSION,'持续更新 · 自动可查',
-    '唯一一份 index.html：433 款滤镜、30 种盘模式、界面主题、说明书、渲染管线都在里面。'
+    '唯一一份 index.html：443 款滤镜、35 种盘模式、界面主题、说明书、渲染管线都在里面。'
     +'替换即生效，不用重新签名、不用重跑构建、不用重新上架。',false]
   ].forEach(([t,v,tag,d,frozen])=>{
     const d1=spEl('div','pol-ch'+(frozen?' frozen':''));
@@ -14550,7 +14639,7 @@ function buildTools(){
     t.append(b);
   });
   if(isFocus){ moreOpen=false; renderMoreMenu(); return; }
-  const inMore=!PRIMARY.includes(tool), cur=TOOLS.find(v=>v.id===tool);
+  const inMore=!PRIMARY.includes(tool), cur=TOOLS.find(v=>v.id===tool)||TOOLS[0];
   const m=document.createElement('button');
   m.className='tool'+(inMore?' active':''); m.innerHTML=`<i>${svg(cur&&inMore?cur.icon:'more',19)}</i>${inMore?cur.name:'更多'}`;
   m.onclick=e=>{ e.stopPropagation(); moreOpen=!moreOpen; renderMoreMenu(); };
@@ -14631,7 +14720,7 @@ function tidyPanel(p){
   help.onclick=()=>{ helpShown=!helpShown; help.classList.toggle('on',helpShown); p.classList.toggle('show-help',helpShown); };
   head.append(left,help); p.insertBefore(head,p.firstChild);
   p.classList.toggle('show-help',helpShown);
-  /* v1.0.38：data-keep="1" 的提示行常显，不参与「更多选项」自动隐藏（导出尺寸口径要一直看得见） */
+  /* v1.0.39：data-keep="1" 的提示行常显，不参与「更多选项」自动隐藏（导出尺寸口径要一直看得见） */
   p.querySelectorAll('.hint').forEach(el=>{ if(el.dataset.keep==='1') return; if(!el.closest('details')) el.classList.add('auto-hide'); });
   // 窄屏用短标签，让一行放得下、看得清
   p.querySelectorAll('[data-short]').forEach(el=>{
@@ -14744,7 +14833,7 @@ function syncPanelFit(force){
   let over=p.scrollWidth>p.clientWidth+1;
   if(!over){
     /* 同一类行用的是同一条 CSS 规则，overflow-x 只在本次测量内缓存一次；
-       同类行宽度一致，最多抽查 12 个就够判定，不必遍历 433 张卡片。
+       同类行宽度一致，最多抽查 12 个就够判定，不必遍历 443 张卡片。
        缓存是局部的，inline style 改了也不会留下陈旧值。 */
     const oxCache=Object.create(null);
     for(let k=0;k<FIT_ROWS.length&&!over;k++){
@@ -14811,10 +14900,10 @@ function buildPlate(p){
     if(isMobile()) tonePickerOpen=false;   // 手机上选完即收起，立刻回到调色盘
     buildPanel(true);
   }));
-  /* 主盘（全局 · 全部）才有 30 种模式；其余 11 色调 / 层归属仍是原分色调盘 */
+  /* 主盘（全局 · 全部）才有 35 种模式；其余 11 色调 / 层归属仍是原分色调盘 */
   const isMain=state.plateScope==='global'&&state.plateTarget==='all';
   if(isMain){
-    /* 30 款按 7 组折叠：默认只占一行，点开才构建 30 个 chip。
+    /* 35 款按 8 组折叠：默认只占一行，点开才构建 35 个 chip。
        折叠状态记住，选完一款自动收起，立刻回到盘面。 */
     let foldOpen=false;
     try{ foldOpen=localStorage.getItem('iris_pad_mode_fold')==='1'; }catch(e){}
@@ -15039,13 +15128,13 @@ function buildPlate(p){
   sum.textContent='操作说明 · 已启用色调 ('+act.length+')';
   s3.append(sum);
   s3.append(hint(isMain
-    ? '<b>'+mm.name+'</b>：'+mm.desc+'。30 种模式各自记住自己的两轴与强度，切换回来数值还在；'
+    ? '<b>'+mm.name+'</b>：'+mm.desc+'。35 种模式各自记住自己的两轴与强度，切换回来数值还在；'
       +'白点居中（零位）严格等于原图，不会引入偏色。向下滑还能看当前读数。'
     : '像 iPhone 一样：白点上下＝色调深浅，左右＝颜色彩度，下方横条＝套用强度。每个归属都有 12 个独立色调（高光/中间调/阴影 + 8 色相）。双击白点或滑杆可归零。'));
   s3.append(hint(semActive
     ? `语义轴：影调 ${state.sem.tone>0?'+':''}${Math.round(state.sem.tone*100)} / 颜色 ${state.sem.color>0?'+':''}${Math.round(state.sem.color*100)} / 强度 ${Math.round(state.sem.intensity*100)}。切到具体色相可继续做专业分色调。`
     : (act.length?act.map(t=>`${t.name} 色调${PL[t.id].y>0?'+':''}${Math.round(PL[t.id].y*100)} / 颜色${PL[t.id].x>0?'+':''}${Math.round(PL[t.id].x*100)}`).join('　·　'):'还没有调整任何色调，拖一下上面的白点试试。')));
-  s3.append(hint('主盘有 <b>语义感知 / 经典 12 色 / 电影双色 / 银盐黑白</b> 30 种模式，上方「盘模式」一行直接切换，互不串扰。'
+  s3.append(hint('主盘有 <b>语义感知 / 经典 12 色 / 电影双色 / 银盐黑白</b> 35 种模式，上方「盘模式」一行直接切换，互不串扰。'
     +'语义盘配色可跟随当前照片的大致色调；经典盘固定 iPhone 原生黄橙；电影盘与银盐盘各有专属盘面。'
     +'盘面只改变观感，不改变任何调色参数。'));
   p.append(s3);
@@ -15347,7 +15436,7 @@ function buildFilters(p){
       filterText='';filterGroup='我的';filterBrowse=false;buildPanel();
     }
   },'accent sm');
-  saveAll.title='把当前整套调色参数（滤镜层 / 12 色调 / 30 种盘模式 / HSL / 曲线 / 分级 等）存成一款可复用的滤镜，点击即存';
+  saveAll.title='把当前整套调色参数（滤镜层 / 12 色调 / 35 种盘模式 / HSL / 曲线 / 分级 等）存成一款可复用的滤镜，点击即存';
   tools.append(saveAll);
   const rnd=button('🎲',()=>mutate(()=>{
     const pool=FILTERS.filter(f=>f.name!=='原图'&&f.name!==cur.name&&!f.full&&!f.toneId);
@@ -17676,18 +17765,23 @@ const GUIDE_CHAPTERS=[
    +'双击复位、轻点一下收起。引导是编辑栏里普通的一行，<b>不盖住照片，也不挡住下面的工具</b>，'
    +'只出现这一次；点「知道了」、真的拖过横条、或 10 秒后自动收起。'
    +'想再看一次，用全局搜索「面板调整提示」。'},
- {id:'pad',t:'02 · 主调色盘与 30 种模式',k:'调色盘 二维盘 白点 Tone Color 强度 颜色 影调 肤色锁 语义 模式 鲜艳 vivid 经典 电影 黑白 折叠 分组 桌面 归属 色调 鲜亮通透 浓金溢彩 冷艳蓝调 清朗鲜明 柔光绽放 胶片人像 铂金影调 交叉冲印 哑光质地 双色调印 鲜活 工艺',
+ {id:'pad',t:'02 · 主调色盘与 35 种模式',k:'调色盘 二维盘 白点 Tone Color 强度 颜色 影调 肤色锁 语义 模式 鲜艳 vivid 经典 电影 黑白 折叠 分组 桌面 归属 色调 恒美 护盾 怎么调都好看 薄金晨光 静海深蓝 蜜桃奶霜 松林薄暮 琥珀余晖 鲜亮通透 浓金溢彩 冷艳蓝调 清朗鲜明 柔光绽放 胶片人像 铂金影调 交叉冲印 哑光质地 双色调印 鲜活 工艺',
   b:'方盘横轴 <b>Color</b>（色温偏置 + 色度）、纵轴 <b>Tone</b>（暗部深度 + 对比斜率），下方强度条控套用量，顶部实时显示数值。'
    +'<br>与普通滤镜不同，它先在端侧生成低分辨率 <b>matte</b>（皮肤 / 天空 / 头发 / 亮部四通道），再对不同区域做不等权映射：'
    +'皮肤区乘 skin_mask 压回肤色流形，非皮肤区吃满用户值 —— 所以拖冷调脸不泛蓝、拖浓艳天空不爆橙。'
    +'<br>盘面颜色会跟着照片主色变化，可点盘下标签切回 iPhone 原生配色；「全局 · 全部」＝语义主盘。'
-   +'<br><b>30 种盘模式</b>（只在「全局 · 全部」主盘出现，顶部「盘模式」一行直接切换）：'
+   +'<br><b>35 种盘模式</b>（只在「全局 · 全部」主盘出现，顶部「盘模式」一行直接切换）：'
    +'<b>语义感知</b>＝端侧分割 + 肤色锁，拖冷调脸不偏蓝；<b>经典 12 色</b>＝iPhone 原生盘的直觉映射，固定黄橙盘面；'
    +'<b>电影双色</b>＝冷阴影 + 暖高光 + S 型对比，青金渐变盘；<b>银盐黑白</b>＝白点离开中心才逐渐转黑白，横向控冷银 / 暖棕、纵向控反差，灰阶盘。'
-   +'30 种模式<b>各自记住自己的两轴与强度</b>，切回来数值还在；白点居中（零位）严格等于原图，不会引入偏色。'
+   +'35 种模式<b>各自记住自己的两轴与强度</b>，切回来数值还在；白点居中（零位）严格等于原图，不会引入偏色。'
       +'它们复用同一套渲染参数，不新增着色器通道，所以切换与拖动都不掉帧。'
-   +'<br><b>30 种模式按「直觉 / 影调 / 色彩 / 风格 / 专项 / 鲜活 / 工艺」7 组折叠</b>，默认只占一行，点开才显示全部；'
-    +'收起时连一个 chip 的 DOM 都不创建，30 款与 20 款时一样轻。'
+   +'<br><b>35 种模式按「直觉 / 影调 / 色彩 / 风格 / 专项 / 鲜活 / 工艺 / 恒美」8 组折叠</b>，默认只占一行，点开才显示全部；'
+     +'收起时连一个 chip 的 DOM 都不创建，35 款与 20 款时一样轻。'
+   +'<br><b>「恒美」组是 v1.0.37 新增的 5 款</b>（薄金晨光 / 静海深蓝 / 蜜桃奶霜 / 松林薄暮 / 琥珀余晖）：'
+   +'两轴统一为「横向 清淡→浓郁 / 纵向 通透→沉稳」，四个角、四条边都是协调成片。'
+   +'它们挂着<b>恒美护盾</b>：对本次盘模式带来的增量做 tanh 软膝限幅（越往极端越收敛，变化仍明显），'
+   +'再自动追加肤色锁、高光防溢与暗部防死黑 —— 所以推到边角也不会爆色、糊白、死黑或把脸染橘。'
+   +'护盾只作用于盘的增量，<b>滤镜层原有参数一个字节不动</b>，白点回中仍严格等于原图。'
     +'其中<b>「鲜艳」</b>一键把饱和度、鲜明度与明快感一起推上去，有高光保护，不会溢色糊成一片。'
     +'<br><b>v1.0.20 新增 10 款</b>：「鲜活」组 3 款鲜艳家族 —— <b>鲜亮通透</b>（清透向）、'
     +'<b>浓金溢彩</b>（暖金向）、<b>冷艳蓝调</b>（冷蓝向），名字与原有「鲜艳」及彼此都不重复，'
@@ -17718,10 +17812,13 @@ const GUIDE_CHAPTERS=[
    +'+ 显著性最大连通块（抑制零散误判）+ 区域一致性平滑 + 互斥归一化。'
    +'分割精度可选快速 / 标准 / 精细（精细为 2× 分辨率 matte），页内直接切换并重算。'
    +'<br>换照片会自动重算；点「重新分析画面」或全局搜索「重算 matte」可手动刷新。仍属前端启发式分割，不是设备端 ML。'},
- {id:'filters',t:'05 · 滤镜库与分类',k:'滤镜 分类 目录 搜索 收藏 最近使用 随机 存为滤镜 433',
+ {id:'filters',t:'05 · 滤镜库与分类',k:'滤镜 分类 目录 搜索 收藏 最近使用 随机 存为滤镜 443',
   b:'徕卡 / 哈苏 / 索尼已合并为一个「相机厂商」分区，每款都自带独立调色盘预设。<br>打开「滤镜」先看到<b>分类目录</b>：分类卡用该组 3 款缩略图拼成预览，点一张进入该分类；'
    +'顶部有最近使用、★收藏、全部、我的，以及跨分类搜索框和分类下拉，任意分类里都能一步跳到另一组。'
-   +'<br>目前共 <b>433 款</b>滤镜、25 个风格分类。缩略图按原比例中心裁切，不会拉伸变形。'},
+   +'<br>目前共 <b>443 款</b>滤镜、25 个风格分类。缩略图按原比例中心裁切，不会拉伸变形。'
+   +'<br>v1.0.37 新增的 10 款走<b>高级克制</b>路线（雾面银灰 / 丝光暖白 / 雾面裸肌 / 冷瓷雾光 / 雨后松绿 / '
+   +'暮色琥珀 / 和纸灰蓝 / Deakins 窗光 / 湿版淡银 / 哈苏柔金）：低饱和、抬黑柔光、有影调层次，'
+   +'每款都带肤色保护，沿用现有 25 个分类，不新增分组。'},
  {id:'layers',t:'06 · 滤镜分层与每层调色盘',k:'图层 叠加 4 层 强度 每层 独立调色盘 开关',
   b:'最多叠 <b>4 层</b>滤镜，每层单独强度、开关、调色盘开关。切到「调色盘」页的归属下拉，'
    +'就能单独调某一层的 12 个色调，互不串扰；关掉某层或调低强度，它那套调色盘会一起减弱。'
@@ -17831,9 +17928,9 @@ const GUIDE_CHAPTERS=[
    +'<br><b>限制</b>：网页不能把结果写回 iOS 相册变成原生实况照片，需用「快捷指令 → 将图像和视频转换为实况照片」把封面与视频重新配对；'
    +'动态片段不含原音频，最长 6 秒；部分浏览器打不开 HEIC 时会自动用视频中间帧作封面。'},
  {id:'search',t:'15 · 全局搜索与快捷键',k:'搜索 Ctrl K 快捷键 命令面板 1-9 空格 对比 Esc',
-  b:'顶栏放大镜或 Ctrl/⌘+K（也可按 /）打开全局搜索：工具、433 款滤镜、调整参数、78 套内置模板与我的色调、常用操作都能搜到，'
+  b:'顶栏放大镜或 Ctrl/⌘+K（也可按 /）打开全局搜索：工具、443 款滤镜、调整参数、78 套内置模板与我的色调、常用操作都能搜到，'
    +'↑↓ 选择、Enter 执行、Esc 关闭。搜「色温」会跳到对应滑杆并高亮；'
-  +'折叠起来的 <b>30 种盘模式</b>也能直接搜名字（如「鲜艳」「人像」「红外」）一键切换。'
+  +'折叠起来的 <b>35 种盘模式</b>也能直接搜名字（如「鲜艳」「人像」「红外」）一键切换。'
    +'<br>常用：Ctrl/⌘+Z 撤销、+Shift+Z 重做、空格按住看原图、R 分屏对比、E 导出、L 播放实况、'
    +'1–9/0 切换工具、F 收起编辑栏、\\ 切填满 / 适应。完整清单在预设页「关于」栏。'},
  {id:'archive',t:'16 · 参数存档与隐私',k:'参数 JSON 复制 粘贴 预设 自定义滤镜 localStorage 隐私 不上传 撤销 重做',
@@ -17842,7 +17939,7 @@ const GUIDE_CHAPTERS=[
    +'<br>预设页「编辑参数」可复制 / 粘贴参数、导出 / 导入 JSON；自定义滤镜、收藏、最近使用与界面偏好存在本机 localStorage。'
       +'<br><b>「我的空间」</b>（独立页面，顶栏「⋯」与页面中心首屏都能进）：一页看到<b>历史编辑过的图片</b>（本机最多 12 张，含缩略图、参数与原图，点「继续编辑」回到那一版）、'
   +'<b>我创作的滤镜 / 全套参数 / 色调</b>（可套用、重命名、删除）、书签、导出记录与最近使用。'
-  +'<br><b>「一键保存所有参数」</b>（滤镜页 / 我的空间 / 全局搜索）：点击即把滤镜层、每层独立盘、12 色调、30 种盘模式、'
+  +'<br><b>「一键保存所有参数」</b>（滤镜页 / 我的空间 / 全局搜索）：点击即把滤镜层、每层独立盘、12 色调、35 种盘模式、'
   +'基础调整、HSL、曲线、分级、分色、通道混合、光效、蒙版形状、光场、虚化、画框与色调迁移目标整套存成一款滤镜；'
   +'明确不带文字贴纸、涂抹笔迹、裁剪与导出规格。套用时是整套参数而非叠一层滤镜，完全非破坏、可撤销。'
 +'<br><b>自动保存</b>：每次编辑后约 1 秒自动把【照片原始字节 + 完整编辑状态 + 缩略图】写进本机 IndexedDB；退出或切后台会再补一次落盘。重新打开时会弹卡询问「是否编辑上次的照片」，可选继续编辑 / 重新开始 / 稍后，也能在「自动保存」页设为直接恢复或彻底关闭。演示图与待载入占位都不入档；<b>演示图只在第一次启动出现</b>，之后启动是中性占位画面，点「重新开始 / 稍后」也不会退回到测试图。浏览器不允许 IndexedDB 时会降级为「只存参数 + 缩略图」，恢复时明确要求重新选照片，不会假装成功。'
@@ -17953,7 +18050,7 @@ const GUIDE_CHAPTERS=[
     +'远端文本只用于显示，绝不插入页面或执行；外链只放行 https 的 GitHub 域名。'
     +'主通道走 raw 文件，不依赖 GitHub API，匿名限流 60 次/小时也不影响版本结论。'
     +'<br><b>⑩ 卡顿时先看诊断页</b>：「运行状态诊断」里有实时帧率、帧耗时 p50/p95、超过 50ms 的长任务次数、异常数与 WebGL 上下文丢失 / 恢复次数，点「⧉ 复制诊断信息」可把整段发给作者。这些都是本机数据，不上传。'},
-    {id:'video',t:'23 · 视频工作台（暂未开放）',k:'视频工作台 加滤镜 一键滤镜 滤镜条 调色盘 片段调色盘 圆盘 二维盘 拖盘 强度 常用盘 全部盘模式 盘同步全部 去掉滤镜 顶部 tab 工具 tab 时间线 拖拽 排序 拖不动 播放头 裁时长 触屏 检查器 折叠 关键帧 转场 运镜 帧精确 导出视频 流畅 风格库 433 78 模板 30 盘模式 combo 样式统一',
+    {id:'video',t:'23 · 视频工作台（暂未开放）',k:'视频工作台 加滤镜 一键滤镜 滤镜条 调色盘 片段调色盘 圆盘 二维盘 拖盘 强度 常用盘 全部盘模式 盘同步全部 去掉滤镜 顶部 tab 工具 tab 时间线 拖拽 排序 拖不动 播放头 裁时长 触屏 检查器 折叠 关键帧 转场 运镜 帧精确 导出视频 流畅 风格库 443 78 模板 30 盘模式 combo 样式统一',
   b:'<b style="color:var(--accent)">⚠ 视频工作台暂未开放</b>：这一章记录的是打磨中的多片段视频编辑设计，'
     +'当前版本的入口已隐藏、导出菜单里的视频项已置灰，下面的操作暂时用不上；'
     +'代码与设置都保留着，等打磨完成会直接恢复。照片、GIF、实况配对素材与打包导出不受影响，照常使用。'
@@ -17964,9 +18061,9 @@ const GUIDE_CHAPTERS=[
    +'<br><b>② 视频页首屏只有三件事</b>：预览 + 播放条、<b>片段调色盘</b>、<b>一键滤镜条</b>。'
    +'大段介绍、统计卡、8 个工具栏按钮、11 根滑杆全部收进折叠或压缩成一行，不再一屏塞满。'
    +'<br><b>③ 片段调色盘：一个圆盘 + 一根强度条</b>'
-   +'（不需要理解「起点 A / 终点 B」、不需要打关键帧、不需要选 30 种模式才能开始）。'
+   +'（不需要理解「起点 A / 终点 B」、不需要打关键帧、不需要选 35 种模式才能开始）。'
    +'<b>横轴 COLOR 冷↔暖、纵轴 TONE 亮↔暗，白点离中心越远效果越浓</b>，拖动时画面立刻变，松手即存进当前片段。'
-   +'右侧只有 4 个常用盘 chip（鲜艳 / 电影双色 / 暖金日落 / 冷调电影），其余 26 种收在「全部 30 种盘模式」折叠里；'
+   +'右侧只有 4 个常用盘 chip（鲜艳 / 电影双色 / 暖金日落 / 冷调电影），其余 31 种收在「全部 35 种盘模式」折叠里；'
    +'下面一根「效果强度」，四个按钮：<b>↺ 归零</b>、<b>⧉ 盘同步全部</b>（把当前盘位复制到整条时间线）、'
    +'<b>✕ 去掉滤镜</b>（只清滤镜、盘调整保留）、<b>✦ 去加滤镜</b>。'
    +'卡上实时显示盘位数值与「当前滤镜」，切换片段时盘跟着切。'
@@ -17977,7 +18074,7 @@ const GUIDE_CHAPTERS=[
    +'滤镜走完整 shader 基准帧，盘调整以实时 2D 参数叠加在其上，两条链路各自独立又同时生效；'
    +'界面上不再出现「起点 / 终点」，只在高级风格库里保留 A/B 过渡给想做风格互溶的人。'
    +'<br><b>⑤ 一键加滤镜</b>：预览下方常驻横排，默认 42 款常用缩略图，'
-   +'25 个分类 chips + 搜索框（可跨全部 <b>433 款</b>，搜「徕卡」「哈苏」「柯达金」），'
+   +'25 个分类 chips + 搜索框（可跨全部 <b>443 款</b>，搜「徕卡」「哈苏」「柯达金」），'
    +'点一下整段套用，也能<b>把卡片直接拖到时间线某一段</b>。'
    +'四个控件：整段套用 / 渐显出现、套到全部片段、↺ 清除、模板 / 调色盘 ›（高级风格库）。'
    +'已套用的卡片有金色描边，条上实时显示当前片段与它正在用的风格。'
@@ -17991,7 +18088,7 @@ const GUIDE_CHAPTERS=[
    +'<br><b>⑦ 检查器默认很轻</b>：只显示名称、时长、转场、运镜四个字段和一行「当前风格 → ⇄ 换滤镜」。'
    +'「高级：起点 A → 终点 B 混合」与「高级：关键帧与动画参数」（11 根滑杆）都收进折叠，'
    +'展开状态跨重建保留，功能一个没删。工具栏次要操作收进「更多操作」。'
-   +'<br><b>⑧ 高级风格库仍完整保留</b>（点「⋯ 更多风格」）：433 款滤镜 / 78 套模板 / 30 种盘模式 / 当前编辑 / 原图，'
+   +'<br><b>⑧ 高级风格库仍完整保留</b>（点「⋯ 更多风格」）：443 款滤镜 / 78 套模板 / 35 种盘模式 / 当前编辑 / 原图，'
    +'每个风格临时构造完整渲染状态走<b>主编辑器同一套 WebGL 管线</b>，渲染后严格还原。'
    +'五套一键成片模板、四种转场、六种运镜、11 项关键帧参数也都在。'
    +'<br><b>⑨ 导出不卡</b>：导出前按帧率采样关键帧参数 → 量化去重 → 分批预生成风格帧（进度可见），'
@@ -18015,7 +18112,7 @@ const SP_ENTRIES=[
   {id:'tech',name:'技术实现',sub:'18 章长文 · 目录 / 搜索 · 源码级拆解',icon:'⌘',sv:'tech'},
   {id:'shortcuts',name:'快捷键总表',sub:'全部按键一处查',icon:'⌨',sv:'sliders'},
   {id:'tools',name:'全部工具',sub:'14 个编辑页直达',icon:'◫',sv:'sliders'},
-  {id:'filters',name:'滤镜总览',sub:'433 款 · 按风格分组',icon:'◈',sv:'filters'},
+  {id:'filters',name:'滤镜总览',sub:'443 款 · 按风格分组',icon:'◈',sv:'filters'},
   {id:'templates',name:'模板库',sub:'78 套内置 + 我的色调',icon:'✦',sv:'presets'},
   {id:'export',name:'导出中心',sub:'照片 / GIF / 视频 / 设置',icon:'↧',sv:'save'},
   {id:'archive',name:'参数存档',sub:'复制 · 粘贴 · JSON',icon:'⟐',sv:'zip'},
@@ -18650,7 +18747,7 @@ const AB_CHAPTERS=[
 <p><b>Iris 调色盘是一个完全运行在浏览器里的照片编辑器。</b>一个 HTML 文件，双击就能用；改名为 <code>index.html</code> 传到任意静态托管，就变成一个在线网页。没有账号、没有后端、没有构建步骤、没有第三方依赖。</p>
 <p>它把「调色」拆成三层可叠加的能力：底层是滤镜与基础参数，中层是语义感知的二维调色盘与 12 种独立色调，上层是局部、空间与元素编辑。所有调整都是<b>非破坏</b>的：原图像素从不改写，只记录 preset_id 与（tone, color, intensity）+ 分割版本元数据，随时撤销、重算、回滚。</p>
 <div class="ab-metrics">
-  <div class="ab-metric"><b>433</b><small>款滤镜</small></div>
+  <div class="ab-metric"><b>443</b><small>款滤镜</small></div>
   <div class="ab-metric"><b>78</b><small>套一键模板</small></div>
   <div class="ab-metric"><b>12</b><small>种独立色调</small></div>
   <div class="ab-metric"><b>4</b><small>层滤镜叠加</small></div>
@@ -18663,11 +18760,11 @@ const AB_CHAPTERS=[
 <p class="ab-dim">它不是「套滤镜的 App」，也不是把桌面专业软件搬进网页；它想保留的是<b>用两个轴就能直出成片</b>的那份轻松，同时把专业用户需要的 HSL、曲线、局部笔刷、LUT、分层与导出都留在手边。</p>`},
 {id:'features',n:'03',eyebrow:'FEATURES',t:'功能地图 · 六组能力',html:`
 <div class="ab-grid">
- <div class="ab-item"><b>◉ 色彩系统</b><small>iPhone 式二维调色盘（Tone × Color + 强度，盘面随照片主色变化）、12 种独立色调、每层滤镜各自的调色盘、433 款分类滤镜、78 套模板、语义保肤渲染、<b>区域工作台（matte 可视化 + 四区独立调色 + 一键生成蒙版 / 虚化）</b>、色彩迁移（Lab 均值方差 → 16³ 3D LUT）、HSL 分色、曲线、三色轮、通道混合与 .cube LUT。</small></div>
+ <div class="ab-item"><b>◉ 色彩系统</b><small>iPhone 式二维调色盘（Tone × Color + 强度，盘面随照片主色变化）、12 种独立色调、每层滤镜各自的调色盘、443 款分类滤镜、78 套模板、语义保肤渲染、<b>区域工作台（matte 可视化 + 四区独立调色 + 一键生成蒙版 / 虚化）</b>、色彩迁移（Lab 均值方差 → 16³ 3D LUT）、HSL 分色、曲线、三色轮、通道混合与 .cube LUT。</small></div>
  <div class="ab-item"><b>◐ 局部与空间</b><small>涂抹式局部蒙版（直接刷出选区，可擦除 / 撤销 / 伪彩预览，形状渐变保留为可选）、背景虚化（一键检测人物或物品 + 涂抹选取主体或虚化区域 + 六种模糊）、光场计算（重聚焦、视差微动、方向重打光）、涂抹式马赛克 / 柔焦 / 动态 / 径向模糊，最多 6 块区域、可调范围与羽化。</small></div>
  <div class="ab-item"><b>▣ 构图与元素</b><small>可视化拖拽裁剪（角点、边框、比例锁、精确数值兜底）、裁剪页首屏的<b>左右 / 上下透视倾斜</b>（两根 −45°~+45° 度数滑杆、斜切与梯形两种模式、照片上横拖纵拖、自动裁切填满不露黑角）、折叠里的任意角度拉直、90° 步进与水平 / 垂直翻转（无损、导出按旋转后尺寸）、构图缩放与位移、文字 / 贴纸 / 形状 / 涂鸦（可拖动、缩放、旋转、改字体颜色描边）、留白画框、旋转翻转与透视矫正。</small></div>
  <div class="ab-item"><b>▷ 动态与输出</b><small>iOS 实况照片逐帧编辑、编辑栏内的实况进度条、自定义封面工作台（12 张关键帧 + 0.01s 精确选帧）、GIF 动图、PNG / JPG / WebP、实况配对素材与全格式 ZIP 打包。视频工作台与视频导出暂未开放，待打磨完成后恢复。</small></div>
- <div class="ab-item"><b>⌕ 效率</b><small>全局搜索（工具 / 滤镜 / 参数 / 模板 / 操作一处直达）、12 个一键快捷、23 章说明书 + 18 章技术实现、22 个独立二级页面（收拢进「页面中心」分组浏览）、本机自动保存与恢复、撤销重做、参数复制与 JSON 存档、自定义滤镜与我的色调、30 种主盘模式、「我的空间」历史图片与一键保存整套参数。视频工作台暂未开放，待打磨完成后再恢复入口。</small></div>
+ <div class="ab-item"><b>⌕ 效率</b><small>全局搜索（工具 / 滤镜 / 参数 / 模板 / 操作一处直达）、12 个一键快捷、23 章说明书 + 18 章技术实现、22 个独立二级页面（收拢进「页面中心」分组浏览）、本机自动保存与恢复、撤销重做、参数复制与 JSON 存档、自定义滤镜与我的色调、35 种主盘模式、「我的空间」历史图片与一键保存整套参数。视频工作台暂未开放，待打磨完成后再恢复入口。</small></div>
  <div class="ab-item"><b>◇ 体验</b><small>移动端大图优先、编辑栏可拖动可收起、25%–800% 缩放、按住看原图与可拖动分屏线、直方图三模式、轻动画（尊重系统「减少动画」）、统一细线图标、桌面与手机自适应。</small></div>
 </div>`},
 {id:'architecture',n:'04',eyebrow:'ARCHITECTURE',t:'技术架构 · 四层与实现',html:`
@@ -18857,7 +18954,7 @@ const TECH_CHAPTERS=[
 <p><b>① 样式</b>：用 CSS 自定义属性收拢配色（深灰底、暖金强调色、次级文字色），后面所有组件、二级页面、关于页、技术页都引用同一组变量，所以改一个色值整站同步。响应式不是两套 UI，而是同一套 DOM 在 <code>760px</code> / <code>520px</code> 断点上重排。</p>
 <p><b>② DOM</b>：顶栏、画布（<code>#stage</code> 里的 WebGL canvas + 2D 叠加层 canvas）、编辑栏、底栏工具、隐藏的 <code>&lt;input type="file"&gt;</code>、二级页面容器、导出菜单、全局搜索、提示条。两个 canvas 叠在一起是关键：<b>一个只画照片，一个只画框、圈、文字元素</b>，互不干扰，也方便「对比原图」时只隐藏叠加层。</p>
 <p><b>③ 工具层</b>：<code>$()</code>、<code>clamp()</code>、<code>svg()</code>（内联 ICONS 字典生成细线图标）、<code>toast()</code>、<code>deep()</code>、<code>normalizeState()</code>。图标是一套 stroke 风格 SVG 字符串，保证任何缩放都清晰、不需要字体文件。</p>
-<p><b>④ 数据层</b>：433 款滤镜、78 套模板、HSV 分色表、23 章说明书、10 章关于、18 章技术文章，全都是字面量数组。新增一款滤镜就是往数组里加一个对象；模板则是「滤镜层 + 分色调盘 + 语义主盘 + 基础参数 + 画框」的组合描述，<b>不是把参数复制一遍</b>。</p>
+<p><b>④ 数据层</b>：443 款滤镜、78 套模板、HSV 分色表、23 章说明书、10 章关于、18 章技术文章，全都是字面量数组。新增一款滤镜就是往数组里加一个对象；模板则是「滤镜层 + 分色调盘 + 语义主盘 + 基础参数 + 画框」的组合描述，<b>不是把参数复制一遍</b>。</p>
 <p><b>⑤ 着色器</b>：VS / FS 是模板字符串，其中几段用代码生成后插入占位符（下一章详述）。</p>
 <p><b>⑥ 运行时</b>：<code>state</code> 单一状态树 + <code>render()</code> 单一渲染入口 + pointer 事件分发。</p>
 <p><b>⑦ 外围</b>：导出、独立页面系统 <code>SUBPAGES</code>、全局搜索 <code>CMD</code>、启动逻辑（首次 <code>uploadImage(demoImage())</code>，之后改中性占位 <code>uploadImage(placeholderImage())</code>，避免导入过照片后重启又冒出测试图）。</p>
@@ -18994,6 +19091,19 @@ function mutate(fn){
  <div><b>Tone 轴</b><span>加性亮度曲线 + 对比斜率 + 暗部保底。向上是明亮奶油、向下是浓郁暗调，但<b>不动色度</b>。</span></div>
  <div><b>强度</b><span>把上述变换整体做 0–100% 混合；0 时逐像素等于原图。</span></div>
  <div><b>12 个色调槽</b><span>全部 / 高光 / 中间调 / 阴影 / 红橙黄绿青蓝紫品红，各存一份参数，互不串扰；4 层滤镜又各自挂一整套。</span></div>
+ <p><b>v1.0.37 · 恒美护盾（怎么调都好看）</b>：旧盘模式是纯线性展开
+ <code>d=(ax·x+ay·y)·强度+aa·amt</code>，白点推到边角时 <code>saturation / contrast / temp</code>
+ 会一路叠到 0.6~0.9，于是爆色、糊白、死黑、脸染橘。恒美组 5 款带 <code>guard:true</code>，
+ 在 <code>applyPadModeToEffective()</code> 里展开前先快照本模式 <code>flat</code> 涉及的键到预分配的
+ <code>GUARD_BUF</code>（Float64Array，逐帧零 GC），展开后 <code>irisPadGuard()</code> 只针对
+ <b>本次增量</b>做 <code>cap·tanh(d/cap)</code> 软膝：<code>|soft| &lt; cap</code>，越极端越收敛，
+ 但 0.1~0.3 的正常位移仍保留八成以上，变化照样明显。再追加三项朝安全方向的保护：</p>
+ <ul><li><code>skinProtect += .30·amt</code> —— 推色时自动锁肤色，脸不会染脏</li>
+ <li>高光防溢：<code>brilliance + exposure + highlights/2 &gt; .34</code> 时回压 highlights</li>
+ <li>暗部防死黑：<code>black + contrast·.45 &gt; .40</code> 时补一点 lift</li></ul>
+ <p>护盾<b>只改盘的增量</b>，滤镜层叠加出来的基值（exposure / vignette / grain 等不在 map 里的键）
+ 逐键比对完全不变；零位 <code>x=y=0</code> 时上层直接 return，护盾不执行，35 款模式逐一验证严格恒等。
+ 9 个盘位 × 5 款实测：最小参数变化量 0.41~0.70（明显），全部落在安全范围，四角签名两两不同。</p>
  <p><b>v1.0.36 · 桌面端选择器改折叠</b>：旧版 <code>buildPlate()</code> 在非手机 branch 里把「归属 / 色调」两行塞进
  <code>.chip-line + .chips(overflow-x:auto; scrollbar-width:none)</code>。实测 12 个色调 chip 总宽 <b>625px</b>，
  桌面侧栏容器只有 <b>268px</b>，滚动条隐藏且鼠标滚轮只走纵向 → 右侧 7~8 个色相永远点不到，这就是「电脑端无法向右推动」的根因。
@@ -19082,12 +19192,12 @@ c = mix(shifted, clampToSkin(shifted, src), skinMask * u_semLock);</pre>
 <p>验证用真实 GLES2 离屏渲染：冷色 → 暖色格点红增 43、暖化位移 40，<b>自映射恒等误差仅 1</b>；恒等 LUT 开关差 0、暖化 LUT 红 +55 / 蓝 −52、50% 强度正好落在中间。也修过两个隐藏 bug：导入照片时没锁定纹理单元可能仍显示上一张；参数 JSON 导入 / 载入预设会悄悄丢掉迁移状态。</p>
 <div class="tech-note">旧版存过的「色调」会自动从缩略图反算指纹升级，不需要用户手动迁移。指纹只是几十个浮点数，不含任何画面像素。</div>`},
 
-{id:'data',n:'13',eyebrow:'DATA',t:'滤镜、模板与预设的数据驱动',k:'433 滤镜 78 模板 索引表 缩略图懒生成 分类目录 4 层 每层独立盘 我的滤镜',html:`
+{id:'data',n:'13',eyebrow:'DATA',t:'滤镜、模板与预设的数据驱动',k:'443 滤镜 78 模板 恒美护盾 35 盘模式 索引表 缩略图懒生成 分类目录 4 层 每层独立盘 我的滤镜',html:`
 <h3>外观系统：变量层 + 两套皮肤 + 液态玻璃</h3>
 <p>做主题前，界面里有约 200 处硬编码颜色（<code>rgba(255,255,255,.07)</code>、<code>rgba(227,182,92,.13)</code>、<code>#151517</code> 与深色浮层）。先把它们全部收敛成变量：<code>--w*</code> 表示白色 alpha 层、<code>--accent-rgb</code> 让 rgba 形式的强调色也能跟随主题、<code>--on-accent</code> 管强调色背景上的文字，<code>--overlay / --topbar-bg / --stage-bg</code> 管玻璃浮层。批量替换<b>只作用于 <code>&lt;style&gt;</code> 块</b>，因为 Canvas 2D 的 <code>fillStyle</code> 不认 CSS 变量。</p>
-<p>9 套主题只覆盖这些变量：深色主题主要改底色与强调色；两套浅色主题把 ≤0.4 的 <code>--w*</code> 整体翻成深色 alpha 层，保证边框、填充与 hover 在白底上依然可见，同时把纯黑阴影调柔。第 9 套「液态玻璃」再叠加一层高斯模糊玻璃：多层半透明渐变 + 折射高光边 + <code>backdrop-filter: blur(22px) saturate(185%)</code>。高斯模糊开关<b>对全部 9 套主题生效</b>，用 <code>html[data-glass]</code> 统一控制顶栏与浮层，关闭时显式 <code>none !important</code> 连 Nova 自身的 blur 也一并关掉；只作用于真正浮在照片上的少数容器，面板卡片用渐变模拟而不加 blur。流畅度上还做了三件事：Nova 的 blur 半径从 30px 降到 18px、去掉不透明容器上无意义的 backdrop-filter、主题切换不再无条件触发全分辨率 WebGL 重绘，433 款平铺用 <code>content-visibility:auto</code> 跳过视口外卡片。</p>
+<p>9 套主题只覆盖这些变量：深色主题主要改底色与强调色；两套浅色主题把 ≤0.4 的 <code>--w*</code> 整体翻成深色 alpha 层，保证边框、填充与 hover 在白底上依然可见，同时把纯黑阴影调柔。第 9 套「液态玻璃」再叠加一层高斯模糊玻璃：多层半透明渐变 + 折射高光边 + <code>backdrop-filter: blur(22px) saturate(185%)</code>。高斯模糊开关<b>对全部 9 套主题生效</b>，用 <code>html[data-glass]</code> 统一控制顶栏与浮层，关闭时显式 <code>none !important</code> 连 Nova 自身的 blur 也一并关掉；只作用于真正浮在照片上的少数容器，面板卡片用渐变模拟而不加 blur。流畅度上还做了三件事：Nova 的 blur 半径从 30px 降到 18px、去掉不透明容器上无意义的 backdrop-filter、主题切换不再无条件触发全分辨率 WebGL 重绘，443 款平铺用 <code>content-visibility:auto</code> 跳过视口外卡片。</p>
 <p>界面版本是 <code>html[data-ui="nova"]</code> 下的一整套追加 CSS：不改 DOM、定位与 flex 方向，只重做圆角、间距、玻璃、阴影与卡片化分组；<code>--nova-r</code> 由三档圆角控制。偏好在 <code>head</code> 的内联脚本里<b>于首屏绘制前</b>从 localStorage 读出并写到 <code>documentElement.dataset</code>，避免刷新闪回默认皮肤；主脚本启动再同步一次 <code>theme-color</code>。<code>data-motion="off"</code> 与系统 <code>prefers-reduced-motion</code> 一起关闭全部动效。</p>
-<p><b>滤镜</b>是 433 个字面量对象（名称、分类、一组参数）。运行期建一张「名称 → 对象索引」的查表，播放实况 / 拖动时每帧只做一次哈希查找，不再线性扫 300 多款。缩略图改成<b>用到才生成</b>：打开滤镜库时才为可见的那批画小图，启动不卡。</p>
+<p><b>滤镜</b>是 443 个字面量对象（名称、分类、一组参数）。运行期建一张「名称 → 对象索引」的查表，播放实况 / 拖动时每帧只做一次哈希查找，不再线性扫 300 多款。缩略图改成<b>用到才生成</b>：打开滤镜库时才为可见的那批画小图，启动不卡。</p>
 <p>库的组织是「分类目录 → 分类 → 滤镜」三级：十几张分类卡用该分类 3 款滤镜的缩略图拼成预览，点进去只看这十几款；顶部有最近使用、★ 收藏、全部、我的、原图等快捷行；搜索框跨全部分类查找。分类里还能用下拉直接跳到另一个分类，不必回目录。</p>
 <p><b>最多 4 层滤镜叠加</b>，每层单独强度、开关，并且<b>每层都挂自己那套 12 色调调色盘</b>。关掉某层或调低强度，它那套盘会跟着一起减弱 —— 这就是最初「拆掉 iPhone 调色盘绑定」的落点。</p>
 <p><b>模板</b>是 78 套组合描述：滤镜层 + 分色调盘 + 语义主盘 + 基础参数 + 画框，按人像 / 风景 / 街拍 / 胶片 / 夜景 / 极简等分类。点一下整套套用，但所有参数仍然可继续编辑。<b>「我的色调」</b>与 <b>「我的滤镜」</b>把当前整套色彩效果注册成一个可复用条目，刷新后仍在（localStorage）。</p>
@@ -19145,7 +19255,7 @@ c = mix(shifted, clampToSkin(shifted, src), skinMask * u_semLock);</pre>
  <li><b>零分配 setUniforms</b>：局部效果、蒙版、HSL、调色盘的临时数组全部改成模块级复用缓冲（<code>SU</code>），<code>PARAMS.forEach</code> / <code>HUES.forEach</code> 改 for 循环，<code>plateUniform()</code> 原地写 <code>PLATE_BUF</code>；查找最后一笔笔迹也从「复制数组 + reverse + find」改成从尾部反向遍历。每帧不再产生几十个短命数组，GC 抖动明显减少。</li>
  <li><b>帧内布局缓存</b>：一个像素坐标换算可能在同帧触发多次 <code>getBoundingClientRect()</code>，每次都强制同步布局。<code>stageRect()</code> 每帧失效一次、帧内复用，实测 12 次换算只做 <b>1 次</b>布局读取、11 次命中；滚动、resize、切页时主动失效。</li>
  <li><b>直方图让帧</b>：<code>renderSmall</code> 里的 <code>readPixels</code> 会同步等 GPU，连续拖动时每 260ms 一次就足以顿一下。现在拖动帧直接跳过并顺延，停手由恢复计时器补算；标签页隐藏也不算。</li>
- <li><b>缩略图参数缓存</b>：单款滤镜的 <code>effective(name, 1)</code> 是常量，按「名称 + 强度」存进 <code>EFF_SOLO</code>，浏览 433 款滤镜不再反复叠加 30 项参数。</li>
+ <li><b>缩略图参数缓存</b>：单款滤镜的 <code>effective(name, 1)</code> 是常量，按「名称 + 强度」存进 <code>EFF_SOLO</code>，浏览 443 款滤镜不再反复叠加 30 项参数。</li>
  <li><b>倾斜不是旋转，2D 预览怎么跟上 WebGL</b>：斜切 <code>q=(x+sLR·y, y+sUD·x)</code> 与梯形 <code>q=(x/(1+2sUD·y), y/(1+2sLR·x))</code> 都在物理等比例空间完成，系数 <code>s=tan(d°)/2</code>；采样范围再乘 <code>fill=(1−|sLR·sUD|)/(1+|sLR|+|sUD|)</code> 放大裁切填满，四角不露黑边。Crop 编辑器是 2D 画布、无法直接跑单应变换，所以改成<b>透视网格贴图</b>：用 <code>irisInvGeom(u,v)</code> 逐行复刻 <code>mapSrc()</code>（flip → 旧 persp → 90° → 任意角度 → 倾斜），把输出网格四角反算到源图 UV，再把每个四边形拆成两个三角形解 2×3 仿射并 clip 后 <code>drawImage</code>。拖动时 N=6、松手 N=12，结果带 key 缓存；倾斜为 0 时整段跳过，烘焙图退化为原图。<b>预览与导出因此共用同一套几何</b>，连历史遗留的 90°+任意角度顺序差异也一并修正了。</li>
  <li><b>任意角度为什么不变形</b>：<code>mapSrc()</code> 里的 <code>r</code> 是「图片矩形归一化坐标」，x 对应宽、y 对应高，两者尺度不同，直接套旋转矩阵会把横图拉歪。现在先 <code>q=vec2(r.x*u_imgAspect, r.y)</code> 变到物理等比例空间，用 <code>u_angle</code> 旋转，再除回去。旋转后要让输出矩形完全落在旋转后的照片里（不露黑角），采样范围缩小 <code>k=|cos a|+|sin a|·max(ar,1/ar)</code> 倍；正方形 45° 得到 √2，横图更大。<code>u_angleScale = 1/(k·构图缩放)</code> 与 <code>u_framePan</code> 一起传进去。角度为 0、缩放为 1、位移为 0 时整段是恒等变换，新增 uniform 全部取中性值，逐像素等于旧版。裁剪编辑器是 2D 画布，另用一张缓存的「旋转烘焙图」作正矩形底图，让裁剪框始终正立、且 crop 与 shader 一样作用在旋转之后的画面上。</li>
  <li><b>大照片一次降采样、处处复用</b>：6000×4000 的照片，浏览器把整张原图缩放一次就要 100ms 以上，旧版主色调分析与语义分割各缩一次，再叠加缩略图和导出前的 PNG 重编码，导入瞬间能堵住半秒到几秒。现在 <code>irisAnalysisAsync()</code> 用 <code>createImageBitmap(..., resizeWidth/resizeHeight)</code> 在解码线程生成一张最长边 1024 的共享小图（不支持时同步兜底），<code>analyzePhotoTone</code> / <code>analyzeSemantic</code> / <code>makeThumb</code> 都从它取像素；W/H 与 matte hash 仍按原图尺寸算，语义结果不变。<code>sourceToBlob</code> 优先返回原始 File 字节，自动保存零编码；首帧先 <code>render()</code> 出画面，分析、直方图、缩略图由 <code>irisScheduleAnalysis()</code> 分级到 rAF / 空闲，连续换照片用 token 取消过期任务。实测同步耗时 287ms → 73ms。</li>
@@ -19155,7 +19265,7 @@ c = mix(shifted, clampToSkin(shifted, src), skinMask * u_semLock);</pre>
  <li><b>烘焙图零分配（v1.0.17）</b>：透视网格贴图每改一次度数都曾 <code>new</code> 一张 900×675 canvas（约 2.4MB），40 步拖动就是近 100MB 垃圾；每个三角还各建 3 个临时数组。现在 <code>BAKE_POOL[N]</code> 复用同一张画布只 <code>clear</code> 不重建，<code>BAKE_CACHE[6]</code> / <code>BAKE_CACHE[12]</code> 各自独立命中（拖动用 560px、松手用 900px，互不踢掉对方），<code>_quadD / _quadS / _triE / _invOut</code> 全部预分配，<code>irisInvGeom(u,v,out)</code> 支持写入复用数组 —— 帧内零分配。同参数连续调用直接返回同一 canvas。</li>
  <li><b>面板重建是最大热点</b>：画像里 <code>buildPanel</code> 平均 58ms、峰值 92ms，主要来自 <code>innerHTML=''</code> 全量销毁 + 13 类行逐个 <code>getComputedStyle</code> 溢出测量 + 重播入场动画。倾斜这类操作只改几个数字，于是抽出 <code>refreshCropTiltUI()</code>：复用现有 <code>refs</code> 走 <code>syncUI()</code>，只更新两轴读数、快捷 chip 的 active、模式按钮、状态行与角度 hint；<code>syncPanelFit</code> 的 overflow-x 按「选择器 + 类名」在单次测量内缓存，每类最多抽查 12 个元素。</li>
  <li><b>异常不能让 rAF 链断掉</b>：<code>paintFrame</code> 以前一旦抛异常，浏览器不会再排下一帧，界面看起来就是「卡死」。现在顶层 <code>try/catch/finally</code> 只跳过出错的那一帧，记进 <code>IrisStability</code> 并自动补排一帧；<code>finally</code> 里记录帧耗时。全局 <code>error</code> / <code>unhandledrejection</code> 与 <code>PerformanceObserver('longtask')</code> 只观测不吞异常、不弹窗、不上传，数据留在内存供诊断页「一键复制」。<code>webglcontextlost</code> 里 <code>preventDefault()</code> 保留恢复机会，<code>webglcontextrestored</code> 清空 <code>U</code>（旧 uniform location 已失效）与值缓存、标记纹理脏并重新绘制。</li>
- <li><b>小缓冲也复用</b>：<code>renderSmall</code> 每张缩略图都 <code>new Uint8Array(76*76*4)</code> + <code>flipRows</code> 再 new 一个 <code>Uint8ClampedArray</code>，433 张就是近 80MB 垃圾与 GC 抖动。现在两者按尺寸复用（<code>putImageData</code> / <code>toDataURL</code> 都是同步消费，安全）；FBO 或上下文出问题时返回全零缓冲而非 <code>null</code>，让直方图与色调指纹的调用点不会因为读 <code>px.length</code> 而连带崩溃。</li>
+ <li><b>小缓冲也复用</b>：<code>renderSmall</code> 每张缩略图都 <code>new Uint8Array(76*76*4)</code> + <code>flipRows</code> 再 new 一个 <code>Uint8ClampedArray</code>，443 张就是近 80MB 垃圾与 GC 抖动。现在两者按尺寸复用（<code>putImageData</code> / <code>toDataURL</code> 都是同步消费，安全）；FBO 或上下文出问题时返回全零缓冲而非 <code>null</code>，让直方图与色调指纹的调用点不会因为读 <code>px.length</code> 而连带崩溃。</li>
  <li><b>撤销历史改差分存储</b>：以前每步都把整份 <code>state</code> 序列化成字符串（含笔迹、元素、蒙版、图层），60 步就是 60 份完整副本。现在 <code>irisDiff / irisApply</code> 只记录「相对上一步变化了的叶子路径」，undo / redo 共用一个 <code>{f, b, m}</code> step（正向、反向、摘要）；<code>irisEqual</code> 做深度相等，数组里装数组（笔迹坐标点）内容相同就不误记；<code>irisApply</code> 对对象值深拷贝，避免历史 step 与当前 state 共享引用被后续编辑污染。</li>
  <li><b>书签与自动保存快照</b>改成「相对默认状态的差分」打包（<code>packState / unpackState</code>），带版本标记并兼容旧版完整 JSON；历史页新增占用面板与「压缩旧书签」「清空撤销历史」。实测单份状态 4479 B → 733 B（<b>−84%</b>），13 步历史 2116 B，60 步上限 6931 B（旧方案约 269 KB）。</li>
  <li><b>裁剪会话</b>：拖动过程不逐步写历史，点「完成裁剪」才一次性提交一步，「取消」连中间步一起回滚；切走工具自动完成。既减少历史占用，也让「什么时候算裁完」变得明确。</li>
@@ -19165,13 +19275,13 @@ c = mix(shifted, clampToSkin(shifted, src), skinMask * u_semLock);</pre>
     "对 <code>measureText</code> 宽度差做探测（<code>document.fonts.check</code> 对系统字体恒为 true，不能判存在），"
     "只保留设备上真有的字体；每款再配不同的通用族、字重与 <code>letterSpacing</code> 兜底，8 款逐像素互不相同。"
     "<code>applyFont()</code> 让 <code>elMetrics</code> 与 <code>drawEl</code> 共用同一设置，测量框与导出不会错位。</li>
- <li><b>30 种盘模式表驱动</b>：每款只声明 <code>参数 = (ax·x + ay·y)·强度 + aa·amt</code>，启动时预编译成扁平数组并建 <code>Map</code> 索引；"
+ <li><b>35 种盘模式表驱动</b>：每款只声明 <code>参数 = (ax·x + ay·y)·强度 + aa·amt</code>，启动时预编译成扁平数组并建 <code>Map</code> 索引；"
         "逐帧只做一次定长循环，无 <code>Object.keys</code>、无临时对象、无 30 路分支，模式数从 4 增到 30 但每帧成本不变。"
-        "<code>amt = min(1, hypot(x,y))·强度</code> 让黑白 / 棕褐这类效果「离开中心才生效」，零位严格恒等。折叠面板收起时连 30 个 chip 的 DOM 都不创建。</li>
-     <li><b>433 款缩略图懒加载</b>：<code>renderSmall</code> 每张都要一次同步 <code>gl.readPixels</code> + <code>toDataURL</code>。"
+        "<code>amt = min(1, hypot(x,y))·强度</code> 让黑白 / 棕褐这类效果「离开中心才生效」，零位严格恒等。折叠面板收起时连 35 个 chip 的 DOM 都不创建。</li>
+     <li><b>443 款缩略图懒加载</b>：<code>renderSmall</code> 每张都要一次同步 <code>gl.readPixels</code> + <code>toDataURL</code>。"
         "现在图片先挂 1×1 占位，<code>IntersectionObserver</code> 提前 180px 才真正生成，每批最多 3 张、批间让出一帧；"
-        "生成后的主画面重绘合并成一次 rAF。433 款平铺与 44 张分类卡都不再一口气阻塞主线程。</li>
-     <li><b>30 种盘模式共用一条渲染路径</b>：<code>state.padMode</code> + <code>state.padVals[mode]</code> 各存一份两轴与强度，"
+        "生成后的主画面重绘合并成一次 rAF。443 款平铺与 44 张分类卡都不再一口气阻塞主线程。</li>
+     <li><b>35 种盘模式共用一条渲染路径</b>：<code>state.padMode</code> + <code>state.padVals[mode]</code> 各存一份两轴与强度，"
     "<code>applyPadModeToEffective()</code> 在 <code>effectiveRaw()</code> 末尾只把<b>当前模式</b>展开成已有 uniform 的增量（O(1)、零分配），"
     "语义模式仍走原本的 matte + 肤色锁通道。零位增量全为 0，逐像素恒等；不新增纹理 / 分支，切换与拖动不掉帧。"
     "<code>normalizeState()</code> 会把旧存档的语义盘与全局盘迁移成对应模式的值。</li>
@@ -20417,15 +20527,19 @@ function renderDiagnosticsPage(body){
 
 /* ---------- 16 版本演进 ---------- */
 const AS_CHANGELOG=[
- {v:'v1.0.38',t:'实况导出彻底与预览尺寸脱钩 · 同步页回归',d:'把 1.0.35~1.0.37 三轮的实况修复整体并进这个底稿，并补回坚果云同步与输入法守卫。'
-    +'① 导出尺寸只认原始图源像素（新增 imgSrcW/imgSrcH 记账），预览画布多大、预览帧是不是 960、视频中间帧多大，都不再决定导出像素；'
-    +'② 导出时主画布切到目标分辨率全分辨率重渲染（LIVE.exportRender），不再把 390×470 的预览帧拉成 1440×1080，播放不再是马赛克；'
-    +'③ 逐帧绘制显式清空缩放与平移（zoom:1 / pan:[0,0] / noFullSwap），预览里放大 1.6 倍不会再被录进实况，缩放态与 100% 态导出的帧逐字节相同；'
-    +'④ 配对素材的封面改成不叠画框的同比例画布，封面与动态轨比例严格一致，iOS 按住播放不再被拉伸压扁；'
-    +'⑤ 换封面失败时不再退回 960 预览帧这种静默降质，宁可报错；'
-    +'⑥ 导出面板常显一行口径：当前裁剪后尺寸 / 图源像素 / 封面来源；'
-    +'⑦ 坚果云 WebDAV 偏好同步回归「同步」页（10 项偏好打包一次往返，改滤镜后 4 秒静默上传，密码只存本机）；'
-    +'⑧ 安卓输入法守卫回归：焦点在输入框里时布局变化只记账不重建，键盘不会再一弹就被关掉。'},
+ {v:'v1.0.39',t:'实况修复三块归位 · 护盾与城市预设纳入同一底稿',d:'以这份新底稿（调色盘护盾 irisPadGuard / 按模式渐变 / 城市预设）为基准，把 1.0.35~1.0.38 的全部修复原样重贴回来。'
+    +'① 实况与导出：导出尺寸只认原始图源像素（imgSrcW/imgSrcH 记账）；导出时主画布切到目标分辨率全分辨率渲染（LIVE.exportRender）；逐帧绘制显式锁死 zoom:1 / pan:[0,0] / noFullSwap；配对封面改成不叠画框的同比例画布；换封面失败不再退回 960 预览帧；导出面板常显「裁剪后 / 图源 / 封面来源」口径。'
+    +'② 坚果云 WebDAV 同步整块回归（四栏预设、10 项偏好、改滤镜 4 秒静默上传、密码只存本机）。'
+    +'③ 安卓输入法守卫回归（输入中只记账不重建 DOM，键盘不再一弹就关）。'
+    +'④ 你这版新增的护盾限幅、按模式渐变、城市预设与全部 UI 原样保留。'},
+ {v:'v1.0.37',t:'10 款高级滤镜 · 5 款恒美盘模式',d:'① 滤镜 443 → 443：新增雾面银灰 / 丝光暖白 / 雾面裸肌 / 冷瓷雾光 / 雨后松绿 / 暮色琥珀 / 和纸灰蓝 / Deakins 窗光 / 湿版淡银 / 哈苏柔金，'
+    +'全部走克制低饱和 + 抬黑柔光 + 肤色保护路线，沿用现有 25 个分类、不新增分组，名称 443/443 唯一。'
+    +'② 盘模式 30 → 35，新增「恒美」组 5 款（薄金晨光 / 静海深蓝 / 蜜桃奶霜 / 松林薄暮 / 琥珀余晖），'
+    +'两轴统一为「横向清淡→浓郁 / 纵向通透→沉稳」，四个角都是协调成片。'
+    +'③ 关键改动是恒美护盾：旧盘模式纯线性展开，白点推到边角会一路叠到爆色 / 糊白 / 死黑 / 脸染橘；'
+    +'现在只对本次盘模式带来的增量做 tanh 软膝限幅（越极端越收敛，变化仍明显），再追加肤色锁、高光防溢与暗部防死黑，'
+    +'滤镜层原有参数一个字节不动。GUARD_BUF 预分配零 GC，零位严格恒等。'
+    +'④ 9 个盘位 × 5 款逐一验过：都有明显变化且全参数落在安全范围；9 套主题 / Nova / 250px 窄侧栏 / 手机端零溢出。'},
  {v:'v1.0.36',t:'桌面调色盘 · 归属 / 色调改折叠',d:'修掉一个电脑端专属的真 bug：'
     +'调色盘「色调」那行 12 个 chip 总宽 625px，容器只有 268px，靠 overflow-x:auto 横向滚，'
     +'但 scrollbar-width:none 把滚动条藏了、鼠标滚轮又只走纵向 —— 右边 7~8 个色相在桌面永远点不到。'
@@ -20517,7 +20631,7 @@ const AS_CHANGELOG=[
     +'还在 seeking 的 <video> 上传成纹理 0，而暂停态不会再重传，黑帧就一直留着。'
     +'现在 rAF 合并 seek、必须等上次完成、seeked 后才校验上传，未解码好就保留上一张有效帧；'
     +'播放中拖动先暂停并还原静态封面纹理。说明书第 14 章、技术实现实况段、关于页与 README 全部同步。'},
- {v:'v1.0.20',t:'缩放手感 · 盘面微调 · 30 种盘模式',d:'三处手感问题一起修：'
+ {v:'v1.0.20',t:'缩放手感 · 盘面微调 · 35 种盘模式',d:'三处手感问题一起修：'
     +'① 手机双指缩放时一根手指先松开，画面会突然飘走 —— 根因是指针数从 2 变 1 后仍留着第一根手指'
     +'最初按下的 dragStart 基准，捏合过程的位移与 pan 变化被一次性算进单指拖动；现在指针数一变就用'
     +'剩余指针当前坐标 + 当前 pan/zoom 重新播种基准，3→2 指也一并重建捏合基准。'
@@ -21481,7 +21595,7 @@ function buildPresets(p){
   sk.dataset.ptab='about'; p.append(sk);
   const s4=section('导出成品');
   const [dw,dh]=exportDims();
-  /* v1.0.38：把「图源像素 → 导出像素 → 封面来源」摆到明面上，预览尺寸不再偷偷决定导出 */
+  /* v1.0.39：把「图源像素 → 导出像素 → 封面来源」摆到明面上，预览尺寸不再偷偷决定导出 */
   const ov=hint(`当前裁剪后 <b>${dw}×${dh}</b> px。倍率与最长边取较小值，不会把照片放大到糊掉。`
     +`<br>图源 <b>${imgSrcW}×${imgSrcH}</b> · 封面来源 <b>${LIVE.coverSource||'原图'}</b>`
     +(imgSrcLow?' · 实况视频帧口径（动态轨按封面比例，长边 1440）':''));
@@ -21634,7 +21748,7 @@ function buildPresets(p){
   const nsm=document.createElement('summary'); nsm.textContent='关于 Live Photo 的限制'; note.append(nsm);
   note.append(hint('浏览器拿到的是「静态封面 + 配对视频」，网页无法把结果写回 iOS 相册成为原生实况照片。导出的 ZIP 内含已调色的封面与逐帧调色的视频，把两个文件改成相同主文件名，再用 iOS「快捷指令 → 将图像和视频转换为实况照片」或支持 Live Photo 的 App 合并即可。<br>部分浏览器无法解码 HEIC，会自动用视频中间帧作封面；视频不含原音频，最长录制 6 秒。'));
   sl.append(note); sl.dataset.ptab='export'; p.append(sl);
-  /* v1.0.38：同步页移植自 1.0.37 —— 坚果云 WebDAV，10 项偏好一键往返 */
+  /* v1.0.39：同步页移植自 1.0.38 —— 坚果云 WebDAV，10 项偏好一键往返 */
   p.append(buildCloudSection());
   /* 三个分栏：一次只显示一组，功能全保留但不再堆在一起 */
   const tabs=document.createElement('div'); tabs.className='iris-fixed preset-tabs';
@@ -22154,6 +22268,9 @@ window.addEventListener('resize',()=>{ if(exportMenuOpen) positionExportMenu(); 
 const CMD={open:false,items:[],results:[],sel:0,built:false};
 const cmdMask=$('#cmdMask'), cmdInput=$('#cmdInput'), cmdResults=$('#cmdResults');
 function gotoTool(id){
+  /* 未知工具 id（旧存档 / 深链 / 外部调用）一律回退到调色盘：
+     buildPanel 的分发表与 buildTools 都按 tool 索引，读不到会整块崩掉。 */
+  if(!TOOLS.some(t=>t.id===id)) id='plate';
   if(tool==='crop'&&cropSession&&id!=='crop') finishCrop(true);  // 切走 = 自动完成
   else if(id==='crop'&&tool!=='crop') startCropSession();
   tool=id; moreOpen=false; drawMode=null; bokDrag=null; maskDrag=null;
@@ -22257,7 +22374,7 @@ function cmdActions(){
     {name:'一键保存所有参数',desc:'把当前整套调色参数存成一款可复用的滤镜（点击即存）',
      key:'一键 保存 所有参数 全套 存为滤镜 full preset',hint:'',icon:'✦',
      run:()=>{ if(saveAllParamsOneClick()) toast('已存入「我的空间 → 我创作的滤镜」'); }},
-    /* 折叠后的 30 种盘模式也能从全局搜索直达，不用先展开面板 */
+    /* 折叠后的 35 种盘模式也能从全局搜索直达，不用先展开面板 */
     ...PAD_MODES.map(m=>({type:'盘模式',name:'盘模式 · '+m.name,
       desc:m.desc,
       key:'盘模式 调色盘 pad '+m.name+' '+m.short+' '+m.id+' '
@@ -22660,7 +22777,7 @@ $('#btnFocus').onclick=()=>{
 };
 window.addEventListener('scroll',invalidateStageRect,true);
 let lastLayout=isMobile()+'|'+isCompact();
-/* v1.0.38：输入法一弹出来，窗口高度就掉到 720 以下，isCompact() 翻转 →
+/* v1.0.39：输入法一弹出来，窗口高度就掉到 720 以下，isCompact() 翻转 →
    以前会立刻 buildPanel()，把正在输入的那个框连同 DOM 一起重建，
    于是键盘刚升起就被关掉（安卓上「输入不了账号」「改文字被踢」都是这个）。
    规则：焦点在可编辑控件里时，布局变化只记下来，等失焦后再补。 */
