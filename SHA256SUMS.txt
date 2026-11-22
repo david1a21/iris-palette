@@ -1,6 +1,7 @@
-edcffd00e6984225397e65fd1f577201d9bad56bf74ee560d402e0dd77cbbd3d  Iris_1.0.4.apk
-888d8e468c2f0ae1287a85450697b16e937f6ddada635eb6aef8e9a3efc1ca34  Iris-Palette-Linux-x64-1.0.4.tar.gz
-688e426019c2f2f8dfa7bb6e860d32240bfb1448e720cde63cc0335e69d4c6f5  Iris-Palette-macOS-arm64-1.0.4.zip
-fa963066da437d90e21191228eeb2af64a888bb08a34b50e64ef4615f9314dad  Iris-Palette-macOS-x64-1.0.4.zip
-2f522bc6694db434d0e49ff16c56e1aafa765cb8036db6c63781b9703ff8a465  Iris-Palette-Windows-x64-1.0.4.zip
-a871277ad0c6be16867ba4276e6f538256976fc3375b59fada007bd0e973d28a  Iris-Palette-iOS-1.0.4.ipa
+b0c62a7b9aee9d3b39e9f90e61b2756f80e99c346d30f2aa0e9325fdd0979078  web/index.html
+5167cfab3db041f15b8e83495f15cdef01f4214e2380ad1fe7508a09979d4776  desktop/release/Iris-Palette-Windows-x64-1.0.40-Setup.exe
+ccf79c676cf4bb36f877bd7f7b9bcb51a22f87580d53a733b3cdcdf75541e96f  android/dist/Iris_1.0.33.apk
+1a7ab89ad502a1ec3e255a8bc439558ffb7bfaeddbd4b384cf8fc966177b6430  desktop/release/Iris-Palette-Windows-x64-1.0.33.zip
+1805af2e4316881b29996d696b7a30040c7ace8500e877edd7e28ff1b2eb4f50  desktop/release/Iris-Palette-Linux-x64-1.0.33.tar.gz
+2249369a590f620e58c0accb3aeb42f6c0e395ea96938b7aafb95e9b5893bda6  desktop/release/Iris-Palette-macOS-arm64-1.0.33.zip
+82731898d770df1ab9fffdc3b8ae6618623c48c396c5c468a7c69276873bc0e6  desktop/release/Iris-Palette-macOS-x64-1.0.33.zip
