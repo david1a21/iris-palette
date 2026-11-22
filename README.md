@@ -11,7 +11,7 @@
 
 <br>
 
-<img alt="version" src="https://img.shields.io/badge/version-1.0.41-c9a227?style=flat-square">
+<img alt="version" src="https://img.shields.io/badge/version-1.0.42-c9a227?style=flat-square">
 <img alt="page" src="https://img.shields.io/badge/page-1.36%20MB%20single%20file-1b1b1d?style=flat-square">
 <img alt="platform" src="https://img.shields.io/badge/platform-Android%20%7C%20iOS%20%7C%20Win%20%7C%20Linux%20%7C%20macOS-2f6f4f?style=flat-square">
 <img alt="hot update" src="https://img.shields.io/badge/update-hot%20swap-3c6e9f?style=flat-square">
@@ -124,15 +124,15 @@
 
 | 平台 | 文件 | 页面版本 | 大小 | 拿哪个 Release |
 |---|---|---|---|---|
-| 网页版 | 浏览器直接打开 | **1.0.41** | — | 无需下载 |
-| Windows x64 | `Iris-Palette-Windows-x64-1.0.41-Setup.exe` | **1.0.41** | 79.3 MB | `v1.0.41` |
-| iOS | `Iris-Palette-iOS-1.0.41.ipa` | **1.0.41**（build 46） | 999 KB | `v1.0.41` |
-| Android | `Iris_1.0.44.apk` | **1.0.41**（壳 1.0.44） | 853 KB | `v1.0.44` |
-| macOS arm64 | `Iris-Palette-macOS-arm64-1.0.33.zip` | 1.0.33 → 热更新至 1.0.41 | 97.4 MB | `v1.0.33` |
-| macOS x64 | `Iris-Palette-macOS-x64-1.0.33.zip` | 1.0.33 → 热更新至 1.0.41 | 103.5 MB | `v1.0.33` |
-| Linux x64 | `Iris-Palette-Linux-x64-1.0.33.tar.gz` | 1.0.33 → 热更新至 1.0.41 | 107.0 MB | `v1.0.33` |
+| 网页版 | 浏览器直接打开 | **1.0.42** | — | 无需下载 |
+| Windows x64 | `Iris-Palette-Windows-x64-1.0.41-Setup.exe` | **1.0.41**（热更新至 1.0.42） | 79.3 MB | `v1.0.41` |
+| iOS | `Iris-Palette-iOS-1.0.42.ipa` | **1.0.42**（build 47） | 984 KB | `v1.0.42-ios` |
+| Android | `Iris_1.0.44.apk` | **1.0.42**（壳 1.0.44） | 853 KB | `v1.0.44` |
+| macOS arm64 | `Iris-Palette-macOS-arm64-1.0.33.zip` | 1.0.33 → 热更新至 1.0.42 | 97.4 MB | `v1.0.33` |
+| macOS x64 | `Iris-Palette-macOS-x64-1.0.33.zip` | 1.0.33 → 热更新至 1.0.42 | 103.5 MB | `v1.0.33` |
+| Linux x64 | `Iris-Palette-Linux-x64-1.0.33.tar.gz` | 1.0.33 → 热更新至 1.0.42 | 107.0 MB | `v1.0.33` |
 
-壳版本号落后不等于功能落后：装 1.0.33 的包，启动后页面会自动热更新到 1.0.41（见下一节）；Android 另有 1.0.44 的壳修复包（相册落点按厂商分流 + 导出不再被时序闸门吞掉），内嵌 1.0.41 页面、可直接覆盖安装。1.0.34–1.0.38 只走了热更新、没有单独建 Release，1.0.39 起才补建，所以列表里会看到版本跳档。
+壳版本号落后不等于功能落后：装 1.0.33 的包，启动后页面会自动热更新到 1.0.42（见下一节）；Android 另有 1.0.44 的壳修复包（相册落点按厂商分流 + 导出不再被时序闸门吞掉），内嵌 1.0.42 页面、可直接覆盖安装。1.0.34–1.0.38 只走了热更新、没有单独建 Release，1.0.39 起才补建，所以列表里会看到版本跳档。
 
 <details>
 <summary><b>各平台安装细节</b>（点开）</summary>
@@ -173,7 +173,7 @@ chmod +x "Iris 调色盘" && ./"Iris 调色盘"
 
 ```json
 {
-  "version": "1.0.41",
+  "version": "1.0.42",
   "sha256": "dce611e30695052ea3a2e75fcb71fec54fe8784ac143f4717aea264d6e23e1b4",
   "size": 1427706,
   "url": "https://raw.githubusercontent.com/david1a21/iris-palette/main/web/index.html"
@@ -303,7 +303,7 @@ bash build_ipa.sh --adhoc      # 额外 ad-hoc 签名
 <details>
 <summary><b>为什么各端版本号不一样？</b></summary>
 
-页面内容一致，版本号是各端自己迭代的产物。壳版本停在 1.0.33 的包，首次联网后会按 `hot-update.json` 把页面升到 1.0.41。看到版本号不同，不代表功能不同。
+页面内容一致，版本号是各端自己迭代的产物。壳版本停在 1.0.33 的包，首次联网后会按 `hot-update.json` 把页面升到 1.0.42。看到版本号不同，不代表功能不同。
 </details>
 
 <details>
@@ -361,6 +361,7 @@ bash build_ipa.sh --adhoc      # 额外 ad-hoc 签名
 | **1.0.44**（Android 壳） | 2026-11-22 | 修掉导出「静默丢失」：注入层的 1.5 秒手势闸门会误判大图 / GIF / 实况 / 批量导出，漏给 WebView 后文件直接消失；改为壳内一律接管 + `DownloadListener` 兜底重试 + 失败必提示 |
 | 1.0.43（Android 壳） | 2026-11-22 | 落点按厂商分流：三星写 `DCIM/Iris`、其余机型仍写 `Pictures/Iris`（撤回 1.0.42 的全量改道）· pending 回读校验 · 如实提示真实落点 |
 | 1.0.42（Android 壳） | 2026-11-22 | 曾把所有机型改到 `DCIM/Iris`，导致原本正常的机型相册里找不到，已被 1.0.43 纠正 |
+| **1.0.42**（页面） | 2026-11-22 | 背景虚化真正可用：接 iOS 系统 Vision 人像分割（17+ 前景实例软蒙版 / 16 人像分割兜底），蒙版喂进现成的 `u_subject` 通道，六种散景即插即用；五端页面同源 |
 | **1.0.41** | 2026-11-22 | 照片 EXIF 独立页（纯前端零依赖）· 滑动分割线对比 · 沉浸大图再打磨；说明书新增第 24 章，视频工作台顺延为第 25 章 |
 | 1.0.40 | 2026-11-22 | 导入进度条；实况修复、云同步、输入法守卫与消除笔入口置灰合流；Windows 安装器 |
 | 1.0.39 | 2026-11-22 | 新底稿并入 1.0.35–1.0.38 的实况修复 + 坚果云同步 + 输入法守卫；保留护盾、模式渐变、城市预设 |
