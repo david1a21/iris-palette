@@ -17,4 +17,5 @@ done
 
 node scripts/build.js all
 python3 scripts/pack_release.py
+bash scripts/make_setup.sh
 echo "完成：release/"

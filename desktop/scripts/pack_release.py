@@ -5,7 +5,13 @@ import os, shutil, subprocess, zipfile, hashlib, json
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DIST = os.path.join(ROOT, 'dist')
 OUT = os.path.join(ROOT, 'release')
-VER = '1.0.33'
+def _detect_ver():
+    import re
+    html = open(os.path.join(ROOT, 'app', 'assets', 'index.html'), encoding='utf-8').read()
+    m = re.search(r"IRIS_VERSION='([\d.]+)'", html)
+    return m.group(1) if m else '1.0.0'
+
+VER = _detect_ver()
 os.makedirs(OUT, exist_ok=True)
 
 README_MAC = """Iris 调色盘 · macOS（未签名）

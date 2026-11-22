@@ -11,7 +11,15 @@ const CACHE = path.join(ROOT, '.cache');
 const DIST = path.join(ROOT, 'dist');
 const APP = path.join(ROOT, 'app');
 const UI = path.join(APP, 'ui');
-const VERSION = '1.0.33';
+// 版本号唯一来源：内嵌页面的 IRIS_VERSION（页面换新版，打包版本自动跟随）
+const VERSION = (() => {
+  try {
+    const html = fs.readFileSync(path.join(APP, 'assets', 'index.html'), 'utf8');
+    const m = html.match(/IRIS_VERSION='([\d.]+)'/);
+    if (m) return m[1];
+  } catch (e) {}
+  return '1.0.0';
+})();
 
 const run = (cmd, args, opts = {}) => execFileSync(cmd, args, { stdio: 'inherit', ...opts });
 
