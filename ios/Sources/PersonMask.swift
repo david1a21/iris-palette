@@ -29,8 +29,9 @@ enum PersonMask {
                 do {
                     try handler.perform([req])
                     if let obs = req.results?.first {
-                        let buf = try obs.generateScaledMask(
-                            for: obs.allInstances, croppedToInstancesContent: false)
+                        // 官方用法：把 handler 一起传进去，按原图分辨率出**软边**蒙版
+                        let buf = try obs.generateScaledMaskForImage(
+                            forInstances: obs.allInstances, from: handler)
                         if let png = pngBase64(buf) {
                             let w = CVPixelBufferGetWidth(buf)
                             let h = CVPixelBufferGetHeight(buf)
