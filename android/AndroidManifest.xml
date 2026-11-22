@@ -1,12 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.iris.palette"
-    android:versionCode="15"
-    android:versionName="1.0.33">
+    android:versionCode="17"
+    android:versionName="1.0.42">
 
     <uses-sdk android:minSdkVersion="24" android:targetSdkVersion="34" />
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Android 9 及以下写公共 Pictures 目录需要它；10 起走 MediaStore，不再需要 -->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="28" />
 
     <uses-feature android:name="android.hardware.camera" android:required="false" />
 
@@ -19,6 +22,7 @@
         android:largeHeap="true"
         android:allowBackup="false"
         android:supportsRtl="false"
+        android:requestLegacyExternalStorage="true"
         android:usesCleartextTraffic="false">
 
         <activity

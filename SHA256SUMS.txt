@@ -1,6 +1,6 @@
 dce611e30695052ea3a2e75fcb71fec54fe8784ac143f4717aea264d6e23e1b4  web/index.html
 2c3ab398adffd29fa45752b5ec5ebe73718af73bc25e44cdefe8366098dc2130  desktop/release/Iris-Palette-Windows-x64-1.0.41-Setup.exe
-ccf79c676cf4bb36f877bd7f7b9bcb51a22f87580d53a733b3cdcdf75541e96f  android/dist/Iris_1.0.33.apk
+01de15ddc2ecc6f7b3c902afb7f1b167b24a67bbb5563d842c6d850676bd3996  android/dist/Iris_1.0.42.apk
 1a7ab89ad502a1ec3e255a8bc439558ffb7bfaeddbd4b384cf8fc966177b6430  desktop/release/Iris-Palette-Windows-x64-1.0.33.zip
 1805af2e4316881b29996d696b7a30040c7ace8500e877edd7e28ff1b2eb4f50  desktop/release/Iris-Palette-Linux-x64-1.0.33.tar.gz
 2249369a590f620e58c0accb3aeb42f6c0e395ea96938b7aafb95e9b5893bda6  desktop/release/Iris-Palette-macOS-arm64-1.0.33.zip

@@ -672,6 +672,40 @@ public class MainActivity extends Activity {
 
     /* ================= 落盘：JS 分块传字节，这里按 MIME 写进对应媒体库 ================= */
 
+    /* 落点分级：相册优先，其次下载目录，最后才退到应用私有目录。
+       DCIM 是三星 / 小米 / 华为相册都会并进「相机」的那个目录，
+       Pictures 下的自建目录在部分 ROM 相册里要手动展开才看得见。 */
+    private static final int PLACE_NONE = 0;
+    private static final int PLACE_GALLERY = 1;
+    private static final int PLACE_DOWNLOAD = 2;
+    private static final int PLACE_PRIVATE = 3;
+    private int place = PLACE_NONE;
+
+    private static String extFor(String mime) {
+        if (mime == null) return "";
+        switch (mime) {
+            case "image/jpeg": return ".jpg";
+            case "image/png": return ".png";
+            case "image/webp": return ".webp";
+            case "image/gif": return ".gif";
+            case "image/heic": return ".heic";
+            case "video/mp4": return ".mp4";
+            case "video/quicktime": return ".mov";
+            case "video/webm": return ".webm";
+            case "application/zip": return ".zip";
+            case "application/json": return ".json";
+            default: return "";
+        }
+    }
+
+    /* 没有扩展名的名字会让部分 ROM 的相册按 MIME 猜错类型，这里补齐 */
+    private static String completeName(String name, String mime) {
+        if (name == null || name.isEmpty()) return "Iris_" + System.currentTimeMillis() + extFor(mime);
+        int dot = name.lastIndexOf('.');
+        if (dot > 0 && dot < name.length() - 1) return name;
+        return name + extFor(mime);
+    }
+
     public class IrisBridge {
 
         private OutputStream os;
@@ -680,6 +714,87 @@ public class MainActivity extends Activity {
         private String name = "iris.bin";
         private String mime = "application/octet-stream";
         private long bytes;
+
+        private void openMediaTarget(String name, String mime) {
+            boolean image = mime.startsWith("image/");
+            boolean video = mime.startsWith("video/");
+
+            if (image || video) {
+                Uri col = video ? MediaStore.Video.Media.EXTERNAL_CONTENT_URI
+                        : MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
+                openPending(col, Environment.DIRECTORY_DCIM + "/Iris", name, mime);
+                if (os != null) { place = PLACE_GALLERY; return; }
+                /* 个别 ROM 对 RELATIVE_PATH 处理有 bug：去掉目录再试一次，交给系统定落点 */
+                openPending(col, null, name, mime);
+                if (os != null) { place = PLACE_GALLERY; return; }
+            }
+
+            /* 媒体库这条路彻底走不通时，至少落到「下载」，用户能从文件 App 里找到 */
+            openPending(MediaStore.Downloads.EXTERNAL_CONTENT_URI,
+                    Environment.DIRECTORY_DOWNLOADS + "/Iris", name, mime);
+            if (os != null) { place = PLACE_DOWNLOAD; return; }
+            place = PLACE_NONE;
+        }
+
+        private void openPending(Uri collection, String rel, String name, String mime) {
+            Uri uri = null;
+            try {
+                ContentValues cv = new ContentValues();
+                cv.put(MediaStore.MediaColumns.DISPLAY_NAME, completeName(name, mime));
+                cv.put(MediaStore.MediaColumns.MIME_TYPE, mime);
+                if (rel != null) cv.put(MediaStore.MediaColumns.RELATIVE_PATH, rel);
+                cv.put(MediaStore.MediaColumns.IS_PENDING, 1);
+                uri = getContentResolver().insert(collection, cv);
+                if (uri != null) {
+                    OutputStream s = getContentResolver().openOutputStream(uri, "w");
+                    if (s != null) { targetUri = uri; os = s; return; }
+                    /* 插进去了却打不开：别在媒体库里留一个永远 pending 的空条目 */
+                    try { getContentResolver().delete(uri, null, null); } catch (Throwable ignored) { }
+                }
+            } catch (Throwable t) {
+                Log.i(TAG, "media insert failed: " + t);
+            }
+            targetUri = null;
+        }
+
+        /* 事务收尾：清 IS_PENDING 只是第一步，还要回读确认，
+           否则条目会长久停在 pending —— 文件在，相册看不见。 */
+        private void publishPending(Uri uri) {
+            try {
+                ContentValues cv = new ContentValues();
+                cv.put(MediaStore.MediaColumns.IS_PENDING, 0);
+                getContentResolver().update(uri, cv, null, null);
+            } catch (Throwable t) {
+                Log.i(TAG, "publish failed: " + t);
+            }
+
+            boolean stillPending = false;
+            try (android.database.Cursor c = getContentResolver().query(uri,
+                    new String[]{MediaStore.MediaColumns.IS_PENDING}, null, null, null)) {
+                if (c != null && c.moveToFirst()) stillPending = c.getInt(0) != 0;
+            } catch (Throwable ignored) { }
+
+            if (stillPending) {
+                try {
+                    ContentValues cv = new ContentValues();
+                    cv.put(MediaStore.MediaColumns.IS_PENDING, 0);
+                    getContentResolver().update(uri, cv, null, null);
+                } catch (Throwable t) {
+                    Log.i(TAG, "publish retry failed: " + t);
+                }
+            }
+
+            /* 再让扫描器认一次，规避个别 ROM 媒体索引滞后 */
+            try (android.database.Cursor c = getContentResolver().query(uri,
+                    new String[]{MediaStore.MediaColumns.DATA}, null, null, null)) {
+                if (c != null && c.moveToFirst()) {
+                    String path = c.getString(0);
+                    if (path != null && !path.isEmpty()) {
+                        MediaScannerConnection.scanFile(MainActivity.this, new String[]{path}, null, null);
+                    }
+                }
+            } catch (Throwable ignored) { }
+        }
 
         @JavascriptInterface
         public synchronized void start(String encodedName, String mimeIn) {
@@ -700,38 +815,29 @@ public class MainActivity extends Activity {
             }
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                try {
-                    boolean image = mime.startsWith("image/");
-                    boolean video = mime.startsWith("video/");
-                    Uri collection = video ? MediaStore.Video.Media.EXTERNAL_CONTENT_URI
-                            : image ? MediaStore.Images.Media.EXTERNAL_CONTENT_URI
-                            : MediaStore.Downloads.EXTERNAL_CONTENT_URI;
-                    String rel = video ? Environment.DIRECTORY_MOVIES + "/Iris"
-                            : image ? Environment.DIRECTORY_PICTURES + "/Iris"
-                            : Environment.DIRECTORY_DOWNLOADS + "/Iris";
-
-                    ContentValues cv = new ContentValues();
-                    cv.put(MediaStore.MediaColumns.DISPLAY_NAME, name);
-                    cv.put(MediaStore.MediaColumns.MIME_TYPE, mime);
-                    cv.put(MediaStore.MediaColumns.RELATIVE_PATH, rel);
-                    cv.put(MediaStore.MediaColumns.IS_PENDING, 1);
-                    targetUri = getContentResolver().insert(collection, cv);
-                    if (targetUri != null) os = getContentResolver().openOutputStream(targetUri, "w");
-                } catch (Throwable ignored) {
-                }
+                openMediaTarget(name, mime);
             }
 
-            if (os == null) {   /* Android 9 及以下，或媒体库插入失败：退回应用私有目录 + 扫描入库 */
+            if (os == null) {   /* 9 及以下没有媒体事务：直接写公共 DCIM，再让扫描器入库 */
                 try {
-                    File base = mime.startsWith("video/")
-                            ? getExternalFilesDir(Environment.DIRECTORY_MOVIES)
-                            : mime.startsWith("image/")
-                            ? getExternalFilesDir(Environment.DIRECTORY_PICTURES)
-                            : getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS);
-                    File dir = new File(base != null ? base : getFilesDir(), "Iris");
+                    File dir;
+                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+                        File pub = Environment.getExternalStoragePublicDirectory(
+                                mime.startsWith("video/") ? Environment.DIRECTORY_MOVIES
+                                        : Environment.DIRECTORY_DCIM);
+                        dir = new File(pub, "Iris");
+                    } else {
+                        File base = mime.startsWith("video/")
+                                ? getExternalFilesDir(Environment.DIRECTORY_MOVIES)
+                                : mime.startsWith("image/")
+                                ? getExternalFilesDir(Environment.DIRECTORY_PICTURES)
+                                : getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS);
+                        dir = new File(base != null ? base : getFilesDir(), "Iris");
+                    }
                     if (!dir.exists()) dir.mkdirs();
-                    targetFile = new File(dir, name);
+                    targetFile = new File(dir, completeName(name, mime));
                     os = new FileOutputStream(targetFile);
+                    place = Build.VERSION.SDK_INT < Build.VERSION_CODES.Q ? PLACE_GALLERY : PLACE_PRIVATE;
                 } catch (Throwable t) {
                     os = null;
                     toast("保存失败：存储不可写");
@@ -766,13 +872,7 @@ public class MainActivity extends Activity {
             targetFile = null;
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                if (outUri != null) {
-                    try {
-                        ContentValues cv = new ContentValues();
-                        cv.put(MediaStore.MediaColumns.IS_PENDING, 0);
-                        getContentResolver().update(outUri, cv, null, null);
-                    } catch (Throwable ignored) { }
-                }
+                if (outUri != null) publishPending(outUri);
                 ui.post(() -> onSaved(fName, fMime, outUri, fBytes));
                 return;
             }
@@ -916,7 +1016,11 @@ public class MainActivity extends Activity {
         LinearLayout texts = new LinearLayout(this);
         texts.setOrientation(LinearLayout.VERTICAL);
         TextView t1 = new TextView(this);
-        t1.setText(uri != null ? "已保存到相册 · Iris" : "已保存 · Iris");
+        String where;
+        if (uri == null) where = place == PLACE_PRIVATE ? "已保存到应用私有目录 · 相册不可见" : "已保存 · Iris";
+        else if (place == PLACE_DOWNLOAD) where = "已保存到下载目录 · Iris";
+        else where = "已保存到相册 · DCIM/Iris";
+        t1.setText(where);
         t1.setTextColor(TXT);
         t1.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f);
         t1.setTypeface(t1.getTypeface(), android.graphics.Typeface.BOLD);

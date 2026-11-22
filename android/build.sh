@@ -9,6 +9,10 @@ cd "$(dirname "$0")"
 rm -rf build dist
 mkdir -p build/classes build/dex dist
 
+VER=$(grep -o 'android:versionName="[^"]*"' AndroidManifest.xml | head -1 | sed 's/.*="//;s/"//')
+OUT="dist/Iris_${VER}.apk"
+echo "    壳版本 ${VER}"
+
 echo "==> aapt2 compile"
 "$BT/aapt2" compile --dir res -o build/res.zip
 
@@ -49,8 +53,8 @@ echo "==> sign"
 "$BT/apksigner" sign \
   --ks iris-release.jks --ks-pass pass:iris2026 --key-pass pass:iris2026 \
   --v2-signing-enabled true --v3-signing-enabled true \
-  --out "dist/Iris_1.0.33.apk" build/aligned.apk
+  --out "$OUT" build/aligned.apk
 
 echo "==> verify"
-"$BT/apksigner" verify "dist/Iris_1.0.33.apk" && echo "signature ok"
-ls -lh "dist/Iris_1.0.33.apk"
+"$BT/apksigner" verify "$OUT" && echo "signature ok"
+ls -lh "$OUT"
