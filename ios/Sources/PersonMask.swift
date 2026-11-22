@@ -45,7 +45,7 @@ enum PersonMask {
             }
 
             let req = VNGeneratePersonSegmentationRequest()
-            req.revision = VNGeneratePersonSegmentationRequest.Revision.revision1
+            // revision 用默认（当前最新），显式指定反而在不同 SDK 上名字不一
             req.qualityLevel = .accurate
             req.outputPixelFormat = kCVPixelFormatType_OneComponent8
             do {
