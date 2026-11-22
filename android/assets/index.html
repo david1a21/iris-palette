@@ -6,8 +6,8 @@
 <title>Iris 调色盘 · 语义感知的在线照片编辑器</title>
 <meta name="theme-color" content="#0b0b0d">
 <!-- 版本元数据：检查更新时远端只需读取文件头部即可比对，不必下载整份页面 -->
-<meta name="iris-version" content="1.0.39">
-<meta name="iris-build" content="2026-11-19">
+<meta name="iris-version" content="1.0.40">
+<meta name="iris-build" content="2026-11-22">
 <meta name="iris-repo" content="david1a21/iris-palette">
 <meta name="description" content="Iris 调色盘：语义感知的二维色彩控制器。Tone × Color 两轴、端侧区域分割与肤色锁，443 款滤镜、78 套模板，支持照片 / 视频 / GIF 导出，纯前端不上传。">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -187,6 +187,16 @@ html[data-glass="off"] .exp-progress.in-sub{backdrop-filter:none;-webkit-backdro
   .ep-ic{flex-basis:26px;width:26px;height:26px;font-size:13px}
   .ep-label{font-size:11.5px}.ep-sub{font-size:10px}}
 @media(prefers-reduced-motion:reduce){.exp-progress{animation:none}.ep-fill{transition:none}}
+/* v1.0.38 · 导入进度条：复用导出条的骨架，只把图标换成蓝紫渐变以区分方向 */
+.imp-progress .ep-ic{background:linear-gradient(135deg,#5b8dd9,#7d6bd0)}
+.imp-progress.done .ep-ic{background:linear-gradient(135deg,#2fbf71,#1f9d5b);color:#fff}
+.imp-progress.fail .ep-ic{background:linear-gradient(135deg,#e2564e,#c13a34);color:#fff}
+/* 暂不支持的入口：视觉明确置灰，但仍可点出原因，不是「点了没反应」 */
+.add-btn.off,.chip.off,.btn.off{opacity:.42;filter:grayscale(.7);cursor:not-allowed}
+.add-btn.off:hover,.chip.off:hover,.btn.off:hover{border-color:var(--w12)}
+.off-note{margin:6px 0 2px;font-size:10.5px;line-height:1.5;color:var(--sub);
+  padding:6px 9px;border-radius:9px;background:var(--w05);border:1px solid var(--w09)}
+.off-note b{color:var(--accent)}
 
 /* 照片方向：裁剪页首屏的大控件，不随侧栏变窄被挤成一行小字 */
 .dir-wrap{margin:11px 0 9px;padding:11px 12px 12px;border-radius:16px;
@@ -4068,6 +4078,17 @@ html[data-motion="off"] .fx-btn,html[data-motion="off"] .fx-knob{transition:none
       </div>
       <button class="ep-close" id="epClose" title="收起进度条">✕</button>
     </div>
+    <!-- v1.0.38 · 导入进度条：与导出进度条同为编辑栏普通流的一行，绝不浮在 .stage 的照片上 -->
+    <div class="exp-progress imp-progress" id="impProgress" role="progressbar"
+         aria-label="导入进度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+      <div class="ep-ic" id="ipIc">↥</div>
+      <div class="ep-main">
+        <div class="ep-row"><b class="ep-label" id="ipLabel">准备导入…</b><span class="ep-pct" id="ipPct">0%</span></div>
+        <div class="ep-track"><div class="ep-fill" id="ipFill"></div></div>
+        <div class="ep-sub" id="ipSub"></div>
+      </div>
+      <button class="ep-close" id="ipClose" title="收起进度条">✕</button>
+    </div>
     <div class="dock-grip" id="grip" title="拖动调整大小 · 点击收起 · 双击复位"><span></span></div>
     <!-- v1.0.35 · 初次进入的引导：普通流一行，指向正上方那根 grip -->
     <div class="grip-hint" id="gripHint" hidden role="note" aria-label="编辑面板调整提示">
@@ -4151,6 +4172,11 @@ html[data-motion="off"] .fx-btn,html[data-motion="off"] .fx-knob{transition:none
    再把静态 HTML 里 video 按钮的 disabled / studio 按钮的 hidden 去掉，
    即可完整恢复，不需要重写任何逻辑。 */
 var VIDEO_STUDIO_ON=false, VIDEO_EXPORT_ON=false;
+/* v1.0.38：消除笔与「自动主体检测虚化」效果还不够稳定，入口一律灰掉并说明原因。
+   代码全部保留，改回 true 即可完整恢复；其余像素效果与全部虚化能力照常可用。 */
+var HEAL_ON=false, AUTO_BOKEH_ON=false;
+var OFF_HINT_HEAL='消除暂不支持 · 修复效果还不够稳定，打磨完成后恢复';
+var OFF_HINT_BOKEH='自动主体检测暂不支持 · 识别与边缘还不够稳定，打磨完成后恢复；可改用「涂抹选取主体 / 虚化区域」';
 const $ = s => document.querySelector(s);
 const cropEd = $('#cropEd');
 const isMobile = () => window.matchMedia('(max-width:520px)').matches;
@@ -4214,7 +4240,7 @@ const ExportProgress = (()=>{
     stopSoft();
     const t=performance.now();
     const tick=()=>{
-      if(!active) return;
+      if(!active||pct>=to){ raf=0; return; }   /* 真实阶段已越过上限就立刻停 */
       const k=1-Math.exp(-3*(performance.now()-t)/Math.max(1,ms));
       const v=from+(to-from)*Math.min(1,k);
       if(v>pct) set(v,label,detail);
@@ -4245,6 +4271,85 @@ const ExportProgress = (()=>{
   return {
     get active(){ return active; }, get pct(){ return pct; },
     get el(){ return el; },
+    show,set,softTo,stopSoft,finish,hide,mount,
+    elapsed(){ return ((performance.now()-t0)/1000).toFixed(1)+'s'; }
+  };
+})();
+/* ============================================================
+   v1.0.38 · 导入进度控制器
+   · 与导出进度条同为 .dock 的普通流子节点，绝不浮在 .stage 的照片上；
+     二级页打开时移到内容区顶部并吸顶，隐藏时一律归位编辑栏。
+   · 阶段：读取文件 → 解码图像 → 共享分析小图 → 上传纹理 / 建立预览
+     → 画面分析（分级到后续帧）→ 完成。
+   · 异步解码期间按时间渐近到阶段上限（不越过），同步渲染前双 rAF
+     保证进度条真正画出来；全程单调、不倒退、不瞬间 100%。
+   ============================================================ */
+const ImportProgress=(()=>{
+  const el=$('#impProgress'), lab=$('#ipLabel'), pctEl=$('#ipPct'),
+        fill=$('#ipFill'), sub=$('#ipSub'), ic=$('#ipIc'), close=$('#ipClose');
+  let pct=0, active=false, raf=0, hideTimer=0, t0=0, token=0;
+  const cp=v=>Math.max(0,Math.min(100,v));
+  function mount(){
+    const sp=$('#subPage'), dock=document.querySelector('.dock'), body=$('#spBody');
+    if(sp&&sp.classList.contains('show')&&body){
+      if(el.parentNode!==body){ body.insertBefore(el,body.firstChild); el.classList.add('in-sub'); }
+    } else if(dock&&el.parentNode!==dock){
+      dock.insertBefore(el,dock.firstChild); el.classList.remove('in-sub');
+    }
+  }
+  function set(v,label,detail,force){
+    if(!active&&!force) return;
+    mount();
+    pct=force?cp(v):Math.max(pct,cp(v));
+    const r=pct.toFixed(1);
+    if(fill.style.width!==r+'%') fill.style.width=r+'%';
+    const q=Math.round(pct)+'%';
+    if(pctEl.textContent!==q) pctEl.textContent=q;
+    el.setAttribute('aria-valuenow',String(Math.round(pct)));
+    if(label!==undefined&&lab.textContent!==label) lab.textContent=label;
+    if(detail!==undefined&&sub.textContent!==detail) sub.textContent=detail;
+  }
+  function show(title,detail,tk){
+    clearTimeout(hideTimer); stopSoft();
+    pct=0; active=true; token=tk||0; t0=performance.now();
+    el.classList.remove('done','fail'); el.classList.add('show','busy');
+    ic.textContent='↥';
+    try{ if(app.classList.contains('dock-off')&&typeof expandDock==='function') expandDock(); }catch(e){}
+    set(0,title,detail||'',true);
+  }
+  function softTo(from,to,ms,label,detail){
+    stopSoft();
+    const t=performance.now();
+    const tick=()=>{
+      if(!active||pct>=to){ raf=0; return; }   /* 真实阶段已越过上限就立刻停 */
+      const k=1-Math.exp(-3*(performance.now()-t)/Math.max(1,ms));
+      const v=from+(to-from)*Math.min(1,k);
+      if(v>pct) set(v,label,detail);
+      if(k<1) raf=requestAnimationFrame(tick); else raf=0;
+    };
+    raf=requestAnimationFrame(tick);
+  }
+  function stopSoft(){ if(raf){ cancelAnimationFrame(raf); raf=0; } }
+  function finish(ok,summary){
+    stopSoft(); active=false;
+    el.classList.remove('busy');
+    ic.textContent=ok?'✓':'!';
+    set(100,ok?'已导入':'导入失败',summary||'',true);
+    el.classList.add(ok?'done':'fail');
+    hideTimer=setTimeout(hide,ok?2400:5200);
+  }
+  function hide(){
+    clearTimeout(hideTimer); stopSoft(); active=false;
+    el.classList.remove('show','busy');
+    const dock=document.querySelector('.dock');
+    if(dock&&el.parentNode!==dock){
+      dock.insertBefore(el,dock.firstChild); el.classList.remove('in-sub');
+    }
+  }
+  close.addEventListener('click',hide);
+  return {
+    get active(){ return active; }, get pct(){ return pct; },
+    get token(){ return token; }, get el(){ return el; },
     show,set,softTo,stopSoft,finish,hide,mount,
     elapsed(){ return ((performance.now()-t0)/1000).toFixed(1)+'s'; }
   };
@@ -7226,6 +7331,9 @@ function rebuildSubject(silent){
   return true;
 }
 function detectSubject(mode,silent){
+  /* v1.0.38：自动主体检测暂不支持。silent 的内部调用已全部改成 rebuildSubject，
+     所以这里只拦用户主动触发；命令面板 / 深链 / 外部调用都不会绕过。 */
+  if(!AUTO_BOKEH_ON){ if(!silent) toast(OFF_HINT_BOKEH); return false; }
   const src=LIVE.still;
   if(!src){ if(!silent) toast('请先导入照片'); return false; }
   BOK.low=bokSampleLow();
@@ -9348,13 +9456,24 @@ function liveFrame(t){
 function loadImageFile(f,withVideo,token){
   const url=URL.createObjectURL(f), im=new Image();
   im.onload=async()=>{
+    if(ImportProgress.active&&ImportProgress.token===token)
+      ImportProgress.set(30,'解码图像完成',(im.naturalWidth||im.width)+' × '+(im.naturalHeight||im.height));
     /* 先在异步阶段生成共享分析小图（createImageBitmap 不阻塞主线程），
        再进入 uploadImage；这样大照片「点开 → 出画面」不再被缩放堵住。 */
     let small=null;
+    if(ImportProgress.active&&ImportProgress.token===token)
+      ImportProgress.set(40,'生成共享分析图','只降采样一次，原图完整保留供导出');
     try{ small=await irisAnalysisAsync(im); }catch(e){}
     if(token!==importToken){ URL.revokeObjectURL(url); return; }  // 连续选图：丢弃过期结果
+    if(ImportProgress.active&&ImportProgress.token===token)
+      ImportProgress.set(58,'分析小图已就绪');
     LIVE.srcFile=f;
     LIVE.analysis=small||im; LIVE.analysisFor=im;
+    if(ImportProgress.active&&ImportProgress.token===token)
+      ImportProgress.set(72,'上传纹理 · 建立预览','首帧即将出画面');
+    /* 同步 WebGL 上传前让进度条真正绘制一帧，否则条子根本不会出现 */
+    if(typeof xpNextPaint==='function') await xpNextPaint();
+    if(token!==importToken){ URL.revokeObjectURL(url); return; }
     uploadImage(im,f.name,false,{resetEdits:true,token}); URL.revokeObjectURL(url); updateLiveUI();
     if(withVideo) toast('实况照片已载入 · 长按画面或点 LIVE 播放'+(LIVE.matched?'（同名配对）':''));
   };
@@ -9362,11 +9481,16 @@ function loadImageFile(f,withVideo,token){
     URL.revokeObjectURL(url);
     LIVE.srcFile=null;
     if(LIVE.pair&&LIVE.video&&LIVE.video.videoWidth){
+      if(ImportProgress.active&&ImportProgress.token===token)
+        ImportProgress.set(46,'改用实况视频中间帧','当前浏览器无法直接解码 HEIC');
       liveFrame(Math.min(.6,(LIVE.duration||1.5)/2)).then(c=>{
         uploadImage(c,liveBase(f.name)+'_封面',false,{resetEdits:true,token}); updateLiveUI();
         toast('当前浏览器无法解码 HEIC，已用实况视频中间帧作封面');
       });
-    } else toast('无法读取该图片（HEIC 请同时选中配对的 .MOV，或先转成 JPG / PNG）');
+    } else {
+      ImportProgress.finish(false,'无法读取该图片（HEIC 请同时选中配对的 .MOV，或先转成 JPG / PNG）');
+      toast('无法读取该图片（HEIC 请同时选中配对的 .MOV，或先转成 JPG / PNG）');
+    }
   };
   im.src=url;
 }
@@ -9377,12 +9501,20 @@ function loadFiles(list){
   const vidOK=f=>/^video\//.test(f.type)||/\.(mov|mp4|m4v)$/i.test(f.name);
   const imgOK=f=>/^image\//.test(f.type)||/\.(heic|heif|jpg|jpeg|png|webp|avif|gif|bmp|tiff?)$/i.test(f.name);
   const vid=arr.find(vidOK), img=arr.find(imgOK);
+  /* v1.0.38 · 导入进度条：真实文件名 + 真实体积，连续选图时新 show 顶掉旧进度 */
+  const mainF=img||vid, sz=mainF?mainF.size:0;
+  const sizeTxt=sz>=1048576?(sz/1048576).toFixed(1)+' MB':Math.max(1,Math.round(sz/1024))+' KB';
+  ImportProgress.show('正在导入…',
+    (mainF?mainF.name:'照片')+' · '+sizeTxt+(arr.length>1?' · 共 '+arr.length+' 个文件':''),token);
+  ImportProgress.set(6,'读取文件',(mainF?mainF.name:'照片')+' · '+sizeTxt);
+  ImportProgress.softTo(6,22,900,'解码图像','浏览器正在解码，大照片会稍久一点');
   if(vid) LIVE.vidFile=vid;
   if(!vid){
     livePause(); LIVE.pair=false; LIVE.matched=false;
     if(LIVE.url){ try{URL.revokeObjectURL(LIVE.url);}catch(e){} LIVE.url=null; }
     updateLiveUI();
-    if(img) loadImageFile(img,false,token); else toast('请选择图片或实况视频');
+    if(img) loadImageFile(img,false,token);
+    else { ImportProgress.finish(false,'未找到可读取的图片文件'); toast('请选择图片或实况视频'); }
     return;
   }
   LIVE.matched=!!(img&&liveBase(img.name)===liveBase(vid.name));
@@ -10497,7 +10629,7 @@ function uploadImage(source,name,demo,opts){
   render(); pulsePhoto();
   irisScheduleAnalysis(source);
   BOK.low=null; BOK.ready=false;
-  if(state.bokeh&&state.bokeh.on) setTimeout(()=>detectSubject(state.bokeh.mode,true),120);
+  if(state.bokeh&&state.bokeh.on) setTimeout(()=>rebuildSubject(true),120);
   if(!demo){
     markPhotoImported();
     /* 已打开的独立页面里凡是含照片 / matte / 统计的，立刻重建，
@@ -10514,6 +10646,13 @@ function uploadImage(source,name,demo,opts){
     IrisAutosave.invalidatePhoto();      // 换照片 = 原图字节缓存失效，只重编码一次
     IrisAutosave.onPhotoChanged();
     IrisAutosave.galleryNote(photoName,o);  // 「我的」页的历史编辑图片（异步、空闲写）
+  }
+  /* v1.0.38 · 只有真正从 loadFiles 发起的导入才收尾；启动占位图 / 演示图 /
+     自动保存恢复时 active=false，不会误触发。语义 matte / 缩略图 / 直方图
+     已由 irisScheduleAnalysis 排到后续帧，所以此处如实写「已排到后续帧」。 */
+  if(!demo && typeof ImportProgress!=='undefined' && ImportProgress.active){
+    ImportProgress.set(88,'画面已就绪','色调分析 / 语义 matte / 缩略图已排到后续帧');
+    ImportProgress.finish(true,photoName+' · '+imgW+'×'+imgH+' · 用时 '+ImportProgress.elapsed());
   }
 }
 function loadFile(f){ loadFiles(f?[f]:[]); }
@@ -11261,9 +11400,13 @@ function syncUI(){ Object.values(refs).forEach(r=>r.upd()); syncActive(); update
 function section(title){ const d=document.createElement('div'); d.className='sec'; if(title){const h=document.createElement('div');h.className='sec-h';h.textContent=title;d.append(h);} return d; }
 function chipRow(items,active,onPick){
   const c=document.createElement('div'); c.className='chips';
-  items.forEach(it=>{ const b=document.createElement('button'); b.className='chip'+(it.id===active?' active':'')+(it.color?' dot':'');
+  items.forEach(it=>{ const b=document.createElement('button');
+    b.className='chip'+(it.id===active?' active':'')+(it.color?' dot':'')+(it.off?' off':'');
     if(it.color) b.style.setProperty('--d',it.color);
-    b.textContent=it.name; b.onclick=()=>onPick(it.id); c.append(b); });
+    /* v1.0.38：置灰项仍可点出原因，不是「点了没反应」 */
+    if(it.off){ b.setAttribute('aria-disabled','true'); b.title=it.off; b.onclick=()=>toast(it.off); }
+    else b.onclick=()=>onPick(it.id);
+    b.textContent=it.name; c.append(b); });
   return c;
 }
 function button(text,fn,cls){ const b=document.createElement('button'); b.className='btn '+(cls||''); b.textContent=text; b.onclick=fn; return b; }
@@ -13309,8 +13452,8 @@ function renderVideoPage(body){
    4) 断网、限流、404、旧版页面格式都有明确降级与提示，
       检查失败不影响任何编辑与导出功能。
    ============================================================ */
-const IRIS_VERSION='1.0.39';             /* 页面版本：走 HTML 热更新，持续递增 */
-const IRIS_BUILD='2026-11-19';
+const IRIS_VERSION='1.0.40';             /* 页面版本：走 HTML 热更新，持续递增 */
+const IRIS_BUILD='2026-11-22';
 const IRIS_CHANNEL='hot';                /* hot = HTML 热更新通道 */
 const IRIS_APP_BASELINE='1.0.1.8';       /* 最终安装包 / Release 版本，已冻结 */
 const IRIS_SOURCE_TAG='v1.0.1.8';        /* 最后一个 Release tag，此后不再发 tag */
@@ -14580,7 +14723,7 @@ const PANEL_META={
   curve:['曲线','RGB 与单通道曲线',2],
   crop:['裁剪','拖框 · 左右上下倾斜 · 翻转',2],
   lightfield:['光场','重聚焦 · 视差 · 重打光（2.5D 深度代理）',3],
-  bokeh:['背景虚化','一键检测人物 / 物品主体，自动虚化背景',3],
+  bokeh:['背景虚化','6 种模糊样式 · 涂抹选取主体 / 虚化区域 · 主体框微调',3],
   presets:['预设','风格 · 导出 · 关于（分栏）',5],
   guide:['使用说明书','带目录 · 可搜索 · 复杂功能详解',1]
 };
@@ -14647,6 +14790,7 @@ function buildTools(){
   renderMoreMenu();
 }
 function openHeal(){
+  if(!HEAL_ON){ gotoTool('elements'); toast(OFF_HINT_HEAL); return; }
   gotoTool('elements');
   brushMode='brush'; drawMode='brush5';
   toast('消除笔：在照片上涂过要去掉的东西，松手即补全');
@@ -15660,6 +15804,8 @@ function fxSlider(r,i,label,key,min,max,step,fmt){
   wrap.append(h,inp); show(); return wrap;
 }
 function buildElements(p){
+  /* v1.0.38：消除暂不支持，旧存档 / 热更新前的状态不要卡在消除笔里 */
+  if(!HEAL_ON&&(drawMode==='brush5'||drawMode==='place5')) drawMode=null;
   /* 0. 模式状态条：卡在涂抹 / 放置 / 涂鸦时，一眼能看见并随时退出 */
   if(drawMode){
     let dname='涂鸦';
@@ -15681,9 +15827,12 @@ function buildElements(p){
   /* 1. 添加 */
   const a=section('添加元素');
   const grid=document.createElement('div'); grid.className='add-grid';
-  const mkAdd=(key,label,fn,active)=>{
-    const b=document.createElement('button'); b.className='add-btn'+(active?' active':'');
-    b.innerHTML=`<i>${svg(key,21)}</i><span>${label}</span>`; b.onclick=fn; return b;
+  const mkAdd=(key,label,fn,active,off)=>{
+    const b=document.createElement('button'); b.className='add-btn'+(active?' active':'')+(off?' off':'');
+    b.innerHTML=`<i>${svg(key,21)}</i><span>${label}</span>`;
+    if(off){ b.setAttribute('aria-disabled','true'); b.title=off; b.onclick=()=>toast(off); }
+    else b.onclick=fn;
+    return b;
   };
   grid.append(
     mkAdd('text','文字',()=>addElement('text')),
@@ -15718,12 +15867,18 @@ function buildElements(p){
      它只有涂抹一种交互，所以无论当前是「涂抹笔刷」还是「点放圆形」，
      点它都会切回涂抹模式，避免出现「点放消除圆」那条被删掉的通路。 */
   fxRow.append(mkAdd('heal','消除',()=>{
+    if(!HEAL_ON){ toast(OFF_HINT_HEAL); return; }
     brushMode='brush';
     drawMode=drawMode==='brush5'?null:'brush5';
     toast(drawMode?'消除笔：在照片上涂过要去掉的东西，松手即补全':'已取消消除笔');
     buildPanel(true);
-  },drawMode==='brush5'));
+  },drawMode==='brush5',HEAL_ON?null:OFF_HINT_HEAL));
   a.append(fxRow);
+  if(!HEAL_ON){
+    const n=document.createElement('div'); n.className='off-note';
+    n.innerHTML='ⓘ <b>消除暂不支持</b>：修复效果还不够稳定，打磨完成后恢复；其余像素效果照常可用。';
+    a.append(n);
+  }
   if(brushMode==='brush'){
     a.append(slider('brushSize','笔刷大小',.008,.16,.002,'%',.035));
     a.append(slider('brushStrength','效果强度',0,1,.01,'%',.9));
@@ -15742,7 +15897,9 @@ function buildElements(p){
     a.append(bstat);
   }
   a.append(hint(brushMode==='brush'
-    ? '选一种效果后，在照片上按住拖动即可涂抹；金色圈＝笔刷实际作用范围，跟着手指走（会随照片比例呈椭圆）。涂抹时整屏都可刷，不会被文字、贴纸或效果圈挡住，也不会误删它们；笔刷可反复叠加，导出时一并合成。消除会按周围相似纹理补上涂过的区域，适合路人、水印、瑕疵；大面积规则纹理（砖墙、栏杆）仍会有近似感。再点一次按钮或按 Esc 退出。'
+    ? '选一种效果后，在照片上按住拖动即可涂抹；金色圈＝笔刷实际作用范围，跟着手指走（会随照片比例呈椭圆）。涂抹时整屏都可刷，不会被文字、贴纸或效果圈挡住，也不会误删它们；笔刷可反复叠加，导出时一并合成。'
+      +(HEAL_ON?'消除会按周围相似纹理补上涂过的区域，适合路人、水印、瑕疵；大面积规则纹理（砖墙、栏杆）仍会有近似感。':'消除暂不支持，可先用马赛克 / 柔焦遮盖。')
+      +'再点一次按钮或按 Esc 退出。'
     : '选一种效果后点照片放置圆形区域，可拖动、调范围与羽化；再点一次按钮或按 Esc 退出。'));
   p.append(a);
 
@@ -17844,9 +18001,10 @@ const GUIDE_CHAPTERS=[
    +'切到「◐ 形状渐变」可回到传统的线性 / 径向渐变（含「在照片上点中心」与折叠的精确数值），两种来源各自的参数都会保留。'
    +'<br>「元素」页的四种像素效果（马赛克 / 柔焦 / 动态 / 径向模糊）同样支持<b>直接在照片上涂抹</b>：选一种后拖着刷，'
    +'笔刷大小与强度可调，可撤销上一笔、一键清除；原来的「点一下放个圆」也保留。'
-   +'<br><b>消除（v1.0.33）</b>就是这排效果里的第 5 个并列按钮，不单独做大卡、也没有圈选模式：'
-   +'点它进入「涂抹 · 消除」，在照片上涂过路人 / 水印 / 瑕疵，松手就补上；笔刷大小、强度、撤销、清除消除都和旁边四种完全一样。'
-   +'<br>它不是模糊也不是马赛克。实现参照了几套开源图像修复算法：'
+   +'<br><b>消除（v1.0.38 起暂不支持）</b>：这排效果里的第 5 个按钮已置灰，点它会说明原因，'
+   +'旁边常驻一行小字「修复效果还不够稳定，打磨完成后恢复」；其余四种像素效果照常可用。'
+   +'旧存档里的消除笔迹仍会正常渲染，也能用「清除消除笔迹」清掉。'
+   +'<br>下面是<b>保留的实现原理</b>（恢复后按此工作）：它不是模糊也不是马赛克，参照了几套开源图像修复算法：'
    +'<code>OpenCV cv::inpaint / INPAINT_TELEA</code> 的快速行进「由边界向内、距离加权」、'
    +'<code>INPAINT_NS</code> 的沿等照度线延续结构、'
    +'以及 exemplar-based / <code>PatchMatch</code>（Barnes 2009、Wexler 2007）的「找最相似源块」。'
@@ -17944,14 +18102,16 @@ const GUIDE_CHAPTERS=[
   +'明确不带文字贴纸、涂抹笔迹、裁剪与导出规格。套用时是整套参数而非叠一层滤镜，完全非破坏、可撤销。'
 +'<br><b>自动保存</b>：每次编辑后约 1 秒自动把【照片原始字节 + 完整编辑状态 + 缩略图】写进本机 IndexedDB；退出或切后台会再补一次落盘。重新打开时会弹卡询问「是否编辑上次的照片」，可选继续编辑 / 重新开始 / 稍后，也能在「自动保存」页设为直接恢复或彻底关闭。演示图与待载入占位都不入档；<b>演示图只在第一次启动出现</b>，之后启动是中性占位画面，点「重新开始 / 稍后」也不会退回到测试图。浏览器不允许 IndexedDB 时会降级为「只存参数 + 缩略图」，恢复时明确要求重新选照片，不会假装成功。'
  +'<br><b>隐私</b>：纯前端运行，默认不发起任何网络请求；唯一的例外是你主动点「检查更新」（或开启自动检查）时读取 GitHub 的公开版本元数据，照片与编辑数据始终不发送。自动保存只写本机；清除浏览器数据即清空本地记录。快照不跨设备同步，四端各自独立。'},
- {id:'bokeh',t:'17 · 背景虚化与主体检测',k:'虚化 背景 主体 人物 物品 检测 散景 光圈 景深 一键',
-  b:'「更多 → 虚化」页点<b>✦ 一键检测主体并虚化背景</b>，会先在低分辨率画面上判断是<b>人物还是物品</b>：'
+ {id:'bokeh',t:'17 · 背景虚化与主体检测',k:'虚化 背景 主体 人物 物品 检测 散景 光圈 景深 一键 暂不支持 涂抹',
+  b:'<b>ⓘ 自动主体检测暂不支持</b>（v1.0.38）：识别与边缘还不够稳定，'
+   +'「✦ 一键检测主体并虚化背景」「◉ 自动识别 / 人物 / 物品」「↻ 重新检测」都已置灰，点它们会说明原因；打磨完成后恢复。'
+   +'<br><b>其余虚化功能照常可用</b>：6 种模糊样式（圆盘散景 / 柔和高斯 / 光斑散景 / 动态拖影 / 径向缩放 / 旋转旋焦）、'
+   +'<b>涂抹选取主体 / 虚化区域</b>（全图清晰起手或全图虚化起手，最适合替代自动检测）、开关与反转、'
+   +'强度 / 光圈 / 羽化 / 主体保护，以及中心 X/Y 与横向 / 纵向范围四根滑杆手动收框，8 种一键风格。'
+   +'<br>原理（检测恢复后仍按此实现）：低分辨率画面上判断<b>人物还是物品</b>，'
    +'人物走肤色色度带 + 暗发 + 中心先验，物品走边缘色差 + 局部对比 + 中心先验；生成 128×N 的软 <b>matte</b> 后由 GPU 线性上采样，'
-   +'主体之外做 12 抽样黄金角圆盘散景，主体内部保持清晰。'
-   +'<br>可选自动 / 人物 / 物品三种模式，也有<b>反转</b>（改成虚化主体）、强度、光圈大小、边缘羽化、主体保护，'
-   +'以及中心 X/Y 与横向 / 纵向范围四根滑杆手动收框；预览里金色是主体、蓝紫是被虚化的背景。'
-   +'四种一键风格：人像柔焦、产品特写、微距浅景深、轻度氛围。'
-   +'<br>导出照片 / 视频 / GIF 都会带上虚化；matte 不写进参数 JSON，换照片时按需重算。'
+   +'主体之外做 12 抽样黄金角圆盘散景，主体内部保持清晰；预览里金色是主体、蓝紫是被虚化的背景。'
+   +'<br>导出照片 / GIF 都会带上虚化；matte 不写进参数 JSON，换照片时按需重算。'
    +'<br><b>如实说明</b>：纯前端显著性 + 肤色先验软分割，不是设备端 ML 人像分割；多人、遮挡、透明物体、主体与背景同色会有误差。'},
  {id:'tone',t:'18 · 换照片与色调迁移',k:'换照片 导入 重置 编辑 继承 色调 保存 迁移 色彩指纹 Lab 均值 方差 3D LUT 强度 JSON',
   b:'<b>导入新照片会自动清空上一张的全部编辑</b>（滤镜层、调色盘、文字贴纸、裁剪、局部效果、虚化等），'
@@ -18050,7 +18210,38 @@ const GUIDE_CHAPTERS=[
     +'远端文本只用于显示，绝不插入页面或执行；外链只放行 https 的 GitHub 域名。'
     +'主通道走 raw 文件，不依赖 GitHub API，匿名限流 60 次/小时也不影响版本结论。'
     +'<br><b>⑩ 卡顿时先看诊断页</b>：「运行状态诊断」里有实时帧率、帧耗时 p50/p95、超过 50ms 的长任务次数、异常数与 WebGL 上下文丢失 / 恢复次数，点「⧉ 复制诊断信息」可把整段发给作者。这些都是本机数据，不上传。'},
-    {id:'video',t:'23 · 视频工作台（暂未开放）',k:'视频工作台 加滤镜 一键滤镜 滤镜条 调色盘 片段调色盘 圆盘 二维盘 拖盘 强度 常用盘 全部盘模式 盘同步全部 去掉滤镜 顶部 tab 工具 tab 时间线 拖拽 排序 拖不动 播放头 裁时长 触屏 检查器 折叠 关键帧 转场 运镜 帧精确 导出视频 流畅 风格库 443 78 模板 30 盘模式 combo 样式统一',
+ {id:'jianguoyun',t:'23 · 用坚果云同步照片与参数（WebDAV）',k:'坚果云 WebDAV 同步 多设备 应用密码 第三方应用管理 dav.jianguoyun.com 文件 App 参数 JSON 存档 上传 下载 备份 同步文件夹 限制 跨设备',
+  b:'<b>先把边界说清楚</b>：Iris 页面本身<b>零外部请求、不内置网盘账号、不会自动上传照片</b>。'
+   +'这里说的「同步」，是把<b>导出的成品照片</b>与<b>导出的参数 JSON</b> 放进坚果云的同步文件夹，'
+   +'靠系统文件 App / 坚果云客户端 / 支持 WebDAV 的文件管理器在设备之间搬文件。'
+   +'本机自动保存（IndexedDB 里的照片原始字节与完整编辑状态）、收藏、历史图片<b>不会同步</b>，四端各自独立。'
+   +'<br><br><b>① 生成应用密码</b>（网页端）：登录 <code>www.jianguoyun.com</code> → 右上角账户名 → '
+   +'<b>账户信息</b> → <b>安全选项</b> → <b>第三方应用管理</b> → <b>添加应用密码</b>，'
+   +'填一个名字（例如「Iris」）→ <b>生成密码</b> → 完成，把生成的密码记下来。'
+   +'移动端：iOS 在「设置 → 第三方应用管理」，安卓在「设置 → 第三方应用管理」，步骤相同。'
+   +'<b>这里填的是应用密码，不是坚果云账号密码</b>；每个应用单独生成一个，撤销后要重新填。'
+   +'<br><b>② 连接信息</b>：服务器地址 <code>https://dav.jianguoyun.com/dav/</code>，'
+   +'账号＝坚果云注册邮箱，密码＝第 ① 步的应用密码。'
+   +'建议先在坚果云里单独建一个文件夹（例如 <code>Iris调色盘</code>）专用于这件事，'
+   +'路径可以直接写到子目录：<code>https://dav.jianguoyun.com/dav/Iris调色盘</code>。'
+   +'<br><b>③ 各平台怎么挂载</b>：Windows / macOS 装坚果云客户端，把这个文件夹设为同步文件夹最省事；'
+   +'iOS 用系统「文件」App → 右上角 ⋯ → <b>连接服务器</b>，填上面的地址 / 邮箱 / 应用密码；'
+   +'Android 用坚果云客户端，或任意支持 WebDAV 的文件管理器添加同一地址。'
+   +'<br><b>④ 在 Iris 里放文件</b>：调完图 → 顶栏「导出 ▾」→ 选 PNG / JPG / WebP，'
+   +'把成品<b>保存到这个同步文件夹</b>；想连参数一起带走，到「参数存档」页点<b>导出 JSON</b>，'
+   +'同样存进去（建议同名，例如 <code>海边.json</code> 配 <code>海边.png</code>）。'
+   +'<br><b>⑤ 另一台设备接着用</b>：等坚果云同步完成 → 打开 Iris → 「＋ 换照片」从同步文件夹导入照片'
+   +'（实况照片仍要成对选 HEIC + MOV）→ 到「参数存档」点<b>导入 JSON</b>，'
+   +'恢复那一整套滤镜层、盘位、曲线与分级。导入进度条会显示「读取文件 → 解码图像 → 共享分析图 → 上传纹理 → 完成」的真实阶段。'
+   +'<br><b>⑥ 注意与限制</b>：'
+   +'（a）参数 JSON 不含照片像素，必须连同照片一起搬；'
+   +'（b）「检查更新」只管线上 HTML 版本，和坚果云同步是两条完全独立的通道；'
+   +'（c）坚果云 WebDAV 单文件默认上限 500MB、免费版每 30 分钟不超过 600 次请求、'
+   +'单次请求最多列 750 个文件（含文件夹），超大目录建议直接用坚果云客户端同步，'
+   +'具体额度以坚果云官网最新说明为准；'
+   +'（d）应用密码只给这一个用途，别写进公开截图或反馈信息；'
+   +'（e）重要文件先在本机留一份备份，再清理云端。'},
+    {id:'video',t:'24 · 视频工作台（暂未开放）',k:'视频工作台 加滤镜 一键滤镜 滤镜条 调色盘 片段调色盘 圆盘 二维盘 拖盘 强度 常用盘 全部盘模式 盘同步全部 去掉滤镜 顶部 tab 工具 tab 时间线 拖拽 排序 拖不动 播放头 裁时长 触屏 检查器 折叠 关键帧 转场 运镜 帧精确 导出视频 流畅 风格库 443 78 模板 30 盘模式 combo 样式统一',
   b:'<b style="color:var(--accent)">⚠ 视频工作台暂未开放</b>：这一章记录的是打磨中的多片段视频编辑设计，'
     +'当前版本的入口已隐藏、导出菜单里的视频项已置灰，下面的操作暂时用不上；'
     +'代码与设置都保留着，等打磨完成会直接恢复。照片、GIF、实况配对素材与打包导出不受影响，照常使用。'
@@ -18108,7 +18299,7 @@ const GUIDE_CHAPTERS=[
    ============================================================ */
 const SP_ENTRIES=[
   {id:'mine',name:'我的空间',sub:'历史图片 / 我的滤镜 / 书签 / 导出 · 一键存全套参数',icon:'◉',sv:'aperture'},
-  {id:'guide',name:'使用说明书',sub:'23 章全文 · 目录 / 搜索',icon:'▤',sv:'book'},
+  {id:'guide',name:'使用说明书',sub:'24 章全文 · 目录 / 搜索',icon:'▤',sv:'book'},
   {id:'tech',name:'技术实现',sub:'18 章长文 · 目录 / 搜索 · 源码级拆解',icon:'⌘',sv:'tech'},
   {id:'shortcuts',name:'快捷键总表',sub:'全部按键一处查',icon:'⌨',sv:'sliders'},
   {id:'tools',name:'全部工具',sub:'14 个编辑页直达',icon:'◫',sv:'sliders'},
@@ -18761,10 +18952,10 @@ const AB_CHAPTERS=[
 {id:'features',n:'03',eyebrow:'FEATURES',t:'功能地图 · 六组能力',html:`
 <div class="ab-grid">
  <div class="ab-item"><b>◉ 色彩系统</b><small>iPhone 式二维调色盘（Tone × Color + 强度，盘面随照片主色变化）、12 种独立色调、每层滤镜各自的调色盘、443 款分类滤镜、78 套模板、语义保肤渲染、<b>区域工作台（matte 可视化 + 四区独立调色 + 一键生成蒙版 / 虚化）</b>、色彩迁移（Lab 均值方差 → 16³ 3D LUT）、HSL 分色、曲线、三色轮、通道混合与 .cube LUT。</small></div>
- <div class="ab-item"><b>◐ 局部与空间</b><small>涂抹式局部蒙版（直接刷出选区，可擦除 / 撤销 / 伪彩预览，形状渐变保留为可选）、背景虚化（一键检测人物或物品 + 涂抹选取主体或虚化区域 + 六种模糊）、光场计算（重聚焦、视差微动、方向重打光）、涂抹式马赛克 / 柔焦 / 动态 / 径向模糊，最多 6 块区域、可调范围与羽化。</small></div>
+ <div class="ab-item"><b>◐ 局部与空间</b><small>涂抹式局部蒙版（直接刷出选区，可擦除 / 撤销 / 伪彩预览，形状渐变保留为可选）、背景虚化（涂抹选取主体或虚化区域 + 六种模糊 + 主体框微调；自动主体检测暂不支持）、光场计算（重聚焦、视差微动、方向重打光）、涂抹式马赛克 / 柔焦 / 动态 / 径向模糊，最多 6 块区域、可调范围与羽化。</small></div>
  <div class="ab-item"><b>▣ 构图与元素</b><small>可视化拖拽裁剪（角点、边框、比例锁、精确数值兜底）、裁剪页首屏的<b>左右 / 上下透视倾斜</b>（两根 −45°~+45° 度数滑杆、斜切与梯形两种模式、照片上横拖纵拖、自动裁切填满不露黑角）、折叠里的任意角度拉直、90° 步进与水平 / 垂直翻转（无损、导出按旋转后尺寸）、构图缩放与位移、文字 / 贴纸 / 形状 / 涂鸦（可拖动、缩放、旋转、改字体颜色描边）、留白画框、旋转翻转与透视矫正。</small></div>
  <div class="ab-item"><b>▷ 动态与输出</b><small>iOS 实况照片逐帧编辑、编辑栏内的实况进度条、自定义封面工作台（12 张关键帧 + 0.01s 精确选帧）、GIF 动图、PNG / JPG / WebP、实况配对素材与全格式 ZIP 打包。视频工作台与视频导出暂未开放，待打磨完成后恢复。</small></div>
- <div class="ab-item"><b>⌕ 效率</b><small>全局搜索（工具 / 滤镜 / 参数 / 模板 / 操作一处直达）、12 个一键快捷、23 章说明书 + 18 章技术实现、22 个独立二级页面（收拢进「页面中心」分组浏览）、本机自动保存与恢复、撤销重做、参数复制与 JSON 存档、自定义滤镜与我的色调、35 种主盘模式、「我的空间」历史图片与一键保存整套参数。视频工作台暂未开放，待打磨完成后再恢复入口。</small></div>
+ <div class="ab-item"><b>⌕ 效率</b><small>全局搜索（工具 / 滤镜 / 参数 / 模板 / 操作一处直达）、12 个一键快捷、24 章说明书 + 18 章技术实现、22 个独立二级页面（收拢进「页面中心」分组浏览）、本机自动保存与恢复、撤销重做、参数复制与 JSON 存档、自定义滤镜与我的色调、35 种主盘模式、「我的空间」历史图片与一键保存整套参数。视频工作台暂未开放，待打磨完成后再恢复入口。</small></div>
  <div class="ab-item"><b>◇ 体验</b><small>移动端大图优先、编辑栏可拖动可收起、25%–800% 缩放、按住看原图与可拖动分屏线、直方图三模式、轻动画（尊重系统「减少动画」）、统一细线图标、桌面与手机自适应。</small></div>
 </div>`},
 {id:'architecture',n:'04',eyebrow:'ARCHITECTURE',t:'技术架构 · 四层与实现',html:`
@@ -18808,7 +18999,7 @@ const AB_CHAPTERS=[
  <div class="ab-step"><b>拆掉绑定 · 让色调自由</b>4 层滤镜各自独立调色盘、12 种色调、语义主盘与肤色锁。</div>
  <div class="ab-step"><b>长成编辑器</b>文字贴纸涂鸦、涂抹式马赛克与模糊、可视化裁剪、背景虚化与光场。</div>
  <div class="ab-step"><b>动态与输出</b>实况照片、不限时长视频、GIF、多格式与全格式打包。</div>
- <div class="ab-step"><b>工程化与收敛</b>色彩迁移、23 章说明书、18 章技术实现、22 个二级页面与「页面中心」分组浏览、自动保存与恢复、界面精简与移动端重排。</div>
+ <div class="ab-step"><b>工程化与收敛</b>色彩迁移、24 章说明书、18 章技术实现、22 个二级页面与「页面中心」分组浏览、自动保存与恢复、界面精简与移动端重排。</div>
  <div class="ab-step"><b>现在 · 近乎最终</b>作者与关于页、细节修复、稳定性优先。</div>
 </div>
  <p style="margin-top:14px"><b>更新方式已经变了</b>：最终安装包 / Release 版本冻结在 <b>1.0.1.8</b>，之后不再重新构建 apk / ipa / exe，也不再发布新 Release。所有后续改动只替换一份 <code>web/index.html</code>，App 不用重装；当前页面版本是 <b>1.0.19</b>（构建 2026-11-19，HTML 热更新通道），检查更新时会自动读到线上最新的页面版本。两个版本号分属不同通道，不互相比较 —— 详见「检查更新」页里的完整策略说明与说明书第 22 章。</p>
@@ -18954,7 +19145,7 @@ const TECH_CHAPTERS=[
 <p><b>① 样式</b>：用 CSS 自定义属性收拢配色（深灰底、暖金强调色、次级文字色），后面所有组件、二级页面、关于页、技术页都引用同一组变量，所以改一个色值整站同步。响应式不是两套 UI，而是同一套 DOM 在 <code>760px</code> / <code>520px</code> 断点上重排。</p>
 <p><b>② DOM</b>：顶栏、画布（<code>#stage</code> 里的 WebGL canvas + 2D 叠加层 canvas）、编辑栏、底栏工具、隐藏的 <code>&lt;input type="file"&gt;</code>、二级页面容器、导出菜单、全局搜索、提示条。两个 canvas 叠在一起是关键：<b>一个只画照片，一个只画框、圈、文字元素</b>，互不干扰，也方便「对比原图」时只隐藏叠加层。</p>
 <p><b>③ 工具层</b>：<code>$()</code>、<code>clamp()</code>、<code>svg()</code>（内联 ICONS 字典生成细线图标）、<code>toast()</code>、<code>deep()</code>、<code>normalizeState()</code>。图标是一套 stroke 风格 SVG 字符串，保证任何缩放都清晰、不需要字体文件。</p>
-<p><b>④ 数据层</b>：443 款滤镜、78 套模板、HSV 分色表、23 章说明书、10 章关于、18 章技术文章，全都是字面量数组。新增一款滤镜就是往数组里加一个对象；模板则是「滤镜层 + 分色调盘 + 语义主盘 + 基础参数 + 画框」的组合描述，<b>不是把参数复制一遍</b>。</p>
+<p><b>④ 数据层</b>：443 款滤镜、78 套模板、HSV 分色表、24 章说明书、10 章关于、18 章技术文章，全都是字面量数组。新增一款滤镜就是往数组里加一个对象；模板则是「滤镜层 + 分色调盘 + 语义主盘 + 基础参数 + 画框」的组合描述，<b>不是把参数复制一遍</b>。</p>
 <p><b>⑤ 着色器</b>：VS / FS 是模板字符串，其中几段用代码生成后插入占位符（下一章详述）。</p>
 <p><b>⑥ 运行时</b>：<code>state</code> 单一状态树 + <code>render()</code> 单一渲染入口 + pointer 事件分发。</p>
 <p><b>⑦ 外围</b>：导出、独立页面系统 <code>SUBPAGES</code>、全局搜索 <code>CMD</code>、启动逻辑（首次 <code>uploadImage(demoImage())</code>，之后改中性占位 <code>uploadImage(placeholderImage())</code>，避免导入过照片后重启又冒出测试图）。</p>
@@ -20527,11 +20718,35 @@ function renderDiagnosticsPage(body){
 
 /* ---------- 16 版本演进 ---------- */
 const AS_CHANGELOG=[
+ {v:'v1.0.40',t:'导入进度条 + 入口置灰 + 实况 / 同步 / 护盾全数归位',
+  d:'这一版把两条线合进同一份底稿。<b>① 你这次新增的全部照旧</b>：'
+   +'导入照片的进度条（真实阶段推进、百分比单调、同步上传前双 rAF 保证画出来、失败变红并写明原因、完成自动收起）；'
+   +'消除笔与自动主体检测入口改成明确置灰、点一下说明「暂不支持 · 打磨完成后恢复」，'
+   +'<code>HEAL_ON</code> / <code>AUTO_BOKEH_ON</code> 改回 true 即完整恢复，代码一行没删；'
+   +'说明书第 23 章「用坚果云同步照片与参数」与章节顺延（视频工作台 → 24 章）原样保留。'
+   +'<b>② 1.0.39 的修复整块补回</b>：实况导出尺寸只认原始图源像素、导出时主画布按目标分辨率全分辨率渲染、'
+   +'逐帧绘制显式锁死 zoom / pan / noFullSwap、配对封面走不叠画框的同比例画布、换封面失败不再退回 960 预览帧；'
+   +'坚果云 WebDAV 设置页同步（四栏预设 + 10 项偏好 + 改滤镜 4 秒静默上传 + 密码只存本机）与 409 降级提示；'
+   +'安卓输入法守卫；护盾 irisPadGuard、按模式渐变、城市预设全部在位。'},
  {v:'v1.0.39',t:'实况修复三块归位 · 护盾与城市预设纳入同一底稿',d:'以这份新底稿（调色盘护盾 irisPadGuard / 按模式渐变 / 城市预设）为基准，把 1.0.35~1.0.38 的全部修复原样重贴回来。'
     +'① 实况与导出：导出尺寸只认原始图源像素（imgSrcW/imgSrcH 记账）；导出时主画布切到目标分辨率全分辨率渲染（LIVE.exportRender）；逐帧绘制显式锁死 zoom:1 / pan:[0,0] / noFullSwap；配对封面改成不叠画框的同比例画布；换封面失败不再退回 960 预览帧；导出面板常显「裁剪后 / 图源 / 封面来源」口径。'
     +'② 坚果云 WebDAV 同步整块回归（四栏预设、10 项偏好、改滤镜 4 秒静默上传、密码只存本机）。'
     +'③ 安卓输入法守卫回归（输入中只记账不重建 DOM，键盘不再一弹就关）。'
     +'④ 你这版新增的护盾限幅、按模式渐变、城市预设与全部 UI 原样保留。'},
+ {v:'v1.0.38',t:'导入进度条 · 坚果云同步教程 · 两项功能暂不支持',
+  d:'三件事。<b>① 导入照片有进度条了</b>：与导出进度条同为编辑栏普通流的一行，不盖照片；'
+   +'按「读取文件 → 解码图像 → 共享分析图 → 上传纹理 / 建立预览 → 画面分析 → 完成」真实阶段推进，'
+   +'显示真实文件名、体积、尺寸与耗时，异步解码用带上限的时间软推进、同步 WebGL 上传前双 rAF 保证条子真的画出来，'
+   +'百分比单调不倒退、不瞬间跳满；失败变红写明原因，完成后自动收起。'
+   +'<b>② 说明书新增第 23 章「用坚果云同步照片与参数（WebDAV）」</b>：'
+   +'从生成应用密码、<code>dav.jianguoyun.com/dav/</code> 连接信息、各平台挂载，'
+   +'到导出成品照片与参数 JSON、另一台设备导入恢复，一步不省；'
+   +'同时写明页面零外部请求、本机自动保存不同步，以及坚果云官方的单文件 500MB / 免费版 30 分钟 600 次请求 / 单次 750 个文件限制。'
+   +'<b>③ 消除与自动主体检测全部置灰</b>：效果还不够稳定，入口不隐藏而是明确变灰，'
+   +'点一下会说明「暂不支持 · 打磨完成后恢复」，旁边常驻一行小字解释原因；'
+   +'其余像素效果与 6 种模糊样式、涂抹选取、主体框微调、一键风格等全部虚化能力照常可用。'
+   +'两个开关 <code>HEAL_ON</code> / <code>AUTO_BOKEH_ON</code> 改回 true 即可完整恢复，代码一行没删。'
+   +'说明书 23 → 24 章，视频工作台章顺延为第 24 章。'},
  {v:'v1.0.37',t:'10 款高级滤镜 · 5 款恒美盘模式',d:'① 滤镜 443 → 443：新增雾面银灰 / 丝光暖白 / 雾面裸肌 / 冷瓷雾光 / 雨后松绿 / 暮色琥珀 / 和纸灰蓝 / Deakins 窗光 / 湿版淡银 / 哈苏柔金，'
     +'全部走克制低饱和 + 抬黑柔光 + 肤色保护路线，沿用现有 25 个分类、不新增分组，名称 443/443 唯一。'
     +'② 盘模式 30 → 35，新增「恒美」组 5 款（薄金晨光 / 静海深蓝 / 蜜桃奶霜 / 松林薄暮 / 琥珀余晖），'
@@ -20988,7 +21203,7 @@ async function renderMinePage(body){
 const SUBPAGES={
   zones:{title:'区域工作台',sub:'语义 matte 可视化 · 四区独立调色 · 一键转成蒙版 / 虚化',render:renderZonesPage},
   mine:{title:'我的空间',sub:'历史图片 · 我的滤镜 / 全套参数 · 书签 · 导出 · 最近使用',render:renderMinePage},
-  guide:{title:'使用说明书',sub:'23 章全文 · 目录 / 搜索 / 复杂功能详解',render:renderGuidePage},
+  guide:{title:'使用说明书',sub:'24 章全文 · 目录 / 搜索 / 复杂功能详解',render:renderGuidePage},
   tech:{title:'技术实现',sub:'18 章长文 · 渲染管线 / 着色器 / 坐标 / 语义 / 导出 / 验证',render:renderTechPage},
   shortcuts:{title:'快捷键总表',sub:'全部按键一处查',render:renderShortcuts},
   tools:{title:'全部工具',sub:'14 个编辑页直达',render:renderToolsPage},
@@ -21279,17 +21494,26 @@ function buildBokeh(p){
     const quit=button('✕ 退出涂抹',()=>{ exitDrawMode(); });
     quit.classList.add('accent'); bar.append(txt,quit); p.append(bar);
   }
-  const head=section('背景虚化 · 一键主体检测');
-  head.append(hint('自动判断画面里是<b>人物</b>还是<b>物品</b>，生成软 matte；也可以直接在照片上<b>涂抹</b>选取主体或虚化区域。'
+  const head=section('背景虚化 · 6 种模糊样式');
+  head.append(hint('直接在照片上<b>涂抹</b>选取主体或虚化区域，或用「主体框微调」收范围；'
     +'共 6 种模糊样式，所有处理都是非破坏的，导出成品会一并带上。'));
+  if(!AUTO_BOKEH_ON){
+    const n=document.createElement('div'); n.className='off-note';
+    n.innerHTML='ⓘ <b>自动主体检测暂不支持</b>：识别与边缘还不够稳定，打磨完成后恢复；'
+      +'6 种模糊样式、涂抹选取、主体框微调、虚化参数与一键风格照常可用。';
+    head.append(n);
+  }
+  const off=AUTO_BOKEH_ON?null:OFF_HINT_BOKEH;
   const modeRow=document.createElement('div'); modeRow.className='row';
-  modeRow.append(chipRow([{id:'auto',name:'◉ 自动识别'},{id:'person',name:'人物'},{id:'object',name:'物品'}],
+  modeRow.append(chipRow([{id:'auto',name:'◉ 自动识别',off},
+    {id:'person',name:'人物',off},{id:'object',name:'物品',off}],
     bk.mode||'auto',id=>mutate(()=>{state.bokeh.mode=id;buildPanel(true);})));
   head.append(modeRow);
-  const go=document.createElement('button'); go.className='btn accent';
+  const go=document.createElement('button'); go.className='btn accent'+(off?' off':'');
   go.style.cssText='width:100%;padding:11px;margin:8px 0 6px;font-size:12.5px';
   go.textContent='✦ 一键检测主体并虚化背景';
-  go.onclick=()=>detectSubject(bk.mode||'auto');
+  if(off){ go.setAttribute('aria-disabled','true'); go.title=off; go.onclick=()=>toast(off); }
+  else go.onclick=()=>detectSubject(bk.mode||'auto');
   head.append(go);
   const sw=document.createElement('div'); sw.className='row';
   sw.append(chipRow([{id:'on',name:'● 已开启'},{id:'off',name:'○ 关闭'}],
@@ -21302,7 +21526,7 @@ function buildBokeh(p){
     ? `已检测：<b>${bk.detected.mode==='person'?'人物':'物品'}</b> · 主体框 `+
       `<b>${Math.round(bk.cx*100)}%, ${Math.round(bk.cy*100)}%</b> ± `+
       `<b>${Math.round(bk.rx*100)}% / ${Math.round(bk.ry*100)}%</b> · matte ${BOK.W}×${BOK.H}`
-    : '尚未检测 · 点上面的按钮自动识别主体';
+    : '使用默认主体框 · 可用「主体框微调」或「涂抹选取」收范围';
   head.append(st);
   p.append(head);
 
@@ -21327,7 +21551,7 @@ function buildBokeh(p){
     +'支持「全图虚化起手，只把主体刷回来」这种从零手绘的用法。'));
   bp.append(chipRow([{id:'subject',name:'✎ 涂主体（保清晰）'},{id:'blur',name:'✎ 涂虚化区域'}],
     bk.paintMode||'subject',id=>mutate(()=>{ state.bokeh.paintMode=id; buildPanel(true); })));
-  bp.append(chipRow([{id:'auto',name:'基于自动检测'},{id:'sharp',name:'全图清晰起手'},{id:'blur',name:'全图虚化起手'}],
+  bp.append(chipRow([{id:'auto',name:'基于当前主体框'},{id:'sharp',name:'全图清晰起手'},{id:'blur',name:'全图虚化起手'}],
     bk.paintBase||'auto',id=>mutate(()=>{
       state.bokeh.paintBase=id; rebuildSubject(true); buildPanel(true);
     })));
@@ -21360,8 +21584,12 @@ function buildBokeh(p){
   pv.append(hint('<span style="color:#e3b65c">金色</span>＝保持清晰的主体，<span style="color:#4a7fb5">蓝紫</span>＝会被虚化的背景；虚线是主体框。'));
   pv.append(bokPreviewCanvas());
   const prow=document.createElement('div'); prow.className='row'; prow.style.marginTop='7px';
-  prow.append(button('↻ 重新检测',()=>detectSubject(bk.mode||'auto')),
-    button('清除虚化',()=>clearSubject()));
+  const reBtn=button('↻ 重新检测',()=>detectSubject(bk.mode||'auto'));
+  if(!AUTO_BOKEH_ON){
+    reBtn.classList.add('off'); reBtn.setAttribute('aria-disabled','true');
+    reBtn.title=OFF_HINT_BOKEH; reBtn.onclick=()=>toast(OFF_HINT_BOKEH);
+  }
+  prow.append(reBtn,button('清除虚化',()=>clearSubject()));
   pv.append(prow);
   p.append(pv);
 
@@ -21400,7 +21628,7 @@ function buildBokeh(p){
   const pr=document.createElement('div'); pr.className='row';
   presets.forEach(([n,v])=>pr.append(button(n,()=>mutate(()=>{
     Object.assign(state.bokeh,v); state.bokeh.on=true;
-    if(!BOK.ready) detectSubject(state.bokeh.mode,true); else rebuildSubject(true);
+    rebuildSubject(true);
     buildPanel(true);
   }))));
   pre.append(pr); p.append(pre);
@@ -21413,7 +21641,7 @@ let guideQuery='';
 function buildGuide(p){
   const head=section('使用说明书 · '+GUIDE_CHAPTERS.length+' 章');
   head.classList.add('iris-fixed');
-  head.append(hint('<b>完整内容已做成独立页面</b>：左侧目录、右侧 23 章全文，可搜索、可跳转、可返回。'
+  head.append(hint('<b>完整内容已做成独立页面</b>：左侧目录、右侧 24 章全文，可搜索、可跳转、可返回。'
     +'下面点目录或章节标题，会直接打开对应章节。'));
   const open=document.createElement('button'); open.className='btn sp-primary';
   open.textContent='▤ 打开完整说明书（独立页）';
@@ -22402,11 +22630,11 @@ function cmdActions(){
     {name:'换照片',desc:'选择或拖入图片，实况照片可同时选 HEIC + MOV',key:'open import 导入 打开',hint:'Ctrl O',icon:'＋',run:()=>$('#file').click()},
     {name:'撤销',desc:'回到上一步编辑',key:'undo',hint:'Ctrl Z',icon:'↶',run:undo},
     {name:'重做',desc:'恢复刚撤销的编辑',key:'redo',hint:'⇧Ctrl Z',icon:'↷',run:redo},
-    {name:'一键检测主体并虚化背景',desc:'自动识别人物 / 物品，生成软 matte 并虚化背景',
+    {name:'一键检测主体并虚化背景',desc:'暂不支持 · 自动识别人物 / 物品，打磨完成后恢复',
       key:'背景虚化 主体检测 人物 物品 散景 bokeh 一键',hint:'',icon:'◎',run:()=>{gotoTool('bokeh');detectSubject('auto');}},
-    {name:'背景虚化 · 人物模式',desc:'按肤色与暗发先验检测人像主体',
+    {name:'背景虚化 · 人物模式',desc:'暂不支持 · 按肤色与暗发先验检测人像主体',
       key:'虚化 人像 人物 主体 景深',hint:'',icon:'◎',run:()=>{gotoTool('bokeh');detectSubject('person');}},
-    {name:'背景虚化 · 物品模式',desc:'按色差与局部对比检测静物主体',
+    {name:'背景虚化 · 物品模式',desc:'暂不支持 · 按色差与局部对比检测静物主体',
       key:'虚化 产品 物品 静物 主体 景深',hint:'',icon:'◎',run:()=>{gotoTool('bokeh');detectSubject('object');}},
     {name:'虚化 · 开始涂抹选取',desc:'在照片上刷出主体或虚化区域',
       key:'虚化 涂抹 笔刷 主体 区域 mask',hint:'',icon:'✎',run:()=>{
@@ -22563,7 +22791,7 @@ function buildCmdItems(){
   const push=(type,icon,name,desc,key,hint,run)=>items.push({type,icon,name,desc,key:key||'',hint:hint||'',run});
   cmdActions().forEach(a=>push(a.type||'操作',a.icon,a.name,a.desc,a.key,a.hint,a.run));
   TOOLS.forEach(t=>push('工具','◈',t.name,(PANEL_META[t.id]||[])[1]||'',t.id,'',()=>gotoTool(t.id)));
-  push('操作','◇','消除','涂抹笔 · 去水印 去路人 去杂物 祛痘','heal 消除 修复 去水印','',()=>openHeal());
+  push('操作','◇','消除','暂不支持 · 修复效果还在打磨','heal 消除 修复 去水印','',()=>openHeal());
   push('操作','↺','清除消除笔迹','只清掉消除笔，不碰文字贴纸与其他像素效果','clear heal','',()=>{clearHeal();toast('已清除全部消除笔迹');});
   ADJ.forEach(([g,k,label])=>push('参数','≡',label,g+' 类调整',k,'',()=>gotoParam(label,g,k)));
   FILTERS.forEach(f=>push('滤镜','✦',f.name,f.group+' 分类 · 应用到当前层',f.group,'',()=>applyFilterGlobal(f.name)));
