@@ -118,6 +118,15 @@ public class MainActivity extends Activity {
         disableAutoDarkening(s);
 
         web.setWebViewClient(new Client());
+        /* WebView 自身没有下载器：a[download] 一旦没被 shim 接管，文件会直接消失。
+           这里把漏网的 URL 交回 JS 的 __irisRescue 重试，失败也要给用户一句话。 */
+        web.setDownloadListener((url, ua, cd, mimeType, len) -> {
+            Log.i(TAG, "download leaked to webview: " + url);
+            String js = "(function(){try{return (window.__irisRescue&&window.__irisRescue(" + jsStr(url) + "))?'1':'0'}catch(e){return '0'}})()";
+            web.evaluateJavascript(js, value -> {
+                if (!"\"1\"".equals(value) && !"1".equals(value)) toast("导出没能落盘，请再点一次导出");
+            });
+        });
         web.setWebChromeClient(new Chrome());
         web.addJavascriptInterface(new IrisBridge(), "IrisNative");
 
@@ -133,6 +142,29 @@ public class MainActivity extends Activity {
         }
         startHotCheck();
         ui.postDelayed(this::askUpdate, 2000);   /* 上次没确认的 pending，这次启动继续问 */
+    }
+
+    /** 把 Java 字符串安全地塞进 JS 表达式里（URL 里可能有引号）。 */
+    private static String jsStr(String v) {
+        if (v == null) return "null";
+        return "\"" + v.replace("\\", "\\\\").replace("\"", "\\\"") + "\"";
+    }
+
+    private static String mimeByExt(String name) {
+        if (name == null) return null;
+        String n = name.toLowerCase();
+        if (n.endsWith(".png")) return "image/png";
+        if (n.endsWith(".jpg") || n.endsWith(".jpeg")) return "image/jpeg";
+        if (n.endsWith(".webp")) return "image/webp";
+        if (n.endsWith(".gif")) return "image/gif";
+        if (n.endsWith(".heic")) return "image/heic";
+        if (n.endsWith(".mp4") || n.endsWith(".m4v")) return "video/mp4";
+        if (n.endsWith(".webm")) return "video/webm";
+        if (n.endsWith(".mov")) return "video/quicktime";
+        if (n.endsWith(".zip")) return "application/zip";
+        if (n.endsWith(".json")) return "application/json";
+        if (n.endsWith(".cube") || n.endsWith(".txt")) return "text/plain";
+        return null;
     }
 
     /** 只有用户想拿走的成品才允许落盘：图片、视频、打包、配置。 */
@@ -826,12 +858,17 @@ public class MainActivity extends Activity {
             if (name == null || name.trim().isEmpty()) name = "Iris_" + System.currentTimeMillis();
             name = name.replace('/', '_').replace('\\', '_');
             mime = (mimeIn == null || mimeIn.isEmpty()) ? "application/octet-stream" : mimeIn;
+            if (mime.equals("application/octet-stream")) {
+                String byExt = mimeByExt(name);
+                if (byExt != null) mime = byExt;
+            }
             bytes = 0;
 
             /* 第二道闸：只接受真正会被用户看见的作品类型。
                任何非图片/视频/打包/配置文件一律拒绝，避免把页面内部的临时资源写进相册。 */
             if (!allowedMime(mime)) {
                 Log.i(TAG, "save rejected, mime=" + mime + " name=" + name);
+                toast("这种文件类型不能存到设备");
                 mime = null;
                 return;
             }
@@ -858,6 +895,9 @@ public class MainActivity extends Activity {
                 }
             }
         }
+
+        @JavascriptInterface
+        public void note(String msg) { toast(msg); }
 
         @JavascriptInterface
         public synchronized void append(String chunk) {

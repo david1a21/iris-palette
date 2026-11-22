@@ -34,31 +34,28 @@
      这里要求：① 启动 2.5 秒内不接管（初始化阶段一律不碰）；
              ② 必须有 1.5 秒内的真实触摸/点击手势（isTrusted）；
              ③ 文件类型要在白名单内，且不是几十字节的占位图。            */
-  var BOOT_AT = performance.now();
-  var BOOT_GRACE = 2500;
-  var GESTURE_WINDOW = 1500;
-  var LAST_GESTURE = -1e9;
-
-  function markGesture(ev) {
-    if (ev && ev.isTrusted === false) return;   /* 页面自己 dispatch 的事件不算手势 */
-    LAST_GESTURE = performance.now();
-  }
-  ['pointerdown', 'touchstart', 'mousedown', 'keydown'].forEach(function (t) {
-    window.addEventListener(t, markGesture, true);
-  });
-
   var OK_EXT = {
     png: 1, jpg: 1, jpeg: 1, webp: 1, gif: 1, heic: 1,
     mp4: 1, m4v: 1, webm: 1, mov: 1, zip: 1, json: 1, cube: 1
   };
 
+  /* 只认「像成品」的文件，不再认「多久以前的手势」：
+     页面的导出是「点击 → 进度条 → 逐行编码 → 才 a.click()」，
+     大图 / GIF / 实况 / 批量导出从点击到 click 常常好几秒。
+     以前用 1.5 秒手势窗当闸门，慢一点的导出全被判成「不该我管」，
+     漏给 WebView —— 而壳里没有下载器，文件就这么消失，相册自然找不到。 */
+  function mimeAllowed(m) {
+    if (!m) return true;
+    if (m === 'application/octet-stream') return true;   /* 交给壳按扩展名兜底 */
+    return /^(image\/|video\/|application\/(zip|x-zip-compressed)|application\/json|text\/plain)/.test(m);
+  }
+
   function payloadOk(name, mime, size) {
-    if (performance.now() - LAST_GESTURE > GESTURE_WINDOW) return false;
-    if (!(size > 64)) return false;
+    if (!(size > 64)) return false;                    /* 几十字节的图标/占位不算成品 */
     var ext = extOf(name);
-    if (ext && !OK_EXT[ext]) return false;
-    if (mime && !/^(image\/|video\/|application\/zip|application\/json|text\/plain)/.test(mime)) return false;
-    return true;
+    if (!ext) return /^(image|video)\//.test(mime || '');
+    if (!OK_EXT[ext]) return false;
+    return mimeAllowed(mime);
   }
 
   /* ---------- 3) 分块流式写盘：大视频 / 大 GIF 也不会把内存顶爆 ---------- */
@@ -103,8 +100,10 @@
       return new Promise(function (resolve) {
         var bridge = window.IrisNative;
         if (!bridge) return resolve();
-        var mime = blob.type || mimeByName(name);
-        try { bridge.start(encodeURIComponent(name), mime); } catch (e) { return resolve(); }
+        var mime = blob.type || '';
+        if (!mime || mime === 'application/octet-stream') mime = mimeByName(name);
+        try { bridge.start(encodeURIComponent(name), mime); }
+        catch (e) { try { bridge.note && bridge.note('导出未落盘：' + e); } catch (g) {} return resolve(); }
 
         var STEP = 49152;   /* 3 的整数倍，保证每块 base64 能独立解码 */
         var pos = 0, dead = false;
@@ -146,32 +145,40 @@
     return new Blob([u8], { type: mime });
   }
 
+  var written = {};   /* 同一个 blob URL 只写一次，防止两条拦截路径重复落盘 */
+
   function saveLink(link) {
     if (!window.IrisNative) return false;
-    if (performance.now() - BOOT_AT < BOOT_GRACE) return false;
 
     var href = link.href || '';
     var name = link.getAttribute('download') || link.download;
     if (!name) name = 'Iris_' + Date.now() + (href.indexOf('blob:') === 0 ? '' : '.bin');
+    if (written[href]) return true;
 
     var blob = blobs.get(href);
     if (blob) {
       if (!payloadOk(name, blob.type || mimeByName(name), blob.size)) return false;
+      written[href] = 1;
       writeBlob(name, blob);
       return true;
     }
 
+    if (href.indexOf('data:') === 0) {
+      try {
+        var db = dataUrlToBlob(href);
+        if (!payloadOk(name, db.type || mimeByName(name), db.size)) return false;
+        written[href] = 1;
+        writeBlob(name, db);
+        return true;
+      } catch (e) { return false; }
+    }
     if (href.indexOf('blob:') === 0) {
       var guessMime = mimeByName(name);
-      if (performance.now() - LAST_GESTURE > GESTURE_WINDOW) return false;
+      written[href] = 1;
       fetch(href).then(function (r) { return r.blob(); })
         .then(function (b) { if (payloadOk(name, b.type || guessMime, b.size)) writeBlob(name, b); })
         .catch(function () {});
       return true;
-    }
-    if (href.indexOf('data:') === 0) {
-      if (performance.now() - LAST_GESTURE > GESTURE_WINDOW) return false;
-      try { writeBlob(name, dataUrlToBlob(href)); return true; } catch (e) { return false; }
     }
     return false;
   }
@@ -217,5 +224,21 @@
     } catch (e) {
       return false;
     }
+  };
+
+  /* ---------- 5) 兜底：万一还有下载请求漏给 WebView，壳会把 URL 交回这里重试 ----------
+     WebView 里没有下载器，漏出去等于文件消失，所以这一层必须能自己接住。 */
+  window.__irisRescue = function (href) {
+    try {
+      var blob = blobs.get(href);
+      if (!blob || !(blob.size > 64)) return false;
+      var ext = { 'image/png': '.png', 'image/jpeg': '.jpg', 'image/webp': '.webp',
+                  'image/gif': '.gif', 'image/heic': '.heic', 'video/mp4': '.mp4',
+                  'video/webm': '.webm', 'video/quicktime': '.mov',
+                  'application/zip': '.zip', 'application/json': '.json' }[blob.type];
+      if (!ext) return false;
+      writeBlob('Iris_' + Date.now() + ext, blob);
+      return true;
+    } catch (e) { return false; }
   };
 })();
