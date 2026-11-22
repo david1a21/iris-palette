@@ -9,7 +9,11 @@ cd "$(dirname "$0")/.."
 
 NSIS_HOME="${NSIS_HOME:-/home/user/iris-release/tools/nsis}"
 MAKENSIS="$NSIS_HOME/linux/makensis"
-[ -x "$MAKENSIS" ] || { echo "缺少 makensis：$MAKENSIS（需先解出 electron-builder-binaries 的 nsis-3.0.4.2）" >&2; exit 1; }
+if [ ! -x "$MAKENSIS" ]; then
+  echo "    跳过安装器：没找到 $MAKENSIS" >&2
+  echo "    先跑 bash scripts/get_nsis.sh 拉一次 NSIS 工具链，或设 NSIS_HOME 指向已有的 nsis 目录" >&2
+  exit 0   # 不阻塞主构建
+fi
 
 if [ "${1:-}" = "--build" ]; then
   node scripts/build.js win
