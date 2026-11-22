@@ -301,6 +301,16 @@ h1 em{font-style:normal;color:var(--gold2)}
 .dl-card .nm{font-size:15px;font-weight:500}
 .dl-card .mt{font-family:var(--mono);font-size:11px;color:var(--ash);letter-spacing:.05em}
 .dl-card .go{margin-top:12px;font-size:12.5px;color:var(--gold2)}
+
+.alt-box{margin-top:clamp(24px,3.2vw,38px);border:1px solid var(--line);border-radius:10px;padding:clamp(18px,2.4vw,26px);background:rgba(255,255,255,.02)}
+.alt-title{font-family:var(--mono);font-size:11px;letter-spacing:.12em;color:var(--gold2);text-transform:uppercase;margin-bottom:6px}
+.alt-row{display:grid;grid-template-columns:96px 1fr;gap:16px;align-items:baseline;padding:12px 0;border-top:1px solid rgba(233,231,225,.09)}
+.alt-row .k{font-family:var(--mono);font-size:11px;color:var(--ash);letter-spacing:.06em}
+.alt-row .v{display:flex;flex-wrap:wrap;gap:8px 18px}
+.alt-row .v a{font-size:13.5px;color:rgba(239,236,229,.8);border-bottom:1px solid rgba(201,162,39,.32);padding-bottom:1px;transition:color .3s,border-color .3s}
+.alt-row .v a:hover{color:var(--gold2);border-color:var(--gold)}
+.alt-note{margin-top:14px;font-size:12px;line-height:1.7;color:#7d7f78}
+@media(max-width:620px){.alt-row{grid-template-columns:1fr;gap:6px}}
 @media(max-width:900px){.dl{grid-template-columns:1fr 1fr}}
 @media(max-width:520px){.dl{grid-template-columns:1fr}}
 
@@ -548,24 +558,61 @@ h1 em{font-style:normal;color:var(--gold2)}
     </div>
 
     <div class="dl">
-      <a class="dl-card" href="https://github.com/david1a21/iris-palette/releases/latest" target="_blank" rel="noopener" data-rev>
-        <span class="nm">Android</span><span class="mt">APK · 1.0.44 壳 · 内嵌 1.0.42 页面</span><span class="go">下载 APK</span>
+      <a class="dl-card" href="/download/Iris_1.0.44.apk" data-rev>
+        <span class="nm">Android</span><span class="mt">APK · 1.0.44 壳 · 内嵌 1.0.42 页面</span><span class="go">本站直接下载 · 853 KB</span>
       </a>
-      <a class="dl-card" href="https://github.com/david1a21/iris-palette/releases/tag/v1.0.42-ios" target="_blank" rel="noopener" data-rev>
-        <span class="nm">iOS</span><span class="mt">IPA · 未签名 · 需自签安装</span><span class="go">下载 IPA</span>
+      <a class="dl-card" href="/download/Iris-Palette-iOS-1.0.42.ipa" data-rev>
+        <span class="nm">iOS</span><span class="mt">IPA · 未签名 · 需自签安装</span><span class="go">本站直接下载 · 984 KB</span>
       </a>
-      <a class="dl-card" href="https://github.com/david1a21/iris-palette/releases" target="_blank" rel="noopener" data-rev>
-        <span class="nm">Windows</span><span class="mt">Setup 安装器 · x64</span><span class="go">查看 Release</span>
+      <a class="dl-card" href="https://ghfast.top/https://github.com/david1a21/iris-palette/releases/download/v1.0.41/Iris-Palette-Windows-x64-1.0.41-Setup.exe" target="_blank" rel="noopener" data-rev>
+        <span class="nm">Windows</span><span class="mt">Setup 安装器 · x64 · 75.7 MB</span><span class="go">加速镜像下载</span>
       </a>
-      <a class="dl-card" href="https://github.com/david1a21/iris-palette/releases" target="_blank" rel="noopener" data-rev>
-        <span class="nm">macOS</span><span class="mt">arm64 ／ x64 · 启动后热更新</span><span class="go">查看 Release</span>
+      <a class="dl-card" href="https://ghfast.top/https://github.com/david1a21/iris-palette/releases/download/v1.0.33/Iris-Palette-macOS-arm64-1.0.33.zip" target="_blank" rel="noopener" data-rev>
+        <span class="nm">macOS</span><span class="mt">arm64 · 92.9 MB · Intel 版见下方</span><span class="go">加速镜像下载</span>
       </a>
-      <a class="dl-card" href="https://github.com/david1a21/iris-palette/releases" target="_blank" rel="noopener" data-rev>
-        <span class="nm">Linux</span><span class="mt">tar.gz · x64</span><span class="go">查看 Release</span>
+      <a class="dl-card" href="https://ghfast.top/https://github.com/david1a21/iris-palette/releases/download/v1.0.33/Iris-Palette-Linux-x64-1.0.33.tar.gz" target="_blank" rel="noopener" data-rev>
+        <span class="nm">Linux</span><span class="mt">tar.gz · x64 · 102 MB</span><span class="go">加速镜像下载</span>
       </a>
       <a class="dl-card" href="https://david1a21.github.io/iris-palette-web/" target="_blank" rel="noopener" data-rev>
         <span class="nm">网页版</span><span class="mt">不用装 · 打开就能调</span><span class="go">直接打开</span>
       </a>
+    </div>
+
+    <div class="alt-box" data-rev>
+      <div class="alt-title">其他下载地址</div>
+
+      <div class="alt-row">
+        <span class="k">本站直链</span>
+        <span class="v">
+          <a href="/download/Iris_1.0.44.apk">Android APK</a>
+          <a href="/download/Iris-Palette-iOS-1.0.42.ipa">iOS IPA</a>
+        </span>
+      </div>
+
+      <div class="alt-row">
+        <span class="k">加速镜像</span>
+        <span class="v">
+          <a href="https://ghfast.top/https://github.com/david1a21/iris-palette/releases/download/v1.0.41/Iris-Palette-Windows-x64-1.0.41-Setup.exe" target="_blank" rel="noopener">Windows 75.7 MB</a>
+          <a href="https://ghfast.top/https://github.com/david1a21/iris-palette/releases/download/v1.0.33/Iris-Palette-macOS-arm64-1.0.33.zip" target="_blank" rel="noopener">macOS arm64 92.9 MB</a>
+          <a href="https://ghfast.top/https://github.com/david1a21/iris-palette/releases/download/v1.0.33/Iris-Palette-macOS-x64-1.0.33.zip" target="_blank" rel="noopener">macOS Intel 98.7 MB</a>
+          <a href="https://ghfast.top/https://github.com/david1a21/iris-palette/releases/download/v1.0.33/Iris-Palette-Linux-x64-1.0.33.tar.gz" target="_blank" rel="noopener">Linux 102 MB</a>
+        </span>
+      </div>
+
+      <div class="alt-row">
+        <span class="k">备用网关</span>
+        <span class="v">
+          <a href="https://gh-proxy.com/https://github.com/david1a21/iris-palette/releases/download/v1.0.41/Iris-Palette-Windows-x64-1.0.41-Setup.exe" target="_blank" rel="noopener">gh-proxy.com</a>
+          <a href="https://ghproxy.net/https://github.com/david1a21/iris-palette/releases/download/v1.0.41/Iris-Palette-Windows-x64-1.0.41-Setup.exe" target="_blank" rel="noopener">ghproxy.net</a>
+        </span>
+      </div>
+
+      <div class="alt-row">
+        <span class="k">原始来源</span>
+        <span class="v"><a href="https://github.com/david1a21/iris-palette/releases" target="_blank" rel="noopener">GitHub Releases</a></span>
+      </div>
+
+      <p class="alt-note">GitHub 打不开的地区走上面两条：APK 与 IPA 放在本站同域，直接点就行；Windows / macOS / Linux 体积大，走加速网关。三个网关随便挑一个，哪个打不开就换下一个，把地址开头的网关换成另一个即可。</p>
     </div>
   </div>
 </section>
