@@ -19,7 +19,7 @@
 
 <br><br>
 
-[网页版直接开](https://david1a21.github.io/iris-palette-web/)　·　[Cloudflare 镜像](https://irisplus.pages.dev/)　·　[下载安装包](https://github.com/david1a21/iris-palette/releases)　·　[宣传图](docs/showcase)
+[官网](https://iris-official.pages.dev/)　·　[网页版直接开](https://david1a21.github.io/iris-palette-web/)　·　[Cloudflare 镜像](https://irisplus.pages.dev/)　·　[下载安装包](https://github.com/david1a21/iris-palette/releases)　·　[宣传图](docs/showcase)
 
 <br>
 
