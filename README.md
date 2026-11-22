@@ -11,8 +11,8 @@
 
 <br>
 
-<img alt="version" src="https://img.shields.io/badge/version-1.0.40-c9a227?style=flat-square">
-<img alt="page" src="https://img.shields.io/badge/page-1.33%20MB%20single%20file-1b1b1d?style=flat-square">
+<img alt="version" src="https://img.shields.io/badge/version-1.0.41-c9a227?style=flat-square">
+<img alt="page" src="https://img.shields.io/badge/page-1.36%20MB%20single%20file-1b1b1d?style=flat-square">
 <img alt="platform" src="https://img.shields.io/badge/platform-Android%20%7C%20iOS%20%7C%20Win%20%7C%20Linux%20%7C%20macOS-2f6f4f?style=flat-square">
 <img alt="hot update" src="https://img.shields.io/badge/update-hot%20swap-3c6e9f?style=flat-square">
 <img alt="license" src="https://img.shields.io/badge/license-MIT-6b6b74?style=flat-square">
@@ -23,7 +23,7 @@
 
 <br>
 
-<sub>443 款滤镜 · 78 套快捷模板 · 35 款盘面 · 12 格独立色调 · 全部跑在浏览器里</sub>
+<sub>443 款滤镜 · 78 套快捷模板 · 35 款盘面 · 12 格色调 · EXIF 元数据 · 全部跑在浏览器里</sub>
 
 </div>
 
@@ -56,7 +56,7 @@
 
 | 维度 | 事实 |
 |---|---|
-| 形态 | 单文件 HTML，`web/index.html`，1,392,798 字节（约 1.33 MB） |
+| 形态 | 单文件 HTML，`web/index.html`，1,427,706 字节（约 1.36 MB） |
 | 渲染 | WebGL 实时预览 + Canvas 2D 叠加层 |
 | 联网 | **零外部依赖**：无 CDN、无字体服务、无统计脚本，断网可用 |
 | 隐私 | 图片不离开设备；localStorage / IndexedDB 只存你自己的设置 |
@@ -86,7 +86,9 @@
 <tr><td><b>调整</b></td><td>曝光 · 对比 · 高光 · 阴影 · 黑白场 · 清晰度 · 纹理 · 白平衡（色温 / 色调）· HSL 分通道 · RGB 与分通道曲线 · 三色轮分级</td></tr>
 <tr><td><b>元素</b></td><td>裁剪与比例、旋转校正、网格辅助；文字与贴纸叠加，位置可拖</td></tr>
 <tr><td><b>效率</b></td><td>命令面板一跳到位 · 全局快捷键 · 自动保存与编辑历史 · 导入进度条 · 最近使用与导出记录 · 模板库（78 套快捷模板）</td></tr>
-<tr><td><b>说明书</b></td><td>内置 24 章图文说明书 + 技术实现独立页 + 页面中心（全部 22 页），带目录与搜索</td></tr>
+<tr><td><b>说明书</b></td><td>内置 25 章图文说明书 + 技术实现独立页 + 页面中心（全部 22 页），带目录与搜索</td></tr>
+<tr><td><b>对比</b></td><td>长按看原图 · 滑动分割线对比（一条线、两枚标签、一个数值气泡，单击画面即可落点）· 沉浸大图</td></tr>
+<tr><td><b>元数据</b></td><td>照片 EXIF 独立页：相机 / 镜头 / 光圈 / 快门 / ISO / 焦距 / 拍摄时间 / GPS，只读本机文件前 4 MB，HEIC·HEIF 尽力解析，不联网</td></tr>
 <tr><td><b>同步</b></td><td>坚果云 WebDAV：四栏预设 + 10 项偏好一键往返，账号与应用密码只写在本机</td></tr>
 </table>
 
@@ -122,15 +124,15 @@
 
 | 平台 | 文件 | 页面版本 | 大小 | 拿哪个 Release |
 |---|---|---|---|---|
-| 网页版 | 浏览器直接打开 | **1.0.40** | — | 无需下载 |
-| Windows x64 | `Iris-Palette-Windows-x64-1.0.40-Setup.exe` | **1.0.40** | 79.3 MB | `v1.0.40` |
-| iOS | `Iris-Palette-iOS-1.0.40.ipa` | **1.0.40**（build 45） | 985 KB | `v1.0.40` |
-| Android | `Iris_1.0.33.apk` | 1.0.33 → 热更新至 1.0.40 | 804 KB | `v1.0.33` |
-| macOS arm64 | `Iris-Palette-macOS-arm64-1.0.33.zip` | 1.0.33 → 热更新至 1.0.40 | 97.4 MB | `v1.0.33` |
-| macOS x64 | `Iris-Palette-macOS-x64-1.0.33.zip` | 1.0.33 → 热更新至 1.0.40 | 103.5 MB | `v1.0.33` |
-| Linux x64 | `Iris-Palette-Linux-x64-1.0.33.tar.gz` | 1.0.33 → 热更新至 1.0.40 | 107.0 MB | `v1.0.33` |
+| 网页版 | 浏览器直接打开 | **1.0.41** | — | 无需下载 |
+| Windows x64 | `Iris-Palette-Windows-x64-1.0.41-Setup.exe` | **1.0.41** | 79.3 MB | `v1.0.41` |
+| iOS | `Iris-Palette-iOS-1.0.41.ipa` | **1.0.41**（build 46） | 985 KB | `v1.0.41` |
+| Android | `Iris_1.0.33.apk` | 1.0.33 → 热更新至 1.0.41 | 804 KB | `v1.0.33` |
+| macOS arm64 | `Iris-Palette-macOS-arm64-1.0.33.zip` | 1.0.33 → 热更新至 1.0.41 | 97.4 MB | `v1.0.33` |
+| macOS x64 | `Iris-Palette-macOS-x64-1.0.33.zip` | 1.0.33 → 热更新至 1.0.41 | 103.5 MB | `v1.0.33` |
+| Linux x64 | `Iris-Palette-Linux-x64-1.0.33.tar.gz` | 1.0.33 → 热更新至 1.0.41 | 107.0 MB | `v1.0.33` |
 
-壳版本号落后不等于功能落后：装 1.0.33 的包，启动后页面会自动热更新到 1.0.40（见下一节）。1.0.34–1.0.38 只走了热更新、没有单独建 Release，所以列表里会看到版本跳档。
+壳版本号落后不等于功能落后：装 1.0.33 的包，启动后页面会自动热更新到 1.0.41（见下一节）。1.0.34–1.0.38 只走了热更新、没有单独建 Release，1.0.39 起才补建，所以列表里会看到版本跳档。
 
 <details>
 <summary><b>各平台安装细节</b>（点开）</summary>
@@ -171,9 +173,9 @@ chmod +x "Iris 调色盘" && ./"Iris 调色盘"
 
 ```json
 {
-  "version": "1.0.40",
-  "sha256": "b0c62a7b9aee9d3b39e9f90e61b2756f80e99c346d30f2aa0e9325fdd0979078",
-  "size": 1392798,
+  "version": "1.0.41",
+  "sha256": "dce611e30695052ea3a2e75fcb71fec54fe8784ac143f4717aea264d6e23e1b4",
+  "size": 1427706,
   "url": "https://raw.githubusercontent.com/david1a21/iris-palette/main/web/index.html"
 }
 ```
@@ -212,7 +214,7 @@ chmod +x "Iris 调色盘" && ./"Iris 调色盘"
 ```
 iris-palette/
 ├── web/
-│   ├── index.html              # 页面本体（唯一源，1,392,798 字节）
+│   ├── index.html              # 页面本体（唯一源，1,427,706 字节）
 │   └── hot-update.json         # 热更新清单（版本 / sha256 / 大小 / 地址）
 ├── android/
 │   ├── AndroidManifest.xml
@@ -301,7 +303,7 @@ bash build_ipa.sh --adhoc      # 额外 ad-hoc 签名
 <details>
 <summary><b>为什么各端版本号不一样？</b></summary>
 
-页面内容一致，版本号是各端自己迭代的产物。壳版本停在 1.0.33 的包，首次联网后会按 `hot-update.json` 把页面升到 1.0.40。看到版本号不同，不代表功能不同。
+页面内容一致，版本号是各端自己迭代的产物。壳版本停在 1.0.33 的包，首次联网后会按 `hot-update.json` 把页面升到 1.0.41。看到版本号不同，不代表功能不同。
 </details>
 
 <details>
@@ -344,7 +346,8 @@ bash build_ipa.sh --adhoc      # 额外 ad-hoc 签名
 
 | 版本 | 日期 | 主要变化 |
 |---|---|---|
-| **1.0.40** | 2026-11-22 | 导入进度条；实况修复、云同步、输入法守卫与消除笔入口置灰合流；Windows 安装器 |
+| **1.0.41** | 2026-11-22 | 照片 EXIF 独立页（纯前端零依赖）· 滑动分割线对比 · 沉浸大图再打磨；说明书新增第 24 章，视频工作台顺延为第 25 章 |
+| 1.0.40 | 2026-11-22 | 导入进度条；实况修复、云同步、输入法守卫与消除笔入口置灰合流；Windows 安装器 |
 | 1.0.39 | 2026-11-22 | 新底稿并入 1.0.35–1.0.38 的实况修复 + 坚果云同步 + 输入法守卫；保留护盾、模式渐变、城市预设 |
 | 1.0.38 | 2026-11-21 | 底稿并入 1.0.35–1.0.37 的实况修复，新增坚果云同步与输入法守卫 |
 | 1.0.35–1.0.37 | 2026-11-20–21 | 实况导出逐轮修复：封面与视频轨比例、画质与预览缩放解耦、源尺寸记账 |
@@ -352,7 +355,7 @@ bash build_ipa.sh --adhoc      # 额外 ad-hoc 签名
 
 ## 校验和
 
-页面本体：`web/index.html` · **1,392,798 字节** · sha256 前 8 位 `b0c62a7b`
+页面本体：`web/index.html` · **1,427,706 字节** · sha256 前 8 位 `dce611e3`
 
 ```bash
 shasum -a 256 -c SHA256SUMS.txt        # macOS / Linux

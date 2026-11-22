@@ -6,7 +6,7 @@
 <title>Iris 调色盘 · 语义感知的在线照片编辑器</title>
 <meta name="theme-color" content="#0b0b0d">
 <!-- 版本元数据：检查更新时远端只需读取文件头部即可比对，不必下载整份页面 -->
-<meta name="iris-version" content="1.0.40">
+<meta name="iris-version" content="1.0.41">
 <meta name="iris-build" content="2026-11-22">
 <meta name="iris-repo" content="david1a21/iris-palette">
 <meta name="description" content="Iris 调色盘：语义感知的二维色彩控制器。Tone × Color 两轴、端侧区域分割与肤色锁，443 款滤镜、78 套模板，支持照片 / 视频 / GIF 导出，纯前端不上传。">
@@ -292,6 +292,62 @@ html[data-glass="off"] .exp-progress.in-sub{backdrop-filter:none;-webkit-backdro
 #app.picking .import-card{pointer-events:none;opacity:.22}
 #splitHandle::after{content:"";position:absolute;left:13px;top:-100vh;height:200vh;width:2px;
   background:rgba(var(--accent-rgb),.85);z-index:-1}
+/* ============================================================
+   v1.0.41 · 滑动分割线对比：一条线、两枚标签、一个数值气泡
+   · 所有元素共用 stage 上的 --sx（由 paintOverlay 统一写一次）
+   · 线由 DOM 画，shader 只负责左右短路；导出帧不带 preview 标记，
+     因此绝不会把「半张原图」烤进成品文件。
+   ============================================================ */
+#splitGuide{position:absolute;left:var(--sx,50%);top:0;bottom:0;width:2px;
+  transform:translateX(-1px);display:none;pointer-events:none;z-index:3;
+  background:var(--accent);box-shadow:0 0 0 1px rgba(0,0,0,.42),0 0 16px rgba(var(--accent-rgb),.6)}
+#app.split-on #splitGuide{display:block}
+#app.split-on #splitHandle::after{display:none}   /* 旧竖线让位给 #splitGuide，避免两条线 */
+.split-tag{position:absolute;top:12px;left:var(--sx,50%);display:none;pointer-events:none;z-index:4;
+  padding:5px 9px;border-radius:9px;white-space:nowrap;font-size:10.5px;font-weight:700;
+  letter-spacing:.4px;color:#fff;background:rgba(10,10,12,.74);
+  border:1px solid var(--w18);backdrop-filter:blur(9px)}
+#app.split-on .split-tag{display:block}
+#splitTagL{transform:translateX(calc(-100% - 10px))}
+#splitTagR{margin-left:10px}
+#splitPct{position:absolute;top:44px;left:var(--sx,50%);transform:translateX(-50%);
+  display:none;pointer-events:none;z-index:4;padding:3px 8px;border-radius:8px;
+  font-size:10px;font-weight:800;font-variant-numeric:tabular-nums;
+  color:var(--on-accent);background:var(--accent);white-space:nowrap;
+  box-shadow:0 3px 12px rgba(0,0,0,.4)}
+#app.split-on #splitPct{display:block;opacity:0;transition:opacity .18s}
+#app.split-on #splitPct.show{opacity:1}
+#splitHandle{transition:box-shadow .18s}
+#app.split-on #splitHandle{box-shadow:0 2px 18px rgba(var(--accent-rgb),.55)}
+html[data-ui="focus"] #splitHandle{width:34px;height:34px;margin:-17px 0 0 -17px}
+/* 沉浸大图：底部已有 ◐ 对比按钮，画面内这枚缩小的重复按钮收起 */
+html[data-ui="focus"] .cmp{display:none!important}
+/* ---------- v1.0.41 · 照片 EXIF 页面 ---------- */
+.exif-head{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:12px}
+.exif-stat{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.exif-stat span{display:inline-flex;align-items:center;gap:6px;padding:6px 11px;border-radius:999px;
+  font-size:11px;font-weight:600;background:var(--w05);border:1px solid var(--w10);color:var(--sub)}
+.exif-stat b{color:var(--txt);font-variant-numeric:tabular-nums}
+.exif-card{margin-bottom:12px;padding:12px 14px 13px;border-radius:15px;
+  border:1px solid var(--w10);background:var(--w035)}
+.exif-card>h4{margin:0 0 10px;font-size:12px;font-weight:700;letter-spacing:.4px;
+  color:var(--accent);display:flex;align-items:center;gap:7px}
+.exif-card>h4 small{font-weight:500;color:var(--sub);letter-spacing:0}
+.exif-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 18px}
+.exif-row{display:flex;align-items:baseline;justify-content:space-between;gap:10px;
+  padding:7px 0;border-bottom:1px solid var(--w07);min-width:0}
+.exif-row:last-child{border-bottom:0}
+.exif-row>i{font-style:normal;flex:0 0 auto;font-size:11px;color:var(--sub)}
+.exif-row>b{font-size:11.5px;font-weight:650;color:var(--txt);text-align:right;
+  overflow-wrap:anywhere;min-width:0}
+.exif-empty{padding:22px 16px;text-align:center;color:var(--sub);font-size:12px;line-height:1.9;
+  border:1px dashed var(--w14);border-radius:15px;background:var(--w025)}
+.exif-empty b{display:block;color:var(--txt);font-size:14px;margin-bottom:5px}
+.exif-raw{font:11px/1.65 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  max-height:240px;overflow:auto;color:var(--sub);white-space:pre-wrap;word-break:break-all}
+.exif-priv{margin-top:12px;padding:10px 12px;border-radius:12px;font-size:11px;line-height:1.8;
+  color:var(--sub);background:rgba(var(--accent-rgb),.07);border:1px solid rgba(var(--accent-rgb),.22)}
+@media(max-width:560px){.exif-grid{grid-template-columns:1fr}}
 .zoomctl{position:absolute;left:10px;bottom:10px;z-index:7;display:flex;align-items:center;gap:2px;
   background:var(--overlay);backdrop-filter:blur(14px);border:1px solid var(--line);
   border-radius:11px;padding:3px;z-index:3}
@@ -4033,11 +4089,15 @@ html[data-motion="off"] .fx-btn,html[data-motion="off"] .fx-knob{transition:none
     <canvas id="ov"></canvas>
     <canvas id="cropEd" aria-label="可视化裁剪：拖动四角或边缘调整裁剪框"></canvas>
     <canvas id="hist" width="260" height="104"></canvas>
-    <div id="splitHandle" title="拖动调整对比位置">⇔</div>
+    <div id="splitGuide" aria-hidden="true"></div>
+    <div class="split-tag" id="splitTagL" aria-hidden="true">原图</div>
+    <div class="split-tag" id="splitTagR" aria-hidden="true">成品</div>
+    <div id="splitPct" aria-hidden="true">50%</div>
+    <div id="splitHandle" title="左右拖动分割线 · 双击回到中间 · 点画面任意位置也能定位">⇔</div>
     <div class="zoomctl">
       <button id="zOut">−</button><span id="zVal">100%</span><button id="zIn">+</button><button id="zFit">⤢</button><button id="zMode" class="wide" title="切换：适应画面 / 填满画面">填满</button>
     </div>
-    <button class="cmp" id="cmp">按住对比原图</button>
+    <button class="cmp" id="cmp" title="按住＝临时看原图 · 轻点＝开关滑动分割线对比">◐ 对比</button>
     <button class="dock-float" id="dockFloat">☰ 展开编辑</button>
     <button class="live-badge" id="liveBadge" title="播放 / 暂停实况片段（也可长按画面）"><i></i> LIVE</button>
     <div class="import-card" id="drop">
@@ -4062,7 +4122,7 @@ html[data-motion="off"] .fx-btn,html[data-motion="off"] .fx-knob{transition:none
       <div class="fx-knob" id="fxKnob"></div>
     </div>
     <span class="fx-val" id="fxVal">0</span>
-    <button class="fx-btn" id="fxCmp" title="按住对比原图">◐</button>
+    <button class="fx-btn" id="fxCmp" title="按住＝临时看原图 · 轻点＝开关滑动分割线对比">◐</button>
     <button class="fx-btn" id="fxFull" title="全屏看图">⛶</button>
     <button class="fx-btn fx-all" id="fxDrawer" title="参数 / 工具 / 全部（展开下方工作区）">▦</button>
   </div>
@@ -6932,10 +6992,10 @@ ${MASK_CODE}
   c=clamp(c,0.0,1.0);
   /* 伪彩只在屏幕预览生效：导出 / 缩略图 / 录制都会传 thumb 或 recording */
   c=zonePseudo(c,mapSrc(uv));
-  if(u_splitOn>0.5){
-    if(uv.x<u_splitX) c=src(uv);
-    if(abs(uv.x-u_splitX)<0.0016) c=vec3(1.0,0.84,0.04);
-  }
+  /* v1.0.41：分割线本身由 DOM 画（#splitGuide + 圆点 + 左右标签），
+     着色器只做左右短路；导出 / 缩略图 / 录制帧不带 preview 标记，
+     所以「半张原图」绝不会被烤进成品文件。 */
+  if(u_splitOn>0.5 && uv.x<u_splitX) c=src(uv);
   gl_FragColor=vec4(c,1.0);
 }`;
 
@@ -8337,7 +8397,7 @@ function setUniforms(o){
   u1('u_chanAmt',state.chanAmt);
   u1('u_lutOn',lutSize?state.lutOn:0);
   u1('u_lutSize',lutSize||2);
-  u1('u_splitOn',(state.splitOn&&!o.thumb)?1:0);
+  u1('u_splitOn',(state.splitOn&&o.preview)?1:0);
   u1('u_splitX',state.splitX);
   /* 局部像素效果（马赛克 / 模糊 / 动态 / 径向） */
   for(let k=0;k<6;k++){
@@ -8424,7 +8484,7 @@ function draw(w,h,opts={}){
     w,h,e:opts.e||effective(opts.filter,opts.strength),
     pan:opts.pan||state.pan, zoom:opts.zoom||state.zoom,
     viewAspect:opts.viewAspect!==undefined?opts.viewAspect:w/h,
-    original:!!opts.original, thumb:!!opts.thumb,
+    original:!!opts.original, thumb:!!opts.thumb, preview:!!opts.preview,
     outSize:opts.outSize||null,
     fullRes:!!opts.fullRes
   };
@@ -8513,7 +8573,7 @@ function paintFrame(){
       draw(w,h,{e:effective(),pan:[0,0],zoom:1,viewAspect:imageAspect(),
                 original:false,thumb:true,fullRes:false,noFullSwap:true});
     }else{
-      draw(w,h,{original:comparing,outSize:[fw,fh]});
+      draw(w,h,{original:comparing,outSize:[fw,fh],preview:true});
     }
   }
   if(!er) paintOverlay(dpr);
@@ -8917,7 +8977,11 @@ function paintOverlay(dpr){
   /* 这两项只在状态真的变了才写 DOM */
   const so=!!state.splitOn, sx=(clamp(state.splitX,0,1)*100)+'%';
   if(so!==lastSplitOn){app.classList.toggle('split-on',so);lastSplitOn=so;}
-  if(sx!==lastSplitX){splitHandle.style.left=sx;lastSplitX=sx;}
+  if(sx!==lastSplitX){
+    splitHandle.style.left=sx;lastSplitX=sx;
+    try{ stage.style.setProperty('--sx',sx); }catch(e){}
+    const pc=$('#splitPct'); if(pc) pc.textContent=Math.round(clamp(state.splitX,0,1)*100)+'%';
+  }
   /* 没有叠加元素 / 元素编辑态 / 蒙版可视化时，叠加层清空一次即可，
      后续每帧直接跳过（播放实况时能省掉整块 2D 绘制） */
   const need=(!comparing&&state.elements.length>0)||tool==='elements'||!!state.maskViz
@@ -9000,6 +9064,7 @@ function paintOverlay(dpr){
 let splitDrag=false;
 splitHandle.addEventListener('pointerdown',e=>{
   e.stopPropagation(); capturePointer(splitHandle,e); splitDrag=true;
+  IrisSplit.showPct(true);
 });
 splitHandle.addEventListener('pointermove',e=>{
   if(!splitDrag)return;
@@ -9007,7 +9072,14 @@ splitHandle.addEventListener('pointermove',e=>{
   state.splitX=clamp((e.clientX-r.left)/r.width,0.02,0.98);
   render();
 });
-['pointerup','pointercancel'].forEach(t=>splitHandle.addEventListener(t,()=>{ splitDrag=false; }));
+['pointerup','pointercancel'].forEach(t=>splitHandle.addEventListener(t,()=>{
+  splitDrag=false; IrisSplit.showPct(false);
+}));
+/* 双击圆点回到正中；阻止冒泡，免得 stage 的「双击 1:1 / 2.2×」一起触发 */
+splitHandle.addEventListener('dblclick',e=>{
+  e.preventDefault(); e.stopPropagation();
+  IrisSplit.setX(.5,true); toast('分割线已回到中间');
+});
 function requestRender(){ render(); scheduleHist(); }
 let histTimer=0;
 function scheduleHist(){ clearTimeout(histTimer); histTimer=setTimeout(drawHistogram,260); }
@@ -10739,7 +10811,7 @@ updateLiveUI();
 /* ---------- 缩放 / 平移 / 取色 ---------- */
 const stage=$('#stage');
 const pointers=new Map();
-let pinchStart=null, dragStart=null;
+let pinchStart=null, dragStart=null, splitTap=null;
 function fitScaleJS(aspect){
   const ratio=imageAspect()/Math.max(aspect,1e-4), s=[1,1];
   if(ratio>1){ if(viewFit==='cover') s[0]=ratio; else s[1]=1/ratio; }
@@ -11009,6 +11081,9 @@ stage.addEventListener('pointerdown',e=>{
   if(e.target.closest('button')||e.target.closest('.zoomctl')||e.target.closest('#hist')||
      e.target.closest('#splitHandle')||e.target.closest('.import-card')||
      e.target.closest('.live-bar')||e.target.closest('.live-badge')) return;
+  /* v1.0.41：分屏开启时，单击画面任意空白处即可把分割线移到这里；
+     真正拖动照片（移动 >7px）不会触发，缩放手势也不受影响。 */
+  splitTap={x:e.clientX,y:e.clientY,t:performance.now(),id:e.pointerId};
   if(tool==='bokeh'&&drawMode==='bokeh'&&!picking&&!comparing){
     startBokehPaint(e); return;
   }
@@ -11071,6 +11146,14 @@ stage.addEventListener('pointermove',e=>{
   }
 });
 ['pointerup','pointercancel'].forEach(t=>stage.addEventListener(t,e=>{
+  if(splitTap&&state.splitOn&&e.pointerId===splitTap.id){
+    const dt=performance.now()-splitTap.t, dist=Math.hypot(e.clientX-splitTap.x,e.clientY-splitTap.y);
+    if(dt<350&&dist<7&&!picking&&!comparing&&tool!=='crop'){
+      const r=stage.getBoundingClientRect();
+      IrisSplit.setX((e.clientX-r.left)/r.width,true);
+    }
+  }
+  splitTap=null;
   clearTimeout(LIVE.holdTimer); LIVE.holdTimer=0;
   if(LIVE.holdFired&&!LIVE.recording){ LIVE.holdFired=false; livePause(); }
   endBokehPaint();
@@ -11111,6 +11194,7 @@ stage.addEventListener('wheel',e=>{
   setZoom(state.zoom*clamp(f,1/1.18,1.18),{x:e.clientX,y:e.clientY});
 },{passive:false});
 stage.addEventListener('dblclick',e=>{
+  if(e.target.closest('#splitHandle')) return;   /* 双击圆点＝归中，不缩放 */
   /* 双击画面上的元素：直接打开编辑框（文字自动聚焦输入） */
   if(tool==='elements'&&!picking&&!comparing){
     const hit=hitEl(e.clientX,e.clientY);
@@ -11231,17 +11315,69 @@ function startPick(cb,mode,idx){
   toast((mode==='mask'?'在照片上点一下设置蒙版中心':mode==='wb'?'点一下照片上的中性灰区域':'在照片上点一下要调整的颜色')+'（Esc 取消）');
 }
 
-/* 对比原图 */
+/* ============================================================
+   v1.0.41 · 两种对比，一枚按钮
+   · 按住 ≥320ms：临时看整张原图（原来的「按住对比原图」）
+   · 轻点（未长按、未移动）：开关「滑动分割线对比」
+   · 分屏开启后：拖圆点 / 点画面任意位置定位 / 双击圆点归中 / R 关闭
+   ============================================================ */
 const cmp=$('#cmp');
-function setCompare(v){ comparing=v; cmp.classList.toggle('on',v); render(); }
-cmp.addEventListener('pointerdown',e=>{
-  /* 阻断长按选中按钮文字 / 弹出系统复制菜单，同时不影响 pointerup / dblclick */
-  if(e.cancelable) e.preventDefault();
-  capturePointer(cmp,e); setCompare(true);
-});
-['pointerup','pointercancel','pointerleave','lostpointercapture'].forEach(t=>
-  cmp.addEventListener(t,()=>setCompare(false)));
-/* 切后台 / 窗口失焦时别把对比卡在开启状态 */
+function setCompare(v){
+  comparing=v;
+  [cmp,document.getElementById('fxCmp')].forEach(b=>{ if(b) b.classList.toggle('on',v); });
+  render();
+}
+const IrisSplit=(()=>{
+  const pct=$('#splitPct'); let hideT=0;
+  function showPct(on){
+    if(!pct) return;
+    clearTimeout(hideT);
+    if(on) pct.classList.add('show');
+    else hideT=setTimeout(()=>pct.classList.remove('show'),900);
+  }
+  function setX(v,show){
+    state.splitX=clamp(v,.02,.98);
+    if(show) showPct(true);
+    render();
+  }
+  function toggle(force){
+    const on=force===undefined?!state.splitOn:!!force;
+    mutate(()=>{ state.splitOn=on; });
+    try{ buildPanel(true); }catch(e){}
+    render();
+    toast(on?'分割线对比已开启 · 拖圆点 / 点画面定位 / 双击归中 / R 关闭':'已关闭分割线对比');
+    return on;
+  }
+  function bindCompareButton(btn){
+    if(!btn||btn.__irisCmpBound) return;
+    btn.__irisCmpBound=true;
+    let t0=0,x0=0,y0=0,timer=0,long=false,moved=false;
+    const cancel=()=>{ clearTimeout(timer); timer=0; };
+    btn.addEventListener('pointerdown',e=>{
+      if(e.button!==undefined&&e.button!==0) return;
+      if(e.cancelable) e.preventDefault();
+      try{ capturePointer(btn,e); }catch(err){}
+      t0=performance.now(); x0=e.clientX; y0=e.clientY; long=false; moved=false;
+      cancel();
+      timer=setTimeout(()=>{ long=true; setCompare(true); },320);
+    });
+    btn.addEventListener('pointermove',e=>{
+      if(!t0) return;
+      if(Math.hypot(e.clientX-x0,e.clientY-y0)>8){ moved=true; cancel(); }
+    });
+    const up=()=>{
+      if(!t0) return;
+      cancel(); const dt=performance.now()-t0; t0=0;
+      if(long) setCompare(false);
+      else if(!moved&&dt<320) toggle();
+    };
+    ['pointerup','pointercancel','lostpointercapture'].forEach(t=>btn.addEventListener(t,up));
+    btn.addEventListener('pointerleave',()=>{ if(!long&&t0){ cancel(); t0=0; } });
+  }
+  return {toggle,setX,showPct,bindCompareButton};
+})();
+IrisSplit.bindCompareButton(cmp);
+/* 切后台 / 窗口失焦时别把临时对比卡在开启状态 */
 window.addEventListener('blur',()=>{ if(comparing) setCompare(false); });
 document.addEventListener('visibilitychange',()=>{ if(document.hidden&&comparing) setCompare(false); });
 /* 系统原生长按选取 / 右键菜单 / 文字拖拽：只允许在可编辑控件里发生 */
@@ -11292,7 +11428,7 @@ window.addEventListener('keydown',e=>{
   if(k==='e'){doExport();return;}
   if(k==='l'&&LIVE.pair){LIVE.playing?livePause():livePlay();return;}
   if(k==='f'){app.classList.contains('dock-off')?expandDock():collapseDock();return;}
-  if(k==='r'){mutate(()=>{state.splitOn=!state.splitOn;buildPanel();});return;}
+  if(k==='r'){IrisSplit.toggle();return;}
 });
 window.addEventListener('keyup',e=>{ if(e.code==='Space') setCompare(false); });
 
@@ -13452,7 +13588,7 @@ function renderVideoPage(body){
    4) 断网、限流、404、旧版页面格式都有明确降级与提示，
       检查失败不影响任何编辑与导出功能。
    ============================================================ */
-const IRIS_VERSION='1.0.40';             /* 页面版本：走 HTML 热更新，持续递增 */
+const IRIS_VERSION='1.0.41';             /* 页面版本：走 HTML 热更新，持续递增 */
 const IRIS_BUILD='2026-11-22';
 const IRIS_CHANNEL='hot';                /* hot = HTML 热更新通道 */
 const IRIS_APP_BASELINE='1.0.1.8';       /* 最终安装包 / Release 版本，已冻结 */
@@ -14605,12 +14741,9 @@ function initFocusUI(){
   const tabs=$('#fdTabs');
   if(tabs) tabs.querySelectorAll('.fd-tab').forEach(b=>b.onclick=()=>fxDrawerView(b.dataset.v));
   on('fxFull',()=>{ const b=document.getElementById('btnFocus'); if(b) b.click(); });
-  const cmp=document.getElementById('fxCmp');
-  if(cmp){
-    cmp.addEventListener('pointerdown',e=>{ e.preventDefault(); setCompare(true); cmp.classList.add('on'); });
-    ['pointerup','pointercancel','pointerleave'].forEach(t=>
-      cmp.addEventListener(t,()=>{ setCompare(false); cmp.classList.remove('on'); }));
-  }
+  /* v1.0.41：与画面内的 ◐ 同一套「按住看原图 / 轻点开关分屏」 */
+  const fxCmpBtn=document.getElementById('fxCmp');
+  if(fxCmpBtn) IrisSplit.bindCompareButton(fxCmpBtn);
   fxBuildPicker(); fxBuildTools(); fxTrackBind(); fxSync(true);
 }
 
@@ -14833,7 +14966,7 @@ function renderMoreMenu(){
   pgrid.append(hub);
   menu.append(pgrid);
   const tip=document.createElement('div'); tip.className='more-tip';
-  tip.textContent='数字键 1–9 / 0 切换工具 · 22 个独立页面统一收在「页面中心」，折叠分组不刷屏'; menu.append(tip);
+  tip.textContent='数字键 1–9 / 0 切换工具 · 23 个独立页面统一收在「页面中心」，折叠分组不刷屏'; menu.append(tip);
 }
 document.addEventListener('click',e=>{
   if(moreOpen&&!e.target.closest('#moreMenu')&&!e.target.closest('.tool')){
@@ -18241,7 +18374,37 @@ const GUIDE_CHAPTERS=[
    +'具体额度以坚果云官网最新说明为准；'
    +'（d）应用密码只给这一个用途，别写进公开截图或反馈信息；'
    +'（e）重要文件先在本机留一份备份，再清理云端。'},
-    {id:'video',t:'24 · 视频工作台（暂未开放）',k:'视频工作台 加滤镜 一键滤镜 滤镜条 调色盘 片段调色盘 圆盘 二维盘 拖盘 强度 常用盘 全部盘模式 盘同步全部 去掉滤镜 顶部 tab 工具 tab 时间线 拖拽 排序 拖不动 播放头 裁时长 触屏 检查器 折叠 关键帧 转场 运镜 帧精确 导出视频 流畅 风格库 443 78 模板 30 盘模式 combo 样式统一',
+ {id:'metadata',t:'24 · 照片 EXIF 与滑动分割线对比',k:'EXIF 元数据 相机 镜头 光圈 快门 ISO 焦距 拍摄时间 GPS 位置 信息 分割线 分屏 对比 原图 成品 拖动 归中 沉浸大图 打磨',
+  b:'<b>① 照片 EXIF 信息</b>：「页面中心 → 设备与状态 → 照片 EXIF」、图像信息页顶部按钮、'
+   +'全局搜索「EXIF / 相机 / 光圈 / GPS」、命令面板「照片 EXIF 信息」都能打开。'
+   +'它<b>只从本机文件的前 4MB 字节</b>里读元数据，支持 JPEG 的 APP1 / Exif 段、PNG 的 <code>eXIf</code> 块、'
+   +'WebP 的 <code>EXIF</code> 块，HEIC / HEIF 做尽力解析（读不到会明确告诉原因，不会假装成功）。'
+   +'TIFF 大小端、IFD0 / ExifIFD / GPSIFD / InteropIFD、RATIONAL 与 SRATIONAL 分数都按规范解开，'
+   +'再翻成中文标签与人类读数：<code>1/125 s</code>、<code>f/2.8</code>、<code>ISO 200</code>、'
+   +'<code>50 mm</code>、<code>+0.3 EV</code>、<code>2026-11-22 14:03:21</code>。'
+   +'<br>内容按<b>相机与镜头 / 拍摄参数 / 时间与软件 / 图像规格 / 位置 GPS / 其他</b>六组排好，'
+   +'GPS 默认折叠、另给十进制坐标，底部「全部原始标签」可展开看十六进制与类型。'
+   +'「⧉ 复制全部」把摘要写进剪贴板，「↻ 重新读取」换照片后重扫。'
+   +'<br><b>隐私边界</b>：不发任何网络请求、不写进参数存档、<b>不写入导出的 PNG / JPG / WebP</b>'
+   +' —— 想去掉位置信息，直接导出成品即可。截图、微信转存图、二次压缩图常常没有 EXIF，'
+   +'页面会写明具体原因而不是空白。'
+   +'<br><br><b>② 滑动分割线对比</b>：这是把原来藏在「光效」页深处、只有 <b>R</b> 键能开的分屏功能'
+   +'重新做顺手。现在<b>画面右下「◐ 对比」一枚按钮管两种对比</b>：'
+   +'<b>按住 ≥320ms</b> 临时看整张原图（松手即回），<b>轻点一下</b> 开关滑动分割线。'
+   +'沉浸大图底部那枚 ◐ 是同一套逻辑，两处状态始终一致。'
+   +'<br>分屏开启后画面出现一条金色竖线、<b>「原图 / 成品」两枚标签</b>和拖动时的百分比气泡：'
+   +'拖圆点改位置、<b>点画面任意空白处直接把线移过去</b>、双击圆点回到中间、按 <b>R</b> 关闭。'
+   +'左边是未经任何处理的真原图（着色器里直接短路回 <code>src(uv)</code>），右边是全套滤镜 / 调色 / 局部效果的成品。'
+   +'<br>一个关键修复：旧版用「不是缩略图」当作「这是预览帧」的判据，语义混用；'
+   +'现在改成显式的 <code>preview</code> 标记，<b>只有屏幕预览帧带分屏</b>，'
+   +'导出 / GIF / 缩略图 / 录制帧一律不带，绝不会把「半张原图」烤进成品文件。'
+   +'分割线本身也从着色器挪到 DOM（线和标签都是普通元素），不占 GPU、不受输出分辨率影响。'
+   +'<br><br><b>③ 沉浸大图模式继续打磨</b>：'
+   +'画面内那枚缩小的「按住对比原图」与底部 ◐ 重复，已收起，首屏只剩<b>一条大滑杆 + 一排按钮</b>；'
+   +'底部 ◐ 变成「按住看原图 / 轻点开关分屏」双功能；'
+   +'分割线、左右标签与数值气泡在大图模式下同样可见可用；'
+   +'手机 390px 下底部每一颗按钮都做了真实点击校验（含底部安全区），切回原版布局时 DOM 顺序与工具位置偏好不变。'},
+    {id:'video',t:'25 · 视频工作台（暂未开放）',k:'视频工作台 加滤镜 一键滤镜 滤镜条 调色盘 片段调色盘 圆盘 二维盘 拖盘 强度 常用盘 全部盘模式 盘同步全部 去掉滤镜 顶部 tab 工具 tab 时间线 拖拽 排序 拖不动 播放头 裁时长 触屏 检查器 折叠 关键帧 转场 运镜 帧精确 导出视频 流畅 风格库 443 78 模板 30 盘模式 combo 样式统一',
   b:'<b style="color:var(--accent)">⚠ 视频工作台暂未开放</b>：这一章记录的是打磨中的多片段视频编辑设计，'
     +'当前版本的入口已隐藏、导出菜单里的视频项已置灰，下面的操作暂时用不上；'
     +'代码与设置都保留着，等打磨完成会直接恢复。照片、GIF、实况配对素材与打包导出不受影响，照常使用。'
@@ -18299,7 +18462,7 @@ const GUIDE_CHAPTERS=[
    ============================================================ */
 const SP_ENTRIES=[
   {id:'mine',name:'我的空间',sub:'历史图片 / 我的滤镜 / 书签 / 导出 · 一键存全套参数',icon:'◉',sv:'aperture'},
-  {id:'guide',name:'使用说明书',sub:'24 章全文 · 目录 / 搜索',icon:'▤',sv:'book'},
+  {id:'guide',name:'使用说明书',sub:'25 章全文 · 目录 / 搜索',icon:'▤',sv:'book'},
   {id:'tech',name:'技术实现',sub:'18 章长文 · 目录 / 搜索 · 源码级拆解',icon:'⌘',sv:'tech'},
   {id:'shortcuts',name:'快捷键总表',sub:'全部按键一处查',icon:'⌨',sv:'sliders'},
   {id:'tools',name:'全部工具',sub:'14 个编辑页直达',icon:'◫',sv:'sliders'},
@@ -18308,13 +18471,14 @@ const SP_ENTRIES=[
   {id:'export',name:'导出中心',sub:'照片 / GIF / 视频 / 设置',icon:'↧',sv:'save'},
   {id:'archive',name:'参数存档',sub:'复制 · 粘贴 · JSON',icon:'⟐',sv:'zip'},
   {id:'info',name:'图像信息',sub:'尺寸 / 语义 / 图层',icon:'ⓘ',sv:'photo'},
+  {id:'exif',name:'照片 EXIF',sub:'相机 / 镜头 / 拍摄参数 / 时间 / GPS · 本机读取',icon:'ⓘ',sv:'photo'},
   {id:'about',name:'关于 Iris 与作者',sub:'10 章 · 作者自述 / 版本 / 隐私 / 联系',icon:'◉',sv:'aperture'},
   {id:'autosave',name:'自动保存与恢复',sub:'本机快照 · 继续上次的照片 · 三种恢复方式',icon:'⟳',sv:'save'},
   {id:'history',name:'编辑历史与书签',sub:'回到任意一步 · 状态书签',icon:'↺',sv:'reset'},
   {id:'recent',name:'最近使用工作台',sub:'滤镜 / 收藏 / 模板 / 导出 / 上次照片',icon:'◷',sv:'photo'},
   {id:'exports',name:'导出记录',sub:'名称 / 格式 / 大小 / 时间 · 只存元数据',icon:'↧',sv:'zip'},
   {id:'diagnostics',name:'运行状态诊断',sub:'设备 / WebGL / 存储 / 功能开关 · 可复制',icon:'⌁',sv:'sliders'},
-  {id:'changelog',name:'版本演进',sub:'12 个版本 · 从调色盘到四端',icon:'▤',sv:'book'},
+  {id:'changelog',name:'版本演进',sub:'13 个版本 · 从调色盘到四端',icon:'▤',sv:'book'},
   {id:'gestures',name:'手势与操作地图',sub:'触控 / 鼠标 / 键盘 · 可直达工具',icon:'✆',sv:'draw'},
   {id:'colorbook',name:'色彩术语表',sub:'28 个词条 · 可搜 · 直达实现章节',icon:'◈',sv:'aperture'},
   {id:'appearance',name:'外观与主题',sub:'9 套配色（含液态玻璃）/ 原版 · Nova 双界面 / 顶栏留白 / 工具栏位置 / 圆角 / 动效',icon:'◐',sv:'aperture'},
@@ -18328,12 +18492,12 @@ const PAGE_GROUPS=[
   {id:'help',name:'帮助与阅读',ids:['guide','tech','shortcuts','gestures','colorbook']},
   {id:'browse',name:'编辑与浏览',ids:['tools','filters','templates','zones']},
   {id:'output',name:'输出与文件',ids:['export','archive','exports','autosave']},
-  {id:'status',name:'设备与状态',ids:['mine','history','recent','diagnostics','info','changelog','update']},
+  {id:'status',name:'设备与状态',ids:['mine','history','recent','diagnostics','info','exif','changelog','update']},
   {id:'about',name:'关于',ids:['about']},
   {id:'look',name:'外观与偏好',ids:['appearance']}
 ];
 const PAGE_FAV=['appearance','mine','zones','guide','tech','autosave','export','shortcuts'];
-const PAGE_HUB={title:'页面中心',sub:'22 个独立页面 · 按用途分组 · 可搜索 · 记录最近打开',
+const PAGE_HUB={title:'页面中心',sub:'23 个独立页面 · 按用途分组 · 可搜索 · 记录最近打开',
   render:renderPageCenter};
 let recentPages=[];
 try{ recentPages=JSON.parse(localStorage.getItem('iris_recent_pages')||'[]'); }catch(e){ recentPages=[]; }
@@ -18385,8 +18549,10 @@ function openSubPage(id,anchor){
 }
 /* 换照片后：区域工作台 / 我的空间 / 图像信息 / 诊断 / 历史 等页面
    若正开着，重建内容与缩略图，避免上一张照片的预览留在屏幕上。 */
-const PHOTO_SENSITIVE_PAGES=['zones','mine','info','diag','history','update','tools','browse','filters','templates','export'];
+const PHOTO_SENSITIVE_PAGES=['zones','mine','info','exif','diag','history','update','tools','browse','filters','templates','export'];
 window.addEventListener('iris-photo-changed',()=>{
+  /* v1.0.41：换照片立刻作废 EXIF 解析缓存，页面若正开着会跟着重建 */
+  try{ if(typeof IrisExif!=='undefined') IrisExif.invalidate(); }catch(e){}
   if(!spCurrent||!PHOTO_SENSITIVE_PAGES.includes(spCurrent)) return;
   try{
     const body=$('#spBody'), top=body.scrollTop;
@@ -18598,6 +18764,391 @@ function exportParamsJSON(){
   downloadBlob(new Blob([JSON.stringify(state,null,2)],{type:'application/json'}),'Iris_参数.json');
   toast('参数 JSON 已导出');
 }
+/* ============================================================
+   v1.0.41 · 照片 EXIF / 元数据读取（纯前端 · 零依赖 · 不联网）
+   · 只从本机 File 的前 4MB 字节里找元数据段，不解码整张照片、
+     不占用 WebGL 纹理、不写回导出文件。
+   · 容器：JPEG APP1 / PNG eXIf / WebP EXIF / HEIC·HEIF（尽力而为）
+   · TIFF：大小端、IFD0 + ExifIFD + GPSIFD + InteropIFD，
+     含 RATIONAL / SRATIONAL / ASCII / UNDEFINED 等 12 种类型。
+   · 结果按「相机与镜头 / 拍摄参数 / 时间与软件 / 图像规格 /
+     位置 GPS / 其他」分组，中文标签 + 人类可读的格式化。
+   ============================================================ */
+const IrisExif=(()=>{
+  const TYPE_SZ={1:1,2:1,3:2,4:4,5:8,6:1,7:1,8:2,9:4,10:8,11:4,12:8};
+  /* tag -> [中文名, 分组]；分组 cam/shoot/time/img/gps/other */
+  const T={
+    0x010E:['照片说明','other'],0x010F:['相机厂商','cam'],0x0110:['相机型号','cam'],
+    0x0112:['方向','img'],0x011A:['水平分辨率','img'],0x011B:['垂直分辨率','img'],
+    0x0128:['分辨率单位','img'],0x0131:['处理软件','time'],0x0132:['修改时间','time'],
+    0x013B:['作者','time'],0x8298:['版权','time'],0x0100:['图像宽度','img'],0x0101:['图像高度','img'],
+    0x829A:['快门速度','shoot'],0x829D:['光圈','shoot'],0x8822:['曝光程序','shoot'],
+    0x8827:['感光度','shoot'],0x9000:['Exif 版本','other'],0x9003:['拍摄时间','time'],
+    0x9004:['数字化时间','time'],0x9010:['拍摄时区','time'],0x9011:['原始时区','time'],
+    0x9201:['快门速度值','shoot'],0x9202:['光圈值','shoot'],0x9204:['曝光补偿','shoot'],
+    0x9207:['测光模式','shoot'],0x9208:['闪光灯','shoot'],0x9209:['焦距','shoot'],
+    0x920A:['闪光能量','other'],0x927C:['厂商注释','other'],0x9286:['用户注释','other'],
+    0x9290:['亚秒时间','time'],0x9291:['原始亚秒','time'],0x9292:['数字化亚秒','time'],
+    0xA000:['FlashPix 版本','other'],0xA001:['色彩空间','img'],0xA002:['像素宽度','img'],
+    0xA003:['像素高度','img'],0xA005:['互操作指针','other'],0xA20E:['焦距比','other'],
+    0xA401:['场景类型','shoot'],0xA402:['曝光模式','shoot'],0xA403:['白平衡','shoot'],
+    0xA405:['等效 35mm 焦距','shoot'],0xA406:['场景拍摄类型','shoot'],
+    0xA420:['图像唯一 ID','other'],0xA430:['机主姓名','cam'],0xA431:['机身序列号','cam'],
+    0xA432:['镜头规格','cam'],0xA433:['镜头厂商','cam'],0xA434:['镜头型号','cam'],
+    0xA435:['镜头序列号','cam'],0xA439:['连拍标识','other'],
+    0x0000:['GPS 版本','gps'],0x0001:['纬度参考','gps'],0x0002:['纬度','gps'],
+    0x0003:['经度参考','gps'],0x0004:['经度','gps'],0x0005:['海拔参考','gps'],
+    0x0006:['海拔','gps'],0x0007:['GPS 时间','gps'],0x0008:['GPS 卫星','gps'],
+    0x001D:['GPS 日期','gps'],0x0012:['大地基准','gps']
+  };
+  const MAP={
+    Orientation:['正常','水平镜像','旋转 180°','垂直镜像','顺时针 90° + 镜像','顺时针 90°','逆时针 90° + 镜像','逆时针 90°'],
+    ResolutionUnit:['无单位','英寸','厘米'],
+    MeteringMode:['未知','平均测光','中央重点','点测光','多点','评价测光','局部测光','其他'],
+    ExposureProgram:['未定义','手动','程序自动','光圈优先','快门优先','创意','运动','人像','风景'],
+    WhiteBalance:['自动','手动'],
+    ExposureMode:['自动','手动','自动包围'],
+    ColorSpace:['sRGB','Adobe RGB','未校准'],
+    SceneCaptureType:['标准','风景','人像','夜景'],
+    Flash:['未闪光','闪光','闪光但未测距','闪光且测距','未闪光（强制关闭）','防红眼']
+  };
+  function asStr(v){ return typeof v==='string'?v:(v==null?'':String(v)); }
+  function num(v){ return Array.isArray(v)?(+v[0]||0):(+v||0); }
+  function exposure(v){
+    const x=num(v); if(!x) return '—';
+    if(x<1) return '1/'+Math.round(1/x)+' s';
+    return (Math.round(x*10)/10)+' s';
+  }
+  function rationalPair(v){ return Array.isArray(v)?v:[v]; }
+  function gpsDeg(v,ref){
+    const a=rationalPair(v); if(a.length<3) return null;
+    const d=num(a[0])+num(a[1])/60+num(a[2])/3600;
+    const sign=/^[SW]/i.test(asStr(ref))?-1:1;
+    return {d:+(sign*d).toFixed(6),label:(asStr(ref)||'')+' '+Math.abs(sign*d).toFixed(6)+'°'};
+  }
+  function fmt(tag,v){
+    switch(tag){
+      case 0x829A: case 0x9201: return exposure(v);
+      case 0x829D: case 0x9202: return 'f/'+ (Math.round(num(v)*10)/10);
+      case 0x8827: return 'ISO '+Math.round(num(v));
+      case 0x9209: return (Math.round(num(v)*10)/10)+' mm';
+      case 0xA405: return Math.round(num(v))+' mm（等效）';
+      case 0x9204: {const x=num(v);return (x>0?'+':'')+(Math.round(x*100)/100)+' EV';}
+      case 0x011A: case 0x011B: return Math.round(num(v))+' dpi';
+      case 0x0100: case 0x0101: case 0xA002: case 0xA003: return Math.round(num(v))+' px';
+      case 0x0112: return MAP.Orientation[num(v)-1]||('值 '+num(v));
+      case 0x0128: return MAP.ResolutionUnit[num(v)]||('值 '+num(v));
+      case 0x9207: return MAP.MeteringMode[num(v)]||('值 '+num(v));
+      case 0x8822: return MAP.ExposureProgram[num(v)]||('值 '+num(v));
+      case 0xA403: return MAP.WhiteBalance[num(v)]||('值 '+num(v));
+      case 0xA402: return MAP.ExposureMode[num(v)]||('值 '+num(v));
+      case 0xA001: return MAP.ColorSpace[num(v)]||('值 '+num(v));
+      case 0xA401: return MAP.SceneCaptureType[num(v)]||('值 '+num(v));
+      case 0x9208: {
+        const n=num(v);
+        if(MAP.Flash[n]) return MAP.Flash[n];
+        return (n&1?'已闪光':'未闪光')+(n&0x10?' · 强制':'')+(n&0x40?' · 防红眼':'');
+      }
+      case 0x0002: case 0x0004: {
+        const a=rationalPair(v);
+        return a.length>=3?(num(a[0])+'° '+Math.round(num(a[1]))+"′ "+(Math.round(num(a[2])*100)/100)+'″'):asStr(v);
+      }
+      case 0x0006: return (Math.round(num(v)*100)/100)+' m';
+      case 0x9003: case 0x9004: case 0x0132: return asStr(v).replace(/^(\d{4}):(\d{2}):(\d{2})/,'$1-$2-$3');
+      case 0x9286: case 0x927C: return asStr(v).slice(0,80)||'（二进制内容）';
+      default: {
+        if(Array.isArray(v)) return v.slice(0,8).map(x=>typeof x==='number'?Math.round(x*1000)/1000:String(x)).join(' · ');
+        if(typeof v==='number') return String(Math.round(v*1000)/1000);
+        return asStr(v)||'—';
+      }
+    }
+  }
+  function readVal(dv,p,type,cnt,le,limit){
+    if(type===2){
+      const n=Math.min(cnt,2048); const bytes=new Uint8Array(n);
+      for(let i=0;i<n;i++){ if(p+i>=limit){bytes[i]=0;continue;} bytes[i]=dv.getUint8(p+i); }
+      let end=bytes.indexOf(0); if(end<0) end=n;
+      try{ return new TextDecoder('utf-8').decode(bytes.subarray(0,end)).replace(/\0/g,'').trim(); }
+      catch(e){ let s=''; for(let i=0;i<end;i++)s+=String.fromCharCode(bytes[i]); return s.trim(); }
+    }
+    const sz=TYPE_SZ[type]||1, out=[];
+    const one=(q)=>{
+      if(q+sz>limit) return 0;
+      switch(type){
+        case 1: case 6: case 7: return dv.getUint8(q);
+        case 3: return dv.getUint16(q,le);
+        case 4: return dv.getUint32(q,le);
+        case 5: {const a=dv.getUint32(q,le),b=dv.getUint32(q+4,le);return b?a/b:0;}
+        case 8: return dv.getInt16(q,le);
+        case 9: return dv.getInt32(q,le);
+        case 10:{const a=dv.getInt32(q,le),b=dv.getInt32(q+4,le);return b?a/b:0;}
+        case 11: return dv.getFloat32(q,le);
+        case 12: return dv.getFloat64(q,le);
+        default: return dv.getUint8(q);
+      }
+    };
+    const n=Math.min(cnt,512);
+    for(let i=0;i<n;i++) out.push(one(p+i*sz));
+    return cnt===1?out[0]:out;
+  }
+  function readIfd(dv,base,off,le,limit,out,depth){
+    if(depth>2||off+2>limit) return;
+    const n=dv.getUint16(off,le);
+    if(n>400||off+2+n*12+4>limit) return;
+    for(let i=0;i<n;i++){
+      const p=off+2+i*12;
+      const tag=dv.getUint16(p,le),type=dv.getUint16(p+2,le),cnt=dv.getUint32(p+4,le);
+      const sz=TYPE_SZ[type]||1,total=sz*cnt;
+      const vp=total<=4?p+8:base+dv.getUint32(p+8,le);
+      if(vp<0||vp+Math.min(total,4096)>limit) continue;
+      out.set(tag,{type,cnt,value:readVal(dv,vp,type,cnt,le,limit)});
+    }
+  }
+  function parseTiff(buf,base,format){
+    const dv=new DataView(buf),limit=buf.byteLength;
+    if(base+8>limit) return null;
+    const c0=dv.getUint8(base),c1=dv.getUint8(base+1);
+    let le;
+    if(c0===0x49&&c1===0x49) le=true;
+    else if(c0===0x4D&&c1===0x4D) le=false;
+    else return null;
+    if(dv.getUint16(base+2,le)!==0x2A) return null;
+    const limitSafe=Math.min(limit,base+512*1024);
+    const out=new Map();
+    const ifd0=base+dv.getUint32(base+4,le);
+    readIfd(dv,base,ifd0,le,limitSafe,out,0);
+    /* 子 IFD：Exif / GPS / Interop。只读指针指向的目录，不跟 IFD0 的
+       next（那是缩略图目录，会把主图的宽高覆盖成缩略图尺寸）。 */
+    [0x8769,0x8825,0xA005].forEach(ptr=>{
+      const e=out.get(ptr);
+      if(e&&typeof e.value==='number'&&e.value>0){
+        readIfd(dv,base,base+e.value,le,limitSafe,out,1);
+      }
+    });
+    return {map:out,le,format};
+  }
+  function locate(buf){
+    const dv=new DataView(buf),len=buf.byteLength;
+    const sig=(p,s)=>{ if(p+s.length>len)return false;
+      for(let i=0;i<s.length;i++) if(dv.getUint8(p+i)!==s.charCodeAt(i)) return false; return true; };
+    /* JPEG：逐段扫 APP1 */
+    if(len>4&&dv.getUint16(0,false)===0xFFD8){
+      let p=2;
+      while(p+4<len){
+        if(dv.getUint8(p)!==0xFF){p++;continue;}
+        let m=dv.getUint8(p+1);
+        if(m===0xD8||m===0x01||(m>=0xD0&&m<=0xD7)){p+=2;continue;}
+        if(m===0xDA||m===0xD9) break;
+        const L=dv.getUint16(p+2,false); if(L<2) break;
+        if(m===0xE1&&sig(p+4,'Exif\0\0')) return {base:p+10,format:'JPEG'};
+        p+=2+L;
+      }
+      return {format:'JPEG',reason:'这张 JPEG 里没有 APP1 / Exif 段'};
+    }
+    /* PNG：扫 eXIf chunk（规范要求在 IDAT 之前） */
+    if(len>8&&sig(0,'\x89PNG\r\n\x1a\n')){
+      let p=8;
+      while(p+8<len){
+        const L=dv.getUint32(p,false),type=sig(p+4,'eXIf');
+        if(type){
+          let b=p+8;
+          if(sig(b,'Exif\0\0')) b+=6;
+          return {base:b,format:'PNG'};
+        }
+        if(L>len||p+12+L>len) break;
+        p+=12+L;
+      }
+      return {format:'PNG',reason:'这张 PNG 里没有 eXIf 数据块'};
+    }
+    /* WebP：RIFF chunk 里找 EXIF */
+    if(len>16&&sig(0,'RIFF')&&sig(8,'WEBP')){
+      let p=12;
+      while(p+8<len){
+        const four=sig(p,'EXIF'), sz=dv.getUint32(p+4,true);
+        if(four){
+          let b=p+8;
+          if(sig(b,'Exif\0\0')) b+=6;
+          return {base:b,format:'WebP'};
+        }
+        if(sz>len||p+8+sz>len) break;
+        p+=8+sz+(sz&1);
+      }
+      return {format:'WebP',reason:'这张 WebP 里没有 EXIF 数据块'};
+    }
+    /* HEIC / HEIF：元数据在 item 里，尽力搜索 Exif\0\0 标记；
+       有些相机在标记后还放 4 字节 item 偏移，两种都试。 */
+    if(len>12&&sig(4,'ftyp')){
+      const cap=Math.min(len,4*1024*1024);
+      for(let p=0;p+8<cap;p++){
+        if(sig(p,'Exif\0\0')){
+          let b=p+6;
+          const c0=dv.getUint8(b),c1=dv.getUint8(b+1);
+          if((c0===0x49||c0===0x4D)&&c0===c1) return {base:b,format:'HEIC'};
+          return {base:b+4,format:'HEIC'};
+        }
+      }
+      return {format:'HEIC',reason:'浏览器无法直接读取这个 HEIC 的元数据盒；请用系统相册查看，或先转成 JPG / PNG'};
+    }
+    return {format:'其他',reason:'这个格式没有标准 EXIF 段（截图、动图、网页转存图常如此）'};
+  }
+  const GROUPS=[
+    ['cam','相机与镜头','⌕'],['shoot','拍摄参数','◎'],['time','时间与软件','◷'],
+    ['img','图像规格','▣'],['gps','位置 · GPS','⌖'],['other','其他标签','⋯']
+  ];
+  let cache=null,cacheKey='';
+  async function read(){
+    const f=(typeof LIVE!=='undefined'&&LIVE.srcFile)||null;
+    const key=f?(''+f.size+':'+(f.lastModified||0)+':'+(f.name||'blob')):'none';
+    if(cache&&cacheKey===key) return cache;
+    let res;
+    if(!f){
+      res={ok:false,reason:'当前是内置占位画面或演示图，没有原始文件；导入一张自己的照片后会自动读取。',
+        format:'—',name:(typeof photoName!=='undefined'?photoName:'—'),size:0};
+    } else {
+      try{
+        const head=await f.slice(0,Math.min(f.size,4*1024*1024)).arrayBuffer();
+        const loc=locate(head);
+        let parsed=loc.base!=null?parseTiff(head,loc.base,loc.format):null;
+        if(parsed&&!parsed.map.size) parsed=null;
+        const map=parsed?parsed.map:new Map();
+        const rows=[];
+        /* 内部指针（ExifIFD / GPSIFD / InteropIFD）与缩略图偏移不是用户关心的
+           拍摄信息，不摆到「其他标签」里，免得看起来像一串乱码。 */
+        const HIDDEN=new Set([0x8769,0x8825,0xA005,0x0201,0x0202]);
+        map.forEach((v,tag)=>{
+          if(HIDDEN.has(tag)) return;
+          const meta=T[tag];
+          const name=meta?meta[0]:('标签 0x'+tag.toString(16).toUpperCase().padStart(4,'0'));
+          const group=meta?meta[1]:'other';
+          rows.push({tag,name,group,type:v.type,count:v.count,value:v.value,text:fmt(tag,v.value)});
+        });
+        rows.sort((a,b)=>a.tag-b.tag);
+        /* GPS 十进制坐标：单独算出来，方便一眼核对 */
+        let gps=null;
+        const lat=gpsDeg(map.get(0x0002)?.value,map.get(0x0001)?.value);
+        const lon=gpsDeg(map.get(0x0004)?.value,map.get(0x0003)?.value);
+        if(lat&&lon) gps={lat:lat.d,lon:lon.d,text:lat.label+' , '+lon.label};
+        res={ok:rows.length>0,reason:loc.reason||'',format:loc.format,
+          name:f.name||'本机照片',size:f.size,rows,gps,le:parsed?parsed.le:null};
+        if(!rows.length) res.reason=loc.reason||'找到了 Exif 段，但没有可识别的标签';
+      }catch(e){ res={ok:false,reason:'读取失败：'+(e&&e.message?e.message:e),format:'—',name:f.name||'本机照片',size:f.size,rows:[]}; }
+    }
+    cache=res;cacheKey=key;return res;
+  }
+  function invalidate(){ cache=null;cacheKey=''; }
+  function plainText(r){
+    if(!r) return '';
+    const out=['Iris 调色盘 · 照片 EXIF（本机读取）','文件：'+r.name,'格式：'+r.format];
+    GROUPS.forEach(([k,n])=>{
+      const list=(r.rows||[]).filter(x=>x.group===k);
+      if(!list.length) return;
+      out.push('','【'+n+'】');
+      list.forEach(x=>out.push(x.name+'：'+x.text));
+    });
+    if(r.gps) out.push('','十进制坐标：'+r.gps.text);
+    return out.join('\n');
+  }
+  return {read,invalidate,plainText,GROUPS,T};
+})();
+function renderExifPage(body){
+  const w=spWrap(body);
+  asHero(w,'IRIS · EXIF','照片 EXIF 信息',
+    '直接读取本机照片文件里的元数据：<b>相机 / 镜头 / 光圈 / 快门 / ISO / 焦距 / 拍摄时间 / GPS</b>，中文标签、可读数值，全部在设备内完成。',
+    '支持 JPEG（APP1）、PNG（eXIf）、WebP（EXIF 块）与 HEIC 的尽力解析；纯前端零依赖，不上传任何字节，也不会把元数据写进导出的成品。');
+  const host=document.createElement('div'); w.append(host);
+  const draw=(r)=>{
+    host.innerHTML='';
+    const bar=document.createElement('div'); bar.className='exif-head';
+    bar.append(button('⧉ 复制全部',()=>{
+      const txt=IrisExif.plainText(r);
+      const done=()=>toast('已复制 '+txt.split('\n').length+' 行 EXIF 摘要');
+      if(navigator.clipboard&&navigator.clipboard.writeText){
+        navigator.clipboard.writeText(txt).then(done,()=>fallbackCopy(txt,done));
+      } else fallbackCopy(txt,done);
+    },'sm'));
+    bar.append(button('↻ 重新读取',()=>{ IrisExif.invalidate(); draw(null); load(); },'sm'));
+    if(typeof openSubPage==='function') bar.append(button('→ 图像信息',()=>openSubPage('info'),'sm'));
+    host.append(bar);
+    const stat=document.createElement('div'); stat.className='exif-stat';
+    const fmtSize=n=>n>=1048576?(n/1048576).toFixed(2)+' MB':Math.max(1,Math.round(n/1024))+' KB';
+    [['文件',r.name],['格式',r.format],['体积',r.size?fmtSize(r.size):'—'],
+     ['标签',(r.rows||[]).length+' 项'],['状态',r.ok?'已读取':'无元数据']]
+      .forEach(([k,v])=>{ const s=document.createElement('span'); s.append(document.createTextNode(k+' '));
+        const b=document.createElement('b'); b.textContent=v; s.append(b); stat.append(s); });
+    host.append(stat);
+    if(!r.ok){
+      const e=document.createElement('div'); e.className='exif-empty';
+      e.innerHTML='<b>没有读到 EXIF</b>'+irisExifEsc(r.reason||'')+
+        '<br>微信 / 网页转存、截图、经过二次压缩的图常被抹掉元数据；相机原片与手机「原图」一般都会保留。';
+      host.append(e);
+    } else {
+      IrisExif.GROUPS.forEach(([key,title,ic])=>{
+        const list=(r.rows||[]).filter(x=>x.group===key);
+        if(!list.length) return;
+        const card=document.createElement('div'); card.className='exif-card';
+        const h=document.createElement('h4'); h.textContent=ic+' '+title;
+        const sm=document.createElement('small'); sm.textContent=' · '+list.length+' 项'; h.append(sm);
+        card.append(h);
+        if(key==='gps'){
+          const note=document.createElement('div'); note.className='off-note';
+          note.innerHTML='ⓘ <b>位置属于敏感信息</b>：默认折叠，只在你的设备上显示，不会复制给他人、不会上传。';
+          card.append(note);
+          const det=document.createElement('details'); det.style.marginTop='8px';
+          const sum=document.createElement('summary'); sum.style.cssText='cursor:pointer;font-size:11.5px;color:var(--sub);padding:5px 0';
+          sum.textContent='展开查看经纬度与 GPS 明细'; det.append(sum);
+          const g=document.createElement('div'); g.className='exif-grid';
+          if(r.gps){ const row=document.createElement('div'); row.className='exif-row';
+            row.innerHTML='<i>十进制坐标</i><b>'+irisExifEsc(r.gps.text)+'</b>'; g.append(row); }
+          list.forEach(x=>{ const row=document.createElement('div'); row.className='exif-row';
+            const i=document.createElement('i'); i.textContent=x.name;
+            const b=document.createElement('b'); b.textContent=x.text; row.append(i,b); g.append(row); });
+          det.append(g); card.append(det);
+        } else {
+          const g=document.createElement('div'); g.className='exif-grid';
+          list.forEach(x=>{ const row=document.createElement('div'); row.className='exif-row';
+            const i=document.createElement('i'); i.textContent=x.name;
+            const b=document.createElement('b'); b.textContent=x.text; row.append(i,b); g.append(row); });
+          card.append(g);
+        }
+        host.append(card);
+      });
+      const rawCard=document.createElement('div'); rawCard.className='exif-card';
+      const rh=document.createElement('h4'); rh.textContent='⋯ 全部原始标签';
+      const rsm=document.createElement('small'); rsm.textContent=' · 十六进制 / 类型 / 原始值'; rh.append(rsm);
+      rawCard.append(rh);
+      const det=document.createElement('details');
+      const sum=document.createElement('summary'); sum.style.cssText='cursor:pointer;font-size:11.5px;color:var(--sub);padding:5px 0';
+      sum.textContent='展开原始数据（'+(r.rows||[]).length+' 项）'; det.append(sum);
+      const pre=document.createElement('div'); pre.className='exif-raw';
+      pre.textContent=(r.rows||[]).map(x=>
+        '0x'+x.tag.toString(16).toUpperCase().padStart(4,'0')+'  T'+x.type+' ×'+x.count+'  '+x.name+' = '+x.text
+      ).join('\n');
+      det.append(pre); rawCard.append(det); host.append(rawCard);
+    }
+    const priv=document.createElement('div'); priv.className='exif-priv';
+    priv.innerHTML='<b>🔒 隐私边界</b>：EXIF 只从本机文件的前 4MB 字节里读，'
+      +'不发网络请求、不写进参数存档、不写入导出的 PNG / JPG / WebP。'
+      +'如果要把照片发给别人又不想带位置，复制成品图片即可（Iris 导出默认不带任何元数据）。';
+    host.append(priv);
+  };
+  const load=async()=>{
+    const r=await IrisExif.read();
+    if(spCurrent!=='exif') return;
+    host.innerHTML=''; draw(r);
+  };
+  host.innerHTML='<div class="exif-empty"><b>正在读取本机文件元数据…</b>不解码照片，不联网</div>';
+  load();
+}
+function fallbackCopy(txt,done){
+  try{
+    const ta=document.createElement('textarea'); ta.value=txt;
+    ta.style.cssText='position:fixed;left:-9999px;top:0'; document.body.append(ta);
+    ta.select(); const ok=document.execCommand('copy'); ta.remove();
+    toast(ok?'已复制 EXIF 摘要':'复制失败，请手动选择文本'); if(ok&&done)done();
+  }catch(e){ toast('复制失败，请手动选择文本'); }
+}
+function irisExifEsc(s){ const d=document.createElement('div'); d.textContent=String(s==null?'':s); return d.innerHTML; }
+
 /* ---------- 08 图像信息 ---------- */
 /* ---------- 区域工作台：语义 matte 的可视、可调、可复用 ---------- */
 function renderZonesPage(body){
@@ -18908,6 +19459,9 @@ function renderZonesPageRefresh(body){
 
 function renderInfoPage(body){
   const w=spWrap(body);
+  const jump=document.createElement('div'); jump.className='exif-head';
+  jump.append(button('ⓘ 查看照片 EXIF（相机 / 镜头 / 拍摄参数 / GPS）',()=>openSubPage('exif'),'sm'));
+  w.append(jump);
   const [ew,eh]=exportSize();
   const sem=window.SEM_STATS||{};
   const rows=[
@@ -18943,8 +19497,8 @@ const AB_CHAPTERS=[
   <div class="ab-metric"><b>12</b><small>种独立色调</small></div>
   <div class="ab-metric"><b>4</b><small>层滤镜叠加</small></div>
   <div class="ab-metric"><b>6</b><small>种虚化模糊</small></div>
-  <div class="ab-metric"><b>20</b><small>章说明书</small></div>
-  <div class="ab-metric"><b>19</b><small>个二级页面</small></div>
+  <div class="ab-metric"><b>25</b><small>章说明书</small></div>
+  <div class="ab-metric"><b>23</b><small>个二级页面</small></div>
   <div class="ab-metric"><b>60</b><small>fps 视频导出</small></div>
   <div class="ab-metric"><b>1</b><small>个 HTML 文件</small></div>
 </div>
@@ -18955,7 +19509,7 @@ const AB_CHAPTERS=[
  <div class="ab-item"><b>◐ 局部与空间</b><small>涂抹式局部蒙版（直接刷出选区，可擦除 / 撤销 / 伪彩预览，形状渐变保留为可选）、背景虚化（涂抹选取主体或虚化区域 + 六种模糊 + 主体框微调；自动主体检测暂不支持）、光场计算（重聚焦、视差微动、方向重打光）、涂抹式马赛克 / 柔焦 / 动态 / 径向模糊，最多 6 块区域、可调范围与羽化。</small></div>
  <div class="ab-item"><b>▣ 构图与元素</b><small>可视化拖拽裁剪（角点、边框、比例锁、精确数值兜底）、裁剪页首屏的<b>左右 / 上下透视倾斜</b>（两根 −45°~+45° 度数滑杆、斜切与梯形两种模式、照片上横拖纵拖、自动裁切填满不露黑角）、折叠里的任意角度拉直、90° 步进与水平 / 垂直翻转（无损、导出按旋转后尺寸）、构图缩放与位移、文字 / 贴纸 / 形状 / 涂鸦（可拖动、缩放、旋转、改字体颜色描边）、留白画框、旋转翻转与透视矫正。</small></div>
  <div class="ab-item"><b>▷ 动态与输出</b><small>iOS 实况照片逐帧编辑、编辑栏内的实况进度条、自定义封面工作台（12 张关键帧 + 0.01s 精确选帧）、GIF 动图、PNG / JPG / WebP、实况配对素材与全格式 ZIP 打包。视频工作台与视频导出暂未开放，待打磨完成后恢复。</small></div>
- <div class="ab-item"><b>⌕ 效率</b><small>全局搜索（工具 / 滤镜 / 参数 / 模板 / 操作一处直达）、12 个一键快捷、24 章说明书 + 18 章技术实现、22 个独立二级页面（收拢进「页面中心」分组浏览）、本机自动保存与恢复、撤销重做、参数复制与 JSON 存档、自定义滤镜与我的色调、35 种主盘模式、「我的空间」历史图片与一键保存整套参数。视频工作台暂未开放，待打磨完成后再恢复入口。</small></div>
+ <div class="ab-item"><b>⌕ 效率</b><small>全局搜索（工具 / 滤镜 / 参数 / 模板 / 操作一处直达）、12 个一键快捷、25 章说明书 + 18 章技术实现、23 个独立二级页面（收拢进「页面中心」分组浏览）、本机自动保存与恢复、撤销重做、参数复制与 JSON 存档、自定义滤镜与我的色调、35 种主盘模式、「我的空间」历史图片与一键保存整套参数。视频工作台暂未开放，待打磨完成后再恢复入口。</small></div>
  <div class="ab-item"><b>◇ 体验</b><small>移动端大图优先、编辑栏可拖动可收起、25%–800% 缩放、按住看原图与可拖动分屏线、直方图三模式、轻动画（尊重系统「减少动画」）、统一细线图标、桌面与手机自适应。</small></div>
 </div>`},
 {id:'architecture',n:'04',eyebrow:'ARCHITECTURE',t:'技术架构 · 四层与实现',html:`
@@ -18999,7 +19553,7 @@ const AB_CHAPTERS=[
  <div class="ab-step"><b>拆掉绑定 · 让色调自由</b>4 层滤镜各自独立调色盘、12 种色调、语义主盘与肤色锁。</div>
  <div class="ab-step"><b>长成编辑器</b>文字贴纸涂鸦、涂抹式马赛克与模糊、可视化裁剪、背景虚化与光场。</div>
  <div class="ab-step"><b>动态与输出</b>实况照片、不限时长视频、GIF、多格式与全格式打包。</div>
- <div class="ab-step"><b>工程化与收敛</b>色彩迁移、24 章说明书、18 章技术实现、22 个二级页面与「页面中心」分组浏览、自动保存与恢复、界面精简与移动端重排。</div>
+ <div class="ab-step"><b>工程化与收敛</b>色彩迁移、25 章说明书、18 章技术实现、23 个二级页面与「页面中心」分组浏览、自动保存与恢复、界面精简与移动端重排。</div>
  <div class="ab-step"><b>现在 · 近乎最终</b>作者与关于页、细节修复、稳定性优先。</div>
 </div>
  <p style="margin-top:14px"><b>更新方式已经变了</b>：最终安装包 / Release 版本冻结在 <b>1.0.1.8</b>，之后不再重新构建 apk / ipa / exe，也不再发布新 Release。所有后续改动只替换一份 <code>web/index.html</code>，App 不用重装；当前页面版本是 <b>1.0.19</b>（构建 2026-11-19，HTML 热更新通道），检查更新时会自动读到线上最新的页面版本。两个版本号分属不同通道，不互相比较 —— 详见「检查更新」页里的完整策略说明与说明书第 22 章。</p>
@@ -19145,7 +19699,7 @@ const TECH_CHAPTERS=[
 <p><b>① 样式</b>：用 CSS 自定义属性收拢配色（深灰底、暖金强调色、次级文字色），后面所有组件、二级页面、关于页、技术页都引用同一组变量，所以改一个色值整站同步。响应式不是两套 UI，而是同一套 DOM 在 <code>760px</code> / <code>520px</code> 断点上重排。</p>
 <p><b>② DOM</b>：顶栏、画布（<code>#stage</code> 里的 WebGL canvas + 2D 叠加层 canvas）、编辑栏、底栏工具、隐藏的 <code>&lt;input type="file"&gt;</code>、二级页面容器、导出菜单、全局搜索、提示条。两个 canvas 叠在一起是关键：<b>一个只画照片，一个只画框、圈、文字元素</b>，互不干扰，也方便「对比原图」时只隐藏叠加层。</p>
 <p><b>③ 工具层</b>：<code>$()</code>、<code>clamp()</code>、<code>svg()</code>（内联 ICONS 字典生成细线图标）、<code>toast()</code>、<code>deep()</code>、<code>normalizeState()</code>。图标是一套 stroke 风格 SVG 字符串，保证任何缩放都清晰、不需要字体文件。</p>
-<p><b>④ 数据层</b>：443 款滤镜、78 套模板、HSV 分色表、24 章说明书、10 章关于、18 章技术文章，全都是字面量数组。新增一款滤镜就是往数组里加一个对象；模板则是「滤镜层 + 分色调盘 + 语义主盘 + 基础参数 + 画框」的组合描述，<b>不是把参数复制一遍</b>。</p>
+<p><b>④ 数据层</b>：443 款滤镜、78 套模板、HSV 分色表、25 章说明书、10 章关于、18 章技术文章，全都是字面量数组。新增一款滤镜就是往数组里加一个对象；模板则是「滤镜层 + 分色调盘 + 语义主盘 + 基础参数 + 画框」的组合描述，<b>不是把参数复制一遍</b>。</p>
 <p><b>⑤ 着色器</b>：VS / FS 是模板字符串，其中几段用代码生成后插入占位符（下一章详述）。</p>
 <p><b>⑥ 运行时</b>：<code>state</code> 单一状态树 + <code>render()</code> 单一渲染入口 + pointer 事件分发。</p>
 <p><b>⑦ 外围</b>：导出、独立页面系统 <code>SUBPAGES</code>、全局搜索 <code>CMD</code>、启动逻辑（首次 <code>uploadImage(demoImage())</code>，之后改中性占位 <code>uploadImage(placeholderImage())</code>，避免导入过照片后重启又冒出测试图）。</p>
@@ -20718,6 +21272,21 @@ function renderDiagnosticsPage(body){
 
 /* ---------- 16 版本演进 ---------- */
 const AS_CHANGELOG=[
+ {v:'v1.0.41',t:'照片 EXIF · 滑动分割线对比 · 沉浸大图再打磨',
+  d:'以用户提供的 1.0.40 底稿为基础，三件事。'
+   +'<b>① 新增「照片 EXIF」独立页面</b>：纯前端解析 JPEG APP1 / PNG eXIf / WebP EXIF / HEIC 尽力而为，'
+   +'TIFF 大小端 + IFD0 / ExifIFD / GPSIFD / InteropIFD + 12 种字段类型，'
+   +'中文六组展示（相机与镜头 / 拍摄参数 / 时间与软件 / 图像规格 / GPS / 其他），'
+   +'快门、光圈、ISO、焦距、曝光补偿、闪光灯、测光、白平衡、方向、色彩空间都翻成人类读数；'
+   +'GPS 默认折叠并给十进制坐标，可复制全部摘要、可展开原始标签。'
+   +'只读前 4MB 字节、零网络请求、不写回导出成品；独立页面 22 → 23。'
+   +'<b>② 滑动分割线对比做成顺手功能</b>：一枚「◐ 对比」按钮同时承担「按住看整张原图」与「轻点开关分屏」；'
+   +'金色竖线 + 原图/成品标签 + 拖动百分比气泡，拖圆点 / 点画面定位 / 双击归中 / R 关闭；'
+   +'顺手修掉旧版用 <code>!o.thumb</code> 冒充「预览帧」的语义混用，改成显式 <code>preview</code> 标记，'
+   +'导出、缩略图、GIF、录制帧一律不带分屏。沉浸大图底部 ◐ 复用同一套逻辑。'
+   +'<b>③ 沉浸大图继续打磨</b>：收起画面内重复的缩小对比按钮，首屏只剩一条大滑杆 + 一排按钮；'
+   +'手机 390px 逐颗真实点击校验，浅色主题与原版布局切换不受影响。'
+   +'说明书 24 → 25 章（新增「照片 EXIF 与滑动分割线对比」），视频工作台章顺延为第 25 章。'},
  {v:'v1.0.40',t:'导入进度条 + 入口置灰 + 实况 / 同步 / 护盾全数归位',
   d:'这一版把两条线合进同一份底稿。<b>① 你这次新增的全部照旧</b>：'
    +'导入照片的进度条（真实阶段推进、百分比单调、同步上传前双 rAF 保证画出来、失败变红并写明原因、完成自动收起）；'
@@ -21203,7 +21772,7 @@ async function renderMinePage(body){
 const SUBPAGES={
   zones:{title:'区域工作台',sub:'语义 matte 可视化 · 四区独立调色 · 一键转成蒙版 / 虚化',render:renderZonesPage},
   mine:{title:'我的空间',sub:'历史图片 · 我的滤镜 / 全套参数 · 书签 · 导出 · 最近使用',render:renderMinePage},
-  guide:{title:'使用说明书',sub:'24 章全文 · 目录 / 搜索 / 复杂功能详解',render:renderGuidePage},
+  guide:{title:'使用说明书',sub:'25 章全文 · 目录 / 搜索 / 复杂功能详解',render:renderGuidePage},
   tech:{title:'技术实现',sub:'18 章长文 · 渲染管线 / 着色器 / 坐标 / 语义 / 导出 / 验证',render:renderTechPage},
   shortcuts:{title:'快捷键总表',sub:'全部按键一处查',render:renderShortcuts},
   tools:{title:'全部工具',sub:'14 个编辑页直达',render:renderToolsPage},
@@ -21212,13 +21781,14 @@ const SUBPAGES={
   export:{title:'导出中心',sub:'照片 / GIF / 视频 / 实况配对 / 设置',render:renderExportPage},
   archive:{title:'参数存档',sub:'非破坏编辑 · 复制 / 粘贴 / JSON',render:renderArchivePage},
   info:{title:'图像信息',sub:'尺寸 · 图层 · 语义 matte · 元素统计',render:renderInfoPage},
+  exif:{title:'照片 EXIF 信息',sub:'相机 / 镜头 / 拍摄参数 / 时间 / GPS · 本机读取 · 不上传',render:renderExifPage},
   about:{title:'关于 Iris',sub:'10 章 · 作者自述 · 技术架构 · 隐私 · 版本 · 联系',render:renderAboutPage},
   autosave:{title:'自动保存与恢复',sub:'本机快照 · 继续上次的照片 · 网页 / 桌面 / 手机一致',render:renderAutosavePage},
   history:{title:'编辑历史与书签',sub:'回到任意一步 · 把满意的状态存成书签',render:renderHistoryPage},
   recent:{title:'最近使用工作台',sub:'滤镜 / 收藏 / 模板 / 导出 / 上次的照片',render:renderRecentPage},
   exports:{title:'导出记录',sub:'只记元数据，不保存成品文件',render:renderExportsPage},
   diagnostics:{title:'运行状态诊断',sub:'设备 / WebGL / 本机存储 / 功能开关',render:renderDiagnosticsPage},
-  changelog:{title:'版本演进',sub:'12 个版本 · 从一个调色盘到四条分发路径',render:renderChangelogPage},
+  changelog:{title:'版本演进',sub:'13 个版本 · 从一个调色盘到四条分发路径',render:renderChangelogPage},
   gestures:{title:'手势与操作地图',sub:'触控 / 鼠标 / 键盘 · 点「去试试」直达工具',render:renderGesturesPage},
   colorbook:{title:'色彩术语表',sub:'28 个词条 · 可搜索 · 直达对应实现章节',render:renderColorbookPage},
   appearance:{title:'外观与主题',sub:'9 套配色 · 原版 / Nova 双界面 · 圆角 / 玻璃 / 动效',render:renderAppearancePage},
@@ -21226,13 +21796,13 @@ const SUBPAGES={
   video:{title:'视频工作台',sub:'多片段时间线 · 关键帧 / 转场 / 运镜 · 静止段零重绘导出',render:renderVideoPage}
 };
 /* ============================================================
-   页面中心：把 22 个独立页面从「一排平铺」改成「分组 + 搜索 + 最近」
+   页面中心：把 23 个独立页面从「一排平铺」改成「分组 + 搜索 + 最近」
    默认只显示 5 张常用卡；点分类 tab 才展开该组；搜索跨全部分组。
    ============================================================ */
 function renderPageCenter(body){
   const w=spWrap(body);
   asHero(w,'IRIS · PAGES','页面中心',
-    '22 个独立页面不再一次全铺出来：首屏只有 7 个常用入口，其余按用途收进折叠分组，点组名才展开；也可以直接搜名字，或点最近打开。',
+    '23 个独立页面不再一次全铺出来：首屏只有 7 个常用入口，其余按用途收进折叠分组，点组名才展开；也可以直接搜名字，或点最近打开。',
     '所有页面原样保留，全局搜索 Ctrl/⌘+K 依旧能直达任意一页。');
   const st=spEl('div','pc-stat');
   [[SP_ENTRIES.length,'独立页面'],[PAGE_GROUPS.length,'用途分组'],
@@ -21641,7 +22211,7 @@ let guideQuery='';
 function buildGuide(p){
   const head=section('使用说明书 · '+GUIDE_CHAPTERS.length+' 章');
   head.classList.add('iris-fixed');
-  head.append(hint('<b>完整内容已做成独立页面</b>：左侧目录、右侧 24 章全文，可搜索、可跳转、可返回。'
+  head.append(hint('<b>完整内容已做成独立页面</b>：左侧目录、右侧 25 章全文，可搜索、可跳转、可返回。'
     +'下面点目录或章节标题，会直接打开对应章节。'));
   const open=document.createElement('button'); open.className='btn sp-primary';
   open.textContent='▤ 打开完整说明书（独立页）';
@@ -22543,6 +23113,9 @@ function gotoParam(label,group,key){
 }
 function cmdActions(){
   return [
+    {name:'照片 EXIF 信息',desc:'相机 / 镜头 / 光圈 / 快门 / ISO / 焦距 / 拍摄时间 / GPS · 本机读取',
+     key:'EXIF 元数据 metadata 相机 镜头 光圈 快门 ISO 焦距 拍摄时间 GPS 位置 图像信息 文件',hint:'',icon:'ⓘ',
+     run:()=>openSubPage('exif')},
     {name:'沉浸大图模式',desc:'照片占满屏幕 · 极简顶栏 · 14 工具横向 tab · 随时切回原版',
      key:'沉浸 大图 看图 focus 主题 界面 全屏 手机 修图 醒目',hint:'',icon:'▣',
      run:()=>{ setIrisSkin({ui:irisSkin.ui==='focus'?'classic':'focus'});
@@ -22709,7 +23282,8 @@ function cmdActions(){
     {name:'裁剪与照片方向',desc:'可视化拖框裁剪 · 90° 旋转 · 水平 / 垂直翻转 · 比例锁',
      key:'裁剪 旋转 翻转 方向 crop rotate 拉直 构图',hint:'',icon:'▣',
      run:()=>{ gotoTool('crop'); toast('在「照片方向」里旋转或翻转照片'); }},
-    {name:'分屏对比',desc:'开启 / 关闭左右分屏对比',key:'split 对比',hint:'R',icon:'◫',run:()=>{mutate(()=>{state.splitOn=!state.splitOn;buildPanel();});}},
+    {name:'滑动分割线对比',desc:'左右分屏看原图与成品 · 拖圆点 / 点画面定位 / 双击归中',
+     key:'分屏 分割线 对比 原图 成品 split 滑动 左右 拖动',hint:'R',icon:'◫',run:()=>IrisSplit.toggle()},
     {name:'自定义封面',desc:'从实况视频的关键帧里挑一帧作静态封面，精确到 0.01s',
      key:'自定义封面 选封面 关键帧 封面 cover frame poster 实况 live 抽帧 选帧',hint:'',icon:'✦',
      run:()=>openCoverPicker()},
@@ -22851,7 +23425,7 @@ function buildCmdItems(){
     push('页面','◈','页面 · '+e.name,e.sub,
       '页面 独立 '+e.name+' '+e.id,'',()=>openSubPage(e.id));
   });
-  push('页面','◫','页面 · 页面中心','22 个独立页面按用途分组，一次只看一组，可搜索 / 最近打开',
+  push('页面','◫','页面 · 页面中心','23 个独立页面按用途分组，一次只看一组，可搜索 / 最近打开',
     '页面中心 全部页面 pages hub 分组 目录 独立页面','',()=>openSubPage('pages'));
   /* 自动保存的常用操作 */
   [['立即保存到本机','把当前照片与全部编辑立刻写入本机存储',
