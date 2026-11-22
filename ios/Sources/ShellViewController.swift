@@ -171,6 +171,27 @@ final class ShellViewController: UIViewController, WKScriptMessageHandler, WKNav
             CloudSync.shared.handle(body, web: web)
         case "liveNote":
             alert("导出提示", (body["msg"] as? String) ?? "")
+        case "segmentPerson":
+            let mid = (body["id"] as? String) ?? "0"
+            guard let b64 = body["b64"] as? String else {
+                // 没拿到图也要回一句，否则页面的 busy 会一直挂着
+                web.evaluateJavaScript("window.__irisMaskResult && window.__irisMaskResult('\(mid)',0,'',0,0)",
+                                       completionHandler: nil)
+                return
+            }
+            PersonMask.generate(jpegBase64: b64) { [weak self] png, w, h, note in
+                guard let self = self else { return }
+                if let png = png {
+                    self.web.evaluateJavaScript(
+                        "window.__irisMaskResult && window.__irisMaskResult('\(mid)',1,'\(png)',\(w),\(h))",
+                        completionHandler: nil)
+                } else {
+                    self.web.evaluateJavaScript(
+                        "window.__irisMaskResult && window.__irisMaskResult('\(mid)',0,'',0,0)",
+                        completionHandler: nil)
+                    NSLog("[iris] person mask failed: %@", note)
+                }
+            }
         default:
             break
         }

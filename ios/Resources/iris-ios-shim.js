@@ -83,6 +83,13 @@
     try { H.postMessage(obj); } catch (e) {}
   }
 
+  /* 人像分割：把缩小后的 JPEG 交给原生 Vision，原生回 __irisMaskResult(灰度 PNG)。
+     原生只回一张蒙版，怎么用（背景虚化 / 压暗 / 分区调色）全在页面里决定。 */
+  window.__irisSegmentPerson = function (id, b64) {
+    try { send({ op: 'segmentPerson', id: String(id), b64: String(b64) }); return true; }
+    catch (e) { return false; }
+  };
+
   /* ---------- 3) 分块传原生：32KB 一块 ---------- */
   function save(name, blob) {
     return new Promise(function (resolve) {

@@ -7327,6 +7327,73 @@ function uploadSubjectMask(mask,W,H){
   gl.activeTexture(gl.TEXTURE0);
   requestRender();
 }
+
+/* ============================================================
+   原生人像蒙版（iOS Vision / 端侧模型）
+   页面不再靠肤色和亮度去「猜」主体：把画面缩到 1024 长边送进壳里的系统分割，
+   拿回灰度蒙版 —— 白＝主体、黑＝背景、灰＝软边缘，正好是 u_subject 的口径，
+   所以直接喂 uploadSubjectMask，六种散景与主体框微调立刻都能用上。
+   ============================================================ */
+const NATIVE_MASK={busy:false,ready:false,id:'',W:0,H:0};
+function nativeMaskBridge(){
+  try{ return (typeof window.__irisSegmentPerson==='function')?window.__irisSegmentPerson:null; }
+  catch(e){ return null; }
+}
+function personMaskSnapshot(){
+  let s=null;
+  try{ if(typeof LIVE!=='undefined') s=LIVE.fullSource||LIVE.still||null; }catch(e){}
+  if(!s) return null;
+  const sw=s.naturalWidth||s.videoWidth||s.width||0;
+  const sh=s.naturalHeight||s.videoHeight||s.height||0;
+  if(!sw||!sh) return null;
+  /* 1024 长边足够：蒙版最终要放大到导出尺寸，送原图只会让请求变慢、字符串过大 */
+  const k=Math.min(1,1024/Math.max(sw,sh));
+  const c=document.createElement('canvas');
+  c.width=Math.max(2,Math.round(sw*k));
+  c.height=Math.max(2,Math.round(sh*k));
+  try{ c.getContext('2d').drawImage(s,0,0,c.width,c.height); }catch(e){ return null; }
+  return c;
+}
+function requestNativeMask(){
+  const bridge=nativeMaskBridge();
+  if(!bridge){ toast('这一端还没有人像分割：iOS 壳内已可用'); return; }
+  if(!imageReady){ toast('请先导入照片'); return; }
+  if(NATIVE_MASK.busy){ toast('正在生成，稍等一下'); return; }
+  const c=personMaskSnapshot();
+  if(!c){ toast('拿不到当前画面，重新导入一次照片试试'); return; }
+  NATIVE_MASK.busy=true;
+  NATIVE_MASK.id='m'+Date.now();
+  toast('正在用系统人像分割生成蒙版…');
+  let data='';
+  try{ data=c.toDataURL('image/jpeg',0.92); }
+  catch(e){ NATIVE_MASK.busy=false; toast('蒙版请求失败'); return; }
+  if(!bridge(NATIVE_MASK.id,data.slice(data.indexOf(',')+1))){
+    NATIVE_MASK.busy=false; toast('蒙版请求没能送出去');
+  }
+}
+window.__irisMaskResult=function(id,ok,b64,w,h){
+  if(id&&NATIVE_MASK.id&&id!==NATIVE_MASK.id) return;
+  NATIVE_MASK.busy=false;
+  if(!ok||!b64){ toast('没检测到人物：换一张人像占比更大的照片'); return; }
+  const im=new Image();
+  im.onload=function(){
+    try{
+      const c=document.createElement('canvas');
+      c.width=im.naturalWidth; c.height=im.naturalHeight;
+      const cx=c.getContext('2d',{willReadFrequently:true});
+      cx.drawImage(im,0,0);
+      const d=cx.getImageData(0,0,c.width,c.height).data;
+      const n=c.width*c.height, mask=new Uint8Array(n);
+      for(let i=0;i<n;i++) mask[i]=d[i*4];
+      uploadSubjectMask(mask,c.width,c.height);
+      NATIVE_MASK.ready=true; NATIVE_MASK.W=c.width; NATIVE_MASK.H=c.height;
+      toast('人像蒙版已生成 '+c.width+'×'+c.height+'，去「背景虚化」开开关即可见效');
+      if(typeof buildPanel==='function') buildPanel(true);
+    }catch(e){ toast('蒙版解码失败'); }
+  };
+  im.onerror=function(){ toast('蒙版解码失败'); };
+  im.src='data:image/png;base64,'+b64;
+};
 function bokEffectiveMode(m){
   if(m!=='auto') return m;
   const L=BOK.low||bokSampleLow();
@@ -13588,7 +13655,7 @@ function renderVideoPage(body){
    4) 断网、限流、404、旧版页面格式都有明确降级与提示，
       检查失败不影响任何编辑与导出功能。
    ============================================================ */
-const IRIS_VERSION='1.0.41';             /* 页面版本：走 HTML 热更新，持续递增 */
+const IRIS_VERSION='1.0.42';             /* 页面版本：走 HTML 热更新，持续递增 */
 const IRIS_BUILD='2026-11-22';
 const IRIS_CHANNEL='hot';                /* hot = HTML 热更新通道 */
 const IRIS_APP_BASELINE='1.0.1.8';       /* 最终安装包 / Release 版本，已冻结 */
@@ -22085,6 +22152,11 @@ function buildBokeh(p){
   if(off){ go.setAttribute('aria-disabled','true'); go.title=off; go.onclick=()=>toast(off); }
   else go.onclick=()=>detectSubject(bk.mode||'auto');
   head.append(go);
+  const ai=document.createElement('button'); ai.className='btn';
+  ai.style.cssText='width:100%;padding:10px;margin:0 0 6px;font-size:12px';
+  ai.textContent='◎ 系统人像分割生成蒙版（iOS）';
+  ai.onclick=function(){ requestNativeMask(); };
+  head.append(ai);
   const sw=document.createElement('div'); sw.className='row';
   sw.append(chipRow([{id:'on',name:'● 已开启'},{id:'off',name:'○ 关闭'}],
     bk.on?'on':'off',id=>mutate(()=>{state.bokeh.on=id==='on';buildPanel(true);})));
