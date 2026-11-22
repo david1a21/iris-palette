@@ -680,6 +680,7 @@ public class MainActivity extends Activity {
     private static final int PLACE_DOWNLOAD = 2;
     private static final int PLACE_PRIVATE = 3;
     private int place = PLACE_NONE;
+    private String placeText = "Iris";
 
     private static String extFor(String mime) {
         if (mime == null) return "";
@@ -698,11 +699,16 @@ public class MainActivity extends Activity {
         }
     }
 
-    /* 没有扩展名的名字会让部分 ROM 的相册按 MIME 猜错类型，这里补齐 */
+    /* 没有扩展名的名字会让部分 ROM 的相册按 MIME 猜错类型，这里按后缀白名单补齐。
+       注意不能只看「有没有点」——页面会用时间戳拼名，里面可能本来就带点。 */
     private static String completeName(String name, String mime) {
         if (name == null || name.isEmpty()) return "Iris_" + System.currentTimeMillis() + extFor(mime);
-        int dot = name.lastIndexOf('.');
-        if (dot > 0 && dot < name.length() - 1) return name;
+        String lower = name.toLowerCase();
+        String[] known = {".jpg", ".jpeg", ".png", ".webp", ".gif", ".heic", ".mp4", ".mov",
+                ".webm", ".zip", ".json", ".cube", ".txt"};
+        for (String ext : known) {
+            if (lower.endsWith(ext)) return name;
+        }
         return name + extFor(mime);
     }
 
@@ -722,17 +728,33 @@ public class MainActivity extends Activity {
             if (image || video) {
                 Uri col = video ? MediaStore.Video.Media.EXTERNAL_CONTENT_URI
                         : MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
-                openPending(col, Environment.DIRECTORY_DCIM + "/Iris", name, mime);
-                if (os != null) { place = PLACE_GALLERY; return; }
+                String nativeDir = (video ? Environment.DIRECTORY_MOVIES : Environment.DIRECTORY_PICTURES) + "/Iris";
+                String dcim = Environment.DIRECTORY_DCIM + "/Iris";
+
+                /* 三星相册对 Pictures 下的自建目录不敏感，只有 DCIM 才会并进「相机」；
+                   其他机型一直用 Pictures/Iris 都正常，别为了个例把所有机器一起改道。 */
+                boolean samsung = Build.MANUFACTURER != null
+                        && Build.MANUFACTURER.toLowerCase().contains("samsung");
+                String first = samsung ? dcim : nativeDir;
+                String second = samsung ? nativeDir : dcim;
+
+                openPending(col, first, name, mime);
+                if (os != null) { place = PLACE_GALLERY; placeText = first; return; }
+                openPending(col, second, name, mime);
+                if (os != null) { place = PLACE_GALLERY; placeText = second; return; }
                 /* 个别 ROM 对 RELATIVE_PATH 处理有 bug：去掉目录再试一次，交给系统定落点 */
                 openPending(col, null, name, mime);
-                if (os != null) { place = PLACE_GALLERY; return; }
+                if (os != null) { place = PLACE_GALLERY; placeText = "默认相册目录"; return; }
             }
 
             /* 媒体库这条路彻底走不通时，至少落到「下载」，用户能从文件 App 里找到 */
             openPending(MediaStore.Downloads.EXTERNAL_CONTENT_URI,
                     Environment.DIRECTORY_DOWNLOADS + "/Iris", name, mime);
-            if (os != null) { place = PLACE_DOWNLOAD; return; }
+            if (os != null) {
+                place = PLACE_DOWNLOAD;
+                placeText = Environment.DIRECTORY_DOWNLOADS + "/Iris";
+                return;
+            }
             place = PLACE_NONE;
         }
 
@@ -818,26 +840,18 @@ public class MainActivity extends Activity {
                 openMediaTarget(name, mime);
             }
 
-            if (os == null) {   /* 9 及以下没有媒体事务：直接写公共 DCIM，再让扫描器入库 */
+            if (os == null) {   /* 9 及以下没有媒体事务：沿用原来的私有目录 + 扫描，不改历史行为 */
                 try {
-                    File dir;
-                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
-                        File pub = Environment.getExternalStoragePublicDirectory(
-                                mime.startsWith("video/") ? Environment.DIRECTORY_MOVIES
-                                        : Environment.DIRECTORY_DCIM);
-                        dir = new File(pub, "Iris");
-                    } else {
-                        File base = mime.startsWith("video/")
-                                ? getExternalFilesDir(Environment.DIRECTORY_MOVIES)
-                                : mime.startsWith("image/")
-                                ? getExternalFilesDir(Environment.DIRECTORY_PICTURES)
-                                : getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS);
-                        dir = new File(base != null ? base : getFilesDir(), "Iris");
-                    }
+                    File base = mime.startsWith("video/")
+                            ? getExternalFilesDir(Environment.DIRECTORY_MOVIES)
+                            : mime.startsWith("image/")
+                            ? getExternalFilesDir(Environment.DIRECTORY_PICTURES)
+                            : getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS);
+                    File dir = new File(base != null ? base : getFilesDir(), "Iris");
                     if (!dir.exists()) dir.mkdirs();
                     targetFile = new File(dir, completeName(name, mime));
                     os = new FileOutputStream(targetFile);
-                    place = Build.VERSION.SDK_INT < Build.VERSION_CODES.Q ? PLACE_GALLERY : PLACE_PRIVATE;
+                    place = PLACE_PRIVATE;
                 } catch (Throwable t) {
                     os = null;
                     toast("保存失败：存储不可写");
@@ -1019,7 +1033,7 @@ public class MainActivity extends Activity {
         String where;
         if (uri == null) where = place == PLACE_PRIVATE ? "已保存到应用私有目录 · 相册不可见" : "已保存 · Iris";
         else if (place == PLACE_DOWNLOAD) where = "已保存到下载目录 · Iris";
-        else where = "已保存到相册 · DCIM/Iris";
+        else where = "已保存到相册 · " + placeText;
         t1.setText(where);
         t1.setTextColor(TXT);
         t1.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f);
