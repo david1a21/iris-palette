@@ -9,7 +9,9 @@ set -euo pipefail
 cd "$(dirname "$0")"
 
 APP_NAME="IrisPalette"
-VERSION="1.0.40"
+# 版本号从 Info.plist 自动解析，不再手改
+VERSION="$(grep -A1 'CFBundleShortVersionString' Resources/Info.plist | grep -o '<string>[^<]*' | head -1 | sed 's/<string>//')"
+[ -z "$VERSION" ] && VERSION="0.0.0"
 IPA="Iris-Palette-iOS-${VERSION}.ipa"
 ADHOC=0
 [ "${1:-}" = "--adhoc" ] && ADHOC=1

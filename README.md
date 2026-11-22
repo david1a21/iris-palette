@@ -126,7 +126,7 @@
 |---|---|---|---|---|
 | 网页版 | 浏览器直接打开 | **1.0.41** | — | 无需下载 |
 | Windows x64 | `Iris-Palette-Windows-x64-1.0.41-Setup.exe` | **1.0.41** | 79.3 MB | `v1.0.41` |
-| iOS | `Iris-Palette-iOS-1.0.41.ipa` | **1.0.41**（build 46） | 985 KB | `v1.0.41` |
+| iOS | `Iris-Palette-iOS-1.0.41.ipa` | **1.0.41**（build 46） | 999 KB | `v1.0.41` |
 | Android | `Iris_1.0.33.apk` | 1.0.33 → 热更新至 1.0.41 | 804 KB | `v1.0.33` |
 | macOS arm64 | `Iris-Palette-macOS-arm64-1.0.33.zip` | 1.0.33 → 热更新至 1.0.41 | 97.4 MB | `v1.0.33` |
 | macOS x64 | `Iris-Palette-macOS-x64-1.0.33.zip` | 1.0.33 → 热更新至 1.0.41 | 103.5 MB | `v1.0.33` |
