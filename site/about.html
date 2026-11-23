@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>关于 · Iris 调色盘 · 作者 Petrichor</title>
+<meta name="description" content="Iris 调色盘由 Petrichor（Patrick）独立开发：一个 HTML 文件，六个平台，零外部请求。这里说明它为什么长成这样，以及怎么联系作者。">
+<link rel="stylesheet" href="https://miaoda.feishu.cn/fonts/css2?family=Noto+Serif+SC:wght@600;700;900&family=Noto+Sans+SC:wght@300;400;500;700&display=swap">
+<style>
+/* ============ 基础 / tokens（与首页同源） ============ */
+:root{
+  --ink:#0a0b0c;
+  --ink2:#111316;
+  --ink3:#171a1e;
+  --line:rgba(233,231,225,.14);
+  --paper:#e7e5df;
+  --paper2:#f3f2ed;
+  --gold:#c9a227;
+  --gold2:#e5c05a;
+  --ash:#8b8d86;
+  --txt:#efece5;
+  --serif:"Noto Serif SC","Songti SC","STSong",serif;
+  --sans:"Noto Sans SC","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  --mono:ui-monospace,"SF Mono","JetBrains Mono","Menlo",monospace;
+  --ease:cubic-bezier(.22,.61,.2,1);
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+body{
+  margin:0;background:var(--ink);color:var(--txt);
+  font-family:var(--sans);font-weight:400;line-height:1.65;
+  -webkit-font-smoothing:antialiased;overflow-x:hidden;
+}
+img{max-width:100%;display:block}
+a{color:inherit;text-decoration:none}
+h1,h2,h3,p{margin:0}
+p{text-wrap:pretty}
+::selection{background:var(--gold);color:#0a0b0c}
+.wrap{width:min(1180px,calc(100% - 48px));margin:0 auto}
+.mono{font-family:var(--mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase}
+.grain{
+  position:fixed;inset:0;pointer-events:none;z-index:9;opacity:.28;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.5'/%3E%3C/svg%3E");
+}
+
+/* ============ 导航 ============ */
+.nav{
+  position:fixed;top:0;left:0;right:0;z-index:20;
+  display:flex;align-items:center;gap:24px;
+  padding:14px 24px;transition:background .5s var(--ease),border-color .5s,padding .4s;
+  border-bottom:1px solid transparent;
+}
+.nav.solid{background:rgba(10,11,12,.78);backdrop-filter:blur(18px) saturate(1.2);border-bottom-color:var(--line)}
+.brand{display:flex;align-items:center;gap:10px;font-weight:500;letter-spacing:.01em;flex:0 0 auto}
+.ring{
+  width:22px;height:22px;border-radius:50%;flex:0 0 auto;
+  background:conic-gradient(from 0deg,#e8b95a,#e0784e,#c65f8c,#7d6bd0,#4f8ee0,#4bbfa0,#7fc463,#d6c24e,#e8b95a);
+  -webkit-mask:radial-gradient(circle,transparent 5px,#000 5.6px);
+          mask:radial-gradient(circle,transparent 5px,#000 5.6px);
+}
+.nav-links{display:flex;gap:22px;margin-left:auto;align-items:center}
+.nav-links a{font-size:13.5px;color:rgba(239,236,229,.62);transition:color .3s}
+.nav-links a:hover{color:var(--txt)}
+.nav-links a.on{color:var(--gold2)}
+.nav-cta{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:9px 16px;border-radius:999px;border:1px solid rgba(201,162,39,.55);
+  color:var(--gold2);font-size:13.5px;transition:background .35s,color .35s,border-color .35s;
+}
+.nav-cta:hover{background:var(--gold);border-color:var(--gold);color:#0a0b0c}
+@media(max-width:860px){.nav-links a:not(.nav-cta){display:none}}
+
+/* ============ 共用块 ============ */
+.eyebrow{
+  display:flex;align-items:center;gap:12px;color:var(--ash);
+  font-family:var(--mono);font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;
+  margin-bottom:24px;
+}
+.eyebrow::before{content:"";width:34px;height:1px;background:var(--gold);flex:0 0 auto}
+.lede{margin-top:24px;max-width:34em;color:rgba(239,236,229,.72);font-size:clamp(15px,1.5vw,17px);font-weight:300}
+.lede b{font-weight:500;color:var(--txt)}
+.sec{padding:clamp(76px,9vw,132px) 0;position:relative}
+.sec-paper{background:var(--paper);color:#15161a}
+.sec-paper .eyebrow{color:#6d6f68}
+.sec-paper .lede{color:rgba(21,22,26,.66)}
+.sec-head{max-width:44em;margin-bottom:clamp(38px,5vw,66px)}
+h2{font-family:var(--serif);font-weight:700;font-size:clamp(28px,3.9vw,46px);line-height:1.16;letter-spacing:-.01em}
+[data-rev]{opacity:0;transform:translateY(26px);transition:opacity .9s var(--ease),transform .9s var(--ease);transition-delay:var(--d,0s)}
+[data-rev].in{opacity:1;transform:none}
+
+/* ============ 首屏 ============ */
+.about-hero{position:relative;padding:148px 0 clamp(58px,8vw,104px);min-height:min(880px,94svh);display:grid;align-items:center;overflow:hidden}
+.about-glow{
+  position:absolute;right:-16%;top:2%;width:min(860px,86vw);aspect-ratio:1;pointer-events:none;
+  background:radial-gradient(circle at 50% 50%,rgba(201,162,39,.15),rgba(224,120,78,.08) 36%,transparent 66%);
+  filter:blur(26px);
+}
+.a-inner{position:relative;display:grid;grid-template-columns:1.12fr .88fr;gap:clamp(28px,5vw,64px);align-items:center}
+h1.about{
+  font-family:var(--serif);font-weight:700;font-size:clamp(33px,4.9vw,56px);
+  line-height:1.13;letter-spacing:-.015em;
+}
+h1.about em{font-style:normal;color:var(--gold2)}
+.a-meta{
+  margin-top:32px;display:flex;flex-wrap:wrap;gap:8px 20px;
+  font-family:var(--mono);font-size:11px;letter-spacing:.1em;color:var(--ash);text-transform:uppercase;
+}
+.a-meta span{position:relative;padding-left:14px}
+.a-meta span::before{content:"";position:absolute;left:0;top:.62em;width:6px;height:1px;background:rgba(201,162,39,.7)}
+
+/* 邮箱 */
+.mail{display:flex;flex-direction:column;gap:10px}
+.mail-row{display:flex;flex-direction:column;gap:4px}
+.mail-row .tag{font-family:var(--mono);font-size:10px;letter-spacing:.12em;color:#6d6f68;text-transform:uppercase}
+.mail-row a{
+  position:relative;display:inline-block;align-self:flex-start;
+  font-family:var(--mono);font-size:15px;color:var(--txt);padding-bottom:3px;letter-spacing:.01em;
+}
+.mail-row a::after{
+  content:"";position:absolute;left:0;bottom:0;width:100%;height:1px;background:var(--gold);
+  transform:scaleX(0);transform-origin:left;transition:transform .45s var(--ease);
+}
+.mail-row a:hover::after{transform:scaleX(1)}
+.hero-mail{margin-top:36px}
+
+/* 签名环：用「色轮 + 中心遮盖」两层做环，避免 mask 抗锯齿在边缘留下细缝 */
+.sig{--d:min(330px,74%);position:relative;display:grid;place-items:center;aspect-ratio:1;max-width:420px;margin-inline:auto;width:100%}
+.sig-halo{
+  position:absolute;inset:6%;border-radius:50%;
+  background:radial-gradient(circle,rgba(201,162,39,.13),transparent 68%);filter:blur(16px);
+  animation:breathe 7.5s ease-in-out infinite;
+}
+.sig-disc{
+  position:relative;width:var(--d);aspect-ratio:1;border-radius:50%;
+  background:conic-gradient(from 0deg,
+    #e8b95a,#e0784e,#c65f8c,#7d6bd0,#4f8ee0,#4bbfa0,#7fc463,#d6c24e,#e8b95a);
+  filter:blur(.7px) saturate(1.04);
+}
+.sig-hole{
+  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  width:calc(var(--d) * .68);aspect-ratio:1;border-radius:50%;
+  background:var(--ink);
+  box-shadow:inset 0 0 0 1px rgba(201,162,39,.18), 0 0 34px 6px rgba(10,11,12,.92);
+}
+.sig-core{
+  position:absolute;inset:0;display:grid;place-items:center;text-align:center;gap:6px;align-content:center;
+}
+.sig-core .n{font-family:var(--serif);font-size:clamp(26px,3.4vw,40px);font-weight:700;letter-spacing:.18em;line-height:1}
+.sig-core .s{font-family:var(--mono);font-size:10px;letter-spacing:.22em;color:var(--ash);text-transform:uppercase}
+@keyframes breathe{0%,100%{opacity:.72;transform:scale(.97)}50%{opacity:1;transform:scale(1.05)}}
+@media(prefers-reduced-motion:reduce){.sig-halo{animation:none}}
+
+/* ============ 作者 ============ */
+.author-grid{display:grid;grid-template-columns:.82fr 1.18fr;gap:clamp(26px,4vw,56px);align-items:start}
+.author-card{
+  border:1px solid rgba(21,22,26,.2);border-radius:10px;background:rgba(255,255,255,.34);
+  padding:clamp(22px,2.6vw,30px);
+}
+.ac-top{display:flex;align-items:center;gap:12px}
+.ac-top .ring{width:26px;height:26px;-webkit-mask:radial-gradient(circle,transparent 6px,#000 6.6px);mask:radial-gradient(circle,transparent 6px,#000 6.6px)}
+.ac-top .nm{font-family:var(--serif);font-size:21px;font-weight:600;line-height:1.1}
+.ac-top .nm small{display:block;font-family:var(--mono);font-size:10px;font-weight:400;letter-spacing:.12em;color:#6d6f68;text-transform:uppercase;margin-top:5px}
+.ac-rule{height:1px;background:rgba(21,22,26,.18);margin:20px 0}
+/* 纸白段里的邮箱：底色是浅的，字必须反过来 */
+.ac-mail .mail-row .tag{color:#6d6f68}
+.ac-mail .mail-row a{color:#15161a}
+.ac-mail .mail-row a::after{background:#15161a}
+
+.ac-list{display:flex;flex-direction:column;gap:0}
+.ac-row{display:flex;justify-content:space-between;align-items:baseline;gap:14px;padding:9px 0;font-size:12.5px;color:rgba(21,22,26,.62)}
+.ac-row b{font-family:var(--mono);font-size:11px;font-weight:500;color:#15161a;text-align:right}
+.ac-mail{margin-top:18px;display:flex;flex-direction:column;gap:12px}
+.author-body p{margin-bottom:1.15em;font-size:clamp(14.5px,1.35vw,16px);color:rgba(21,22,26,.8);line-height:1.85}
+.author-body p:last-child{margin-bottom:0}
+.author-body p b{font-weight:500;color:#15161a}
+.author-body .keep{font-family:var(--serif);font-size:clamp(17px,2vw,21px);line-height:1.7;color:#15161a;margin:26px 0 22px;padding-left:18px;border-left:2px solid var(--gold)}
+
+/* ============ 三个取舍（深底卡） ============ */
+.why-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(14px,2vw,20px)}
+.why{
+  border:1px solid var(--line);border-radius:8px;background:rgba(255,255,255,.02);
+  padding:clamp(22px,2.6vw,28px);
+  transition:border-color .4s,background .4s,transform .4s var(--ease);
+}
+.why:hover{border-color:rgba(201,162,39,.45);background:rgba(201,162,39,.045);transform:translateY(-3px)}
+.why .idx{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;color:var(--gold2)}
+.why h3{font-family:var(--serif);font-size:clamp(19px,2.1vw,24px);font-weight:600;margin:14px 0 12px;line-height:1.3}
+.why p{font-size:13.5px;line-height:1.8;color:rgba(239,236,229,.66)}
+
+/* ============ 数字条 ============ */
+.nums{display:grid;grid-template-columns:repeat(6,1fr);gap:0;border-top:1px solid rgba(21,22,26,.18);border-bottom:1px solid rgba(21,22,26,.18)}
+.num{padding:clamp(20px,2.6vw,30px) 12px;border-right:1px solid rgba(21,22,26,.14)}
+.num:last-child{border-right:0}
+.num b{display:block;font-family:var(--serif);font-size:clamp(20px,2.6vw,30px);font-weight:700;line-height:1.1;color:#15161a}
+.num > span{display:block;margin-top:8px;font-family:var(--mono);font-size:10px;letter-spacing:.08em;color:#6d6f68;text-transform:uppercase}
+@media(max-width:860px){.nums{grid-template-columns:repeat(3,1fr)}.num{border-bottom:1px solid rgba(21,22,26,.14)}
+  .num:nth-child(3n){border-right:0}.num:nth-child(n+4){border-bottom:0}}
+@media(max-width:520px){.nums{grid-template-columns:repeat(2,1fr)}
+  .num:nth-child(3n){border-right:1px solid rgba(21,22,26,.14)}.num:nth-child(2n){border-right:0}}
+
+/* ============ 联系 ============ */
+.contact-grid{display:grid;grid-template-columns:1fr 1fr;gap:clamp(28px,4vw,60px);align-items:start}
+.cbox{border:1px solid var(--line);border-radius:10px;padding:clamp(22px,2.8vw,30px);background:rgba(255,255,255,.02)}
+.cbox .t{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;color:var(--gold2);text-transform:uppercase;margin-bottom:16px}
+.cbox .mail-row a{font-size:clamp(13.5px,1.5vw,16px)}
+.cbox p{margin-top:18px;font-size:12.5px;line-height:1.8;color:rgba(239,236,229,.6)}
+.ghlink{
+  display:inline-flex;align-items:center;gap:10px;margin-top:14px;
+  font-size:13.5px;color:var(--txt);border-bottom:1px solid rgba(201,162,39,.32);padding-bottom:2px;
+  transition:color .3s,border-color .3s;
+}
+.ghlink:hover{color:var(--gold2);border-color:var(--gold)}
+
+/* ============ 页脚 ============ */
+.foot{border-top:1px solid var(--line);padding:56px 0 44px;background:#08090a}
+.foot-in{display:flex;flex-wrap:wrap;gap:32px;justify-content:space-between;align-items:flex-start}
+.foot h4{font-family:var(--serif);font-size:26px;font-weight:600;margin:0 0 10px}
+.foot p{font-size:13px;color:var(--ash);max-width:34em}
+.foot-links{display:flex;flex-wrap:wrap;gap:18px}
+.foot-links a{font-size:13px;color:rgba(239,236,229,.66);border-bottom:1px solid transparent;padding-bottom:2px;transition:color .3s,border-color .3s}
+.foot-links a:hover{color:var(--txt);border-color:var(--gold)}
+.foot-btm{margin-top:44px;padding-top:22px;border-top:1px solid rgba(233,231,225,.1);display:flex;flex-wrap:wrap;gap:14px;justify-content:space-between;font-family:var(--mono);font-size:11px;color:#6d6f68;letter-spacing:.05em}
+
+/* ============ 窄屏 ============ */
+@media(max-width:900px){
+  .a-inner{grid-template-columns:1fr;gap:44px}
+  .sig{order:-1;max-width:268px}
+  .about-hero{min-height:auto;padding-top:120px}
+  .author-grid{grid-template-columns:1fr}
+  .why-grid{grid-template-columns:1fr}
+  .contact-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="grain" aria-hidden="true"></div>
+
+<nav class="nav" id="nav">
+  <a class="brand" href="index.html"><span class="ring" aria-hidden="true"></span>Iris 调色盘</a>
+  <div class="nav-links">
+    <a href="index.html#dial">盘</a>
+    <a href="index.html#work">怎么工作</a>
+    <a href="index.html#export">导出</a>
+    <a href="index.html#privacy">隐私</a>
+    <a class="on" href="about.html">关于</a>
+    <a class="nav-cta" href="index.html#download">免费下载</a>
+  </div>
+</nav>
+
+<!-- ============ 首屏 ============ -->
+<header class="about-hero" id="top">
+  <div class="about-glow" aria-hidden="true"></div>
+  <div class="wrap a-inner">
+    <div>
+      <div class="eyebrow">关于 · About</div>
+      <h1 class="about">一个人做的，<br>一个文件装的。</h1>
+      <p class="lede">Iris 没有团队、没有服务器、也没有订阅。你下载的那一份，就是一个 HTML 文件被装进了壳里——<b>全部界面、全部滤镜、全部算法都在里面</b>。</p>
+      <div class="a-meta">
+        <span>作者 Petrichor</span>
+        <span>独立开发</span>
+        <span>MIT 许可</span>
+      </div>
+      <div class="mail hero-mail">
+        <div class="mail-row">
+          <span class="tag">写信给我</span>
+          <a href="mailto:petrichor09@outlook.com">petrichor09@outlook.com</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="sig" aria-hidden="true">
+      <div class="sig-halo"></div>
+      <div class="sig-disc"></div>
+      <div class="sig-hole"></div>
+      <div class="sig-core">
+        <div class="n">IRIS</div>
+        <div class="s">调色盘</div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ============ 作者（纸白） ============ -->
+<section class="sec sec-paper" id="author">
+  <div class="wrap">
+    <div class="sec-head" data-rev>
+      <div class="eyebrow">作者</div>
+      <h2>Petrichor</h2>
+    </div>
+
+    <div class="author-grid">
+      <div class="author-card" data-rev>
+        <div class="ac-top">
+          <span class="ring" aria-hidden="true"></span>
+          <div class="nm">Petrichor<small>Patrick · 独立开发</small></div>
+        </div>
+        <div class="ac-rule"></div>
+        <div class="ac-list">
+          <div class="ac-row"><span>身份</span><b>个人项目 · 无团队</b></div>
+          <div class="ac-row"><span>许可</span><b>MIT · 可商用</b></div>
+          <div class="ac-row"><span>服务器</span><b>没有</b></div>
+          <div class="ac-row"><span>页面体积</span><b>1.36 MB · 单文件</b></div>
+          <div class="ac-row"><span>外部请求</span><b>0</b></div>
+        </div>
+        <div class="ac-mail">
+          <div class="mail-row">
+            <span class="tag">主邮箱</span>
+            <a href="mailto:petrichor09@outlook.com">petrichor09@outlook.com</a>
+          </div>
+          <div class="mail-row">
+            <span class="tag">备用</span>
+            <a href="mailto:out163vip2021@outlook.com">out163vip2021@outlook.com</a>
+          </div>
+        </div>
+              </div>
+
+      <div class="author-body" data-rev>
+        <p>Iris 是从一个很具体的不满意开始的。当时的调色工具有两个极端：一边是一整墙滑杆，色温、对比、饱和度、高光、阴影各占一行，改一个动全部，改完已经忘了自己原本想要什么；另一边是一排预设，点一下就变，好看是好看，但你不知道它动了哪一层，换个场景就失灵。</p>
+        <div class="keep">我想做的是中间那件事：只给三个连续的量，一次只决定一件事。</div>
+        <p>横轴管冷暖，纵轴管影调，半径管强度。三个量合起来指向一个方向，剩下的交给盘面去执行。这就是「调色盘」这个名字的来处——它是一块可以拖动的东西，不是一列需要背诵的数值。</p>
+        <p>代码是我自己一行一行写的。最早它只是个能在浏览器里拖的色盘，后来被装进 Android、iOS、Windows、macOS、Linux 的壳里。壳只管窗口、保存和热更新，页面负责全部编辑能力，所以每改一次，六个平台在同一天就都是新的。</p>
+        <p>我也不打算把它做成订阅。它现在免费、开源、MIT 许可。你在它身上花的钱是零，我在它身上花的是时间——这两件事我分得很清楚。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 三个取舍 ============ -->
+<section class="sec" id="why">
+  <div class="wrap">
+    <div class="sec-head" data-rev>
+      <div class="eyebrow">三个取舍</div>
+      <h2>有些决定不好看，<br>但解释了它为什么长这样。</h2>
+    </div>
+
+    <div class="why-grid">
+      <div class="why" data-rev>
+        <div class="idx">01 / 壳与页面</div>
+        <h3>改一次，六端同一天生效</h3>
+        <p>我试过把它做成完整 App。结果是改一条曲线要等两次编译、三个平台重新打包，还要排队等审核。把界面收回成一个页面之后，壳变薄了，更新变快了，代价是它必须一直保持「单文件能跑」的约束。</p>
+      </div>
+      <div class="why" data-rev>
+        <div class="idx">02 / 零依赖</div>
+        <h3>不想因为别人的服务器，你的滤镜库变空白</h3>
+        <p>页面里没有一个外部脚本、没有一套远程字体、没有一次图片请求。这不是洁癖，是最省事的可靠性方案：没有第三方，就没有第三方挂掉的那一天。断网打开，它照样能调色。</p>
+      </div>
+      <div class="why" data-rev>
+        <div class="idx">03 / 照片去向</div>
+        <h3>你的照片不会经过我</h3>
+        <p>所有解码、滤镜、虚化、导出都在设备本地完成。我没有服务器，也就没有地方存你的照片。云同步那一栏同步的只有偏好设置——滑杆停在哪、收藏了哪些滤镜，仅此而已。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 数字（纸白） ============ -->
+<section class="sec sec-paper" id="facts">
+  <div class="wrap">
+    <div class="sec-head" data-rev>
+      <div class="eyebrow">现状</div>
+      <h2>这些是可以数出来的部分。</h2>
+    </div>
+    <div class="nums" data-rev>
+      <div class="num"><b>1,431,227</b><span>字节 · 单文件</span></div>
+      <div class="num"><b>443</b><span>款滤镜</span></div>
+      <div class="num"><b>78</b><span>套模板</span></div>
+      <div class="num"><b>35</b><span>款盘面 · 8 组</span></div>
+      <div class="num"><b>6</b><span>个平台</span></div>
+      <div class="num"><b>0</b><span>外部请求</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 联系 ============ -->
+<section class="sec" id="contact">
+  <div class="wrap">
+    <div class="sec-head" data-rev>
+      <div class="eyebrow">联系</div>
+      <h2>有问题、有想法、想加个功能，<br>直接写信。</h2>
+      <p class="lede">我不在社交平台上等人 @，邮箱是我最稳的一根线。回信会慢，但会回。</p>
+    </div>
+
+    <div class="contact-grid">
+      <div class="cbox" data-rev>
+        <div class="t">邮箱</div>
+        <div class="mail">
+          <div class="mail-row">
+            <span class="tag">主邮箱 · 建议优先</span>
+            <a href="mailto:petrichor09@outlook.com">petrichor09@outlook.com</a>
+          </div>
+          <div class="mail-row">
+            <span class="tag">备用</span>
+            <a href="mailto:out163vip2021@outlook.com">out163vip2021@outlook.com</a>
+          </div>
+        </div>
+        <p>报 bug 的时候，麻烦带上三样：设备型号、系统版本、还有这张照片是怎么来的。有这三样，我基本能一次定位。</p>
+      </div>
+
+      <div class="cbox" data-rev>
+        <div class="t">代码与问题追踪</div>
+        <a class="ghlink" href="https://github.com/david1a21/iris-palette" target="_blank" rel="noopener">github.com/david1a21/iris-palette</a>
+        <br>
+        <a class="ghlink" href="https://github.com/david1a21/iris-palette/issues" target="_blank" rel="noopener">Issues · 公开的问题清单</a>
+        <p>仓库里是全部源码：页面、六个壳、构建脚本、发布记录。想自己改一份也可以，MIT 允许你这么做。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 页脚 ============ -->
+<footer class="foot">
+  <div class="wrap">
+    <div class="foot-in">
+      <div>
+        <h4>Iris 调色盘</h4>
+        <p>一个单文件网页级的照片编辑器，装进 Android / iOS / Windows / Linux / macOS 的壳里。页面自包含、零外部请求。</p>
+      </div>
+      <div class="foot-links">
+        <a href="index.html">首页</a>
+        <a href="about.html">关于</a>
+        <a href="https://github.com/david1a21/iris-palette" target="_blank" rel="noopener">GitHub</a>
+        <a href="https://github.com/david1a21/iris-palette/releases" target="_blank" rel="noopener">Releases</a>
+        <a href="https://david1a21.github.io/iris-palette-web/" target="_blank" rel="noopener">网页版</a>
+        <a href="mailto:petrichor09@outlook.com">邮箱</a>
+      </div>
+    </div>
+    <div class="foot-btm">
+      <span>MIT License · Petrichor (Patrick)</span>
+      <span>关于 · iris-official.pages.dev</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+/* ============ 进场 reveal ============ */
+(function(){
+  var els=[].slice.call(document.querySelectorAll('[data-rev]'));
+  if(!('IntersectionObserver' in window)){ els.forEach(function(e){e.classList.add('in');}); return; }
+  els.forEach(function(el,i){ el.style.setProperty('--d',(Math.min(i,8)*0.05)+'s'); });
+  var io=new IntersectionObserver(function(es){
+    es.forEach(function(en){ if(en.isIntersecting){ en.target.classList.add('in'); io.unobserve(en.target); } });
+  },{threshold:.2,rootMargin:'0px 0px -8% 0px'});
+  els.forEach(function(e){ io.observe(e); });
+})();
+
+/* ============ 导航滚动态 ============ */
+(function(){
+  var nav=document.getElementById('nav');
+  var ticking=false;
+  function onScroll(){
+    if(ticking) return; ticking=true;
+    requestAnimationFrame(function(){
+      nav.classList.toggle('solid', window.scrollY>40);
+      ticking=false;
+    });
+  }
+  window.addEventListener('scroll',onScroll,{passive:true});
+  onScroll();
+})();
+</script>
+</body>
+</html>
