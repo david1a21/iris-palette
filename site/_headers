@@ -1,0 +1,10 @@
+/index.html
+  Cache-Control: public, max-age=300, must-revalidate
+  X-Content-Type-Options: nosniff
+
+/about.html
+  Cache-Control: public, max-age=300, must-revalidate
+  X-Content-Type-Options: nosniff
+
+/download/*
+  Cache-Control: public, max-age=86400
