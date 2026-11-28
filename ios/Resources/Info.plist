@@ -30,9 +30,9 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>1.0.42</string>
+	<string>2.0.0</string>
 	<key>CFBundleVersion</key>
-	<string>47</string>
+	<string>48</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>LSRequiresIPhoneOS</key>
@@ -41,6 +41,17 @@
 	<true/>
 	<key>MinimumOSVersion</key>
 	<string>16.0</string>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+	</dict>
+	<key>NSCameraUsageDescription</key>
+	<string>实时相机模式需要取景画面：打开相机后你拍下的画面只在本机处理，不会上传。</string>
+	<key>NSCameraUsageDescription~zh</key>
+	<string>实时相机模式需要取景画面：打开相机后你拍下的画面只在本机处理，不会上传。</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>仅在你主动开启相机录制时才采集现场声音，音频不离开设备。</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>把调色后的照片保存回你的相册。</string>
 	<key>NSPhotoLibraryAddUsageDescription~zh</key>

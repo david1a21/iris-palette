@@ -11,8 +11,8 @@
 
 <br>
 
-<img alt="version" src="https://img.shields.io/badge/version-1.0.42-c9a227?style=flat-square">
-<img alt="page" src="https://img.shields.io/badge/page-1.36%20MB%20single%20file-1b1b1d?style=flat-square">
+<img alt="version" src="https://img.shields.io/badge/version-2.0.0-c9a227?style=flat-square">
+<img alt="page" src="https://img.shields.io/badge/page-1.94%20MB%20single%20file-1b1b1d?style=flat-square">
 <img alt="platform" src="https://img.shields.io/badge/platform-Android%20%7C%20iOS%20%7C%20Win%20%7C%20Linux%20%7C%20macOS-2f6f4f?style=flat-square">
 <img alt="hot update" src="https://img.shields.io/badge/update-hot%20swap-3c6e9f?style=flat-square">
 <img alt="license" src="https://img.shields.io/badge/license-MIT-6b6b74?style=flat-square">
@@ -23,7 +23,7 @@
 
 <br>
 
-<sub>443 款滤镜 · 78 套快捷模板 · 35 款盘面 · 12 格色调 · EXIF 元数据 · 全部跑在浏览器里</sub>
+<sub>463 款滤镜 · 35 款盘面 · 12 格色调 · 相机工作台 · 27 个独立页面 · 全部跑在浏览器里</sub>
 
 </div>
 
@@ -80,13 +80,14 @@
 ## 能做什么
 
 <table>
+<tr><td width="120"><b>相机工作台</b></td><td><b>2.0 新增</b>：实时取景 · 点按对焦 · 1×／2× 变焦 · EV 补偿 · 构图参考线 · 取景框内直接叠调色盘与滤镜（玻璃幕墙冷灰 / 和纸柔白 / 蓝调灰阶 / 和纸灰蓝…），边拍边调，所见即所得</td></tr>
 <tr><td width="120"><b>调色盘</b></td><td>二维盘调色（横轴冷暖 / 纵轴影调 / 半径强度）· 12 格独立色调 · 套用强度 · 多盘叠加 · 取色 · 语义渲染（128×96 matte，端侧区域感知）</td></tr>
-<tr><td><b>滤镜</b></td><td>443 款，按原生 / 胶片 / 电影 / 人像 / 风光等分组，每款带实时缩略预览 · 收藏、搜索、分层叠加 · 一键保存所有参数 · 存为滤镜</td></tr>
+<tr><td><b>滤镜</b></td><td>463 款，按原生 / 胶片 / 电影 / 人像 / 风光等分组，每款带实时缩略预览 · 收藏、搜索、分层叠加 · 一键保存所有参数 · 存为滤镜</td></tr>
 <tr><td><b>盘面模式</b></td><td>35 款、8 组（语义 / 经典 / 影调 / 色彩…），点开即换整块盘的性格，不用自己配</td></tr>
 <tr><td><b>调整</b></td><td>曝光 · 对比 · 高光 · 阴影 · 黑白场 · 清晰度 · 纹理 · 白平衡（色温 / 色调）· HSL 分通道 · RGB 与分通道曲线 · 三色轮分级</td></tr>
 <tr><td><b>元素</b></td><td>裁剪与比例、旋转校正、网格辅助；文字与贴纸叠加，位置可拖</td></tr>
 <tr><td><b>效率</b></td><td>命令面板一跳到位 · 全局快捷键 · 自动保存与编辑历史 · 导入进度条 · 最近使用与导出记录 · 模板库（78 套快捷模板）</td></tr>
-<tr><td><b>说明书</b></td><td>内置 25 章图文说明书 + 技术实现独立页 + 页面中心（全部 22 页），带目录与搜索</td></tr>
+<tr><td><b>说明书</b></td><td>内置 25 章图文说明书 + 技术实现独立页 + 页面中心（全部 27 页），带目录与搜索</td></tr>
 <tr><td><b>对比</b></td><td>长按看原图 · 滑动分割线对比（一条线、两枚标签、一个数值气泡，单击画面即可落点）· 沉浸大图</td></tr>
 <tr><td><b>元数据</b></td><td>照片 EXIF 独立页：相机 / 镜头 / 光圈 / 快门 / ISO / 焦距 / 拍摄时间 / GPS，只读本机文件前 4 MB，HEIC·HEIF 尽力解析，不联网</td></tr>
 <tr><td><b>同步</b></td><td>坚果云 WebDAV：四栏预设 + 10 项偏好一键往返，账号与应用密码只写在本机</td></tr>
@@ -124,15 +125,16 @@
 
 | 平台 | 文件 | 页面版本 | 大小 | 拿哪个 Release |
 |---|---|---|---|---|
-| 网页版 | 浏览器直接打开 | **1.0.42** | — | 无需下载 |
-| Windows x64 | `Iris-Palette-Windows-x64-1.0.41-Setup.exe` | **1.0.41**（热更新至 1.0.42） | 79.3 MB | `v1.0.41` |
-| iOS | `Iris-Palette-iOS-1.0.42.ipa` | **1.0.42**（build 47） | 984 KB | `v1.0.42-ios` |
-| Android | `Iris_1.0.44.apk` | **1.0.42**（壳 1.0.44） | 853 KB | `v1.0.44` |
-| macOS arm64 | `Iris-Palette-macOS-arm64-1.0.33.zip` | 1.0.33 → 热更新至 1.0.42 | 97.4 MB | `v1.0.33` |
-| macOS x64 | `Iris-Palette-macOS-x64-1.0.33.zip` | 1.0.33 → 热更新至 1.0.42 | 103.5 MB | `v1.0.33` |
-| Linux x64 | `Iris-Palette-Linux-x64-1.0.33.tar.gz` | 1.0.33 → 热更新至 1.0.42 | 107.0 MB | `v1.0.33` |
+| 网页版 | 浏览器直接打开 | **1.0.42**（线上页面） | — | 无需下载 |
+| Android | `Iris_2.0.0.apk` | **2.0.0** | 0.87 MB | `v2.0.0` |
+| iOS | `Iris-Palette-iOS-2.0.0.ipa` | **2.0.0**（build 48） | 约 1 MB | `v2.0.0` |
+| Windows x64 | `Iris-Palette-Windows-x64-2.0.0-Setup.exe` | **2.0.0** | 77 MB | `v2.0.0` |
+| Windows x64 免安装 | `Iris-Palette-Windows-x64-2.0.0.zip` | **2.0.0** | 107 MB | `v2.0.0` |
+| macOS arm64 | `Iris-Palette-macOS-arm64-2.0.0.zip` | **2.0.0** | 93.4 MB | `v2.0.0` |
+| macOS x64 | `Iris-Palette-macOS-x64-2.0.0.zip` | **2.0.0** | 99.3 MB | `v2.0.0` |
+| Linux x64 | `Iris-Palette-Linux-x64-2.0.0.tar.gz` | **2.0.0** | 102.5 MB | `v2.0.0` |
 
-壳版本号落后不等于功能落后：装 1.0.33 的包，启动后页面会自动热更新到 1.0.42（见下一节）；Android 另有 1.0.44 的壳修复包（相册落点按厂商分流 + 导出不再被时序闸门吞掉），内嵌 1.0.42 页面、可直接覆盖安装。1.0.34–1.0.38 只走了热更新、没有单独建 Release，1.0.39 起才补建，所以列表里会看到版本跳档。
+2.0 之后**不再靠“装旧包 + 等热更新”拿新功能**：每个安装包都把 2.0 页面直接嵌进去了，装上就是 2.0，断网也照常用。热更新只作为“以后发新版页面”的备用通道，并且改成了**只升不降**——清单版本低于包内版本时一律跳过，不会再出现“装 2.0 却被打回 1.0.42”的情况。
 
 <details>
 <summary><b>各平台安装细节</b>（点开）</summary>
@@ -181,6 +183,8 @@ chmod +x "Iris 调色盘" && ./"Iris 调色盘"
 ```
 
 校验不过就放弃本次更新、继续用当前页面 —— 宁可停在旧版，也不让半截文件把编辑器弄坏。
+
+2.0 起加了一条硬规则：**清单里的 `version` 必须高于包内页面版本才会换页**，否则直接跳过。壳比页面新的时候，旧清单动不了它。
 
 ## 技术架构
 
@@ -358,6 +362,7 @@ bash build_ipa.sh --adhoc      # 额外 ad-hoc 签名
 
 | 版本 | 日期 | 主要变化 |
 |---|---|---|
+| **2.0.0** | 2026-11-29 | 相机工作台上线：实时取景、点按对焦、1×／2× 变焦、EV 补偿、构图参考线，取景框内可拉开调色盘与滤镜边拍边调 · 滤镜涨到 463 款并接入语义推荐（先判「偏暗·暖调·人像感」再挑款）· 独立页面统一收到「⋯ → 设置 → 页面」，共 27 页 · 六个安装包全部换成 2.0 内嵌页面，壳加「只升不降」的热更新守卫 |
 | **1.0.44**（Android 壳） | 2026-11-22 | 修掉导出「静默丢失」：注入层的 1.5 秒手势闸门会误判大图 / GIF / 实况 / 批量导出，漏给 WebView 后文件直接消失；改为壳内一律接管 + `DownloadListener` 兜底重试 + 失败必提示 |
 | 1.0.43（Android 壳） | 2026-11-22 | 落点按厂商分流：三星写 `DCIM/Iris`、其余机型仍写 `Pictures/Iris`（撤回 1.0.42 的全量改道）· pending 回读校验 · 如实提示真实落点 |
 | 1.0.42（Android 壳） | 2026-11-22 | 曾把所有机型改到 `DCIM/Iris`，导致原本正常的机型相册里找不到，已被 1.0.43 纠正 |

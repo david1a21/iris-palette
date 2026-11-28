@@ -262,15 +262,12 @@ h1 em{font-style:normal;color:var(--gold2)}
 }
 .card:hover{border-color:rgba(201,162,39,.45);transform:translateY(-4px)}
 .card-media{aspect-ratio:400/400;overflow:hidden;position:relative}
-.card-media img{width:100%;height:100%;object-fit:cover;object-position:50% 82%;transition:transform .8s var(--ease),filter .6s}
+.card-media img{width:100%;height:100%;object-fit:cover;object-position:50% 30%;transition:transform .8s var(--ease),filter .6s}
 .card:hover .card-media img{transform:scale(1.045)}
 .card-body{padding:clamp(18px,2.2vw,24px);border-top:1px solid var(--line)}
 .card-body .tag{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;color:var(--gold2)}
 .card-body h3{font-family:var(--serif);font-size:clamp(17px,1.9vw,20px);font-weight:600;margin:9px 0 8px;line-height:1.3}
 .card-body p{font-size:13.5px;color:rgba(239,236,229,.6);line-height:1.6}
-.cards > .card:nth-child(1) .card-media img{object-position:50% 100%}
-.cards > .card:nth-child(2) .card-media img{object-position:50% 56%}
-.cards > .card:nth-child(3) .card-media img{object-position:50% 100%}
 @media(max-width:900px){.cards{grid-template-columns:1fr}}
 
 /* ============ 导出六种 ============ */
@@ -360,7 +357,7 @@ h1 em{font-style:normal;color:var(--gold2)}
   <div class="hero-glow" id="glow" aria-hidden="true"></div>
   <div class="wrap hero-inner">
     <div class="hero-copy">
-      <div class="eyebrow" data-rev>单文件 1.36 MB · 零外部请求 · MIT</div>
+      <div class="eyebrow" data-rev>2.0 · 相机工作台 · 单文件 1.94 MB · 零外部请求 · MIT</div>
       <h1 data-rev>把色彩决策，<br>压成一块可以<br>拖动的<em>盘</em>。</h1>
       <p class="lede" data-rev>
         不是再给你一堆滤镜预设。Iris 用一块二维盘代替十几个滑杆：<b>横轴决定冷暖走向，纵轴决定影调重塑，半径决定染色强度</b>。
@@ -400,18 +397,71 @@ h1 em{font-style:normal;color:var(--gold2)}
     <span>真实界面 · 400×860 · 2×</span>
   </div>
   <div class="strip" id="stripA">
-    <div class="phone"><img src="https://aka.doubaocdn.com/s/7LlSSrgTDD" alt="Iris 主界面：照片预览与调色盘面板" loading="lazy" decoding="async"></div>
-    <div class="phone"><img src="https://aka.doubaocdn.com/s/VxTCyqRFXG" alt="Iris 滤镜库：443 款按色调分组" loading="lazy" decoding="async"></div>
-    <div class="phone"><img src="https://aka.doubaocdn.com/s/pf3uhqz8qt" alt="Iris 盘面模式：35 款 8 组" loading="lazy" decoding="async"></div>
-    <div class="phone"><img src="https://aka.doubaocdn.com/s/WXLJ204Pz0" alt="Iris 背景虚化：人像分割蒙版" loading="lazy" decoding="async"></div>
-    <div class="phone"><img src="https://aka.doubaocdn.com/s/tofUM6017L" alt="Iris 调整面板：曝光、对比、白平衡" loading="lazy" decoding="async"></div>
+    <div class="phone"><img src="https://aka.doubaocdn.com/s/IiJ5UsCFBQ" alt="Iris 2.0 主界面：语义已识别「偏暗·暖调·人像感」并推荐 6 款盘" loading="lazy" decoding="async"></div>
+    <div class="phone"><img src="https://aka.doubaocdn.com/s/gnuyngzF1d" alt="Iris 2.0 滤镜库：463 款，按这张照片的语义给出推荐" loading="lazy" decoding="async"></div>
+    <div class="phone"><img src="https://aka.doubaocdn.com/s/G3pcFLD7PV" alt="Iris 2.0 盘面模式：35 款 · 8 组，12 色调" loading="lazy" decoding="async"></div>
+    <div class="phone"><img src="https://aka.doubaocdn.com/s/hjvfsP17LL" alt="Iris 2.0 更多编辑工具：局部、分级、光效、分色、曲线、虚化" loading="lazy" decoding="async"></div>
+    <div class="phone"><img src="https://aka.doubaocdn.com/s/LNq4IBKfVc" alt="Iris 2.0 相机工作台：实时取景，带对焦、变焦与曝光" loading="lazy" decoding="async"></div>
+    <div class="phone"><img src="https://aka.doubaocdn.com/s/SSgk8GpDBQ" alt="Iris 2.0 相机工作台：取景框内直接叠调色盘与滤镜" loading="lazy" decoding="async"></div>
   </div>
   <div class="strip rev" id="stripB" aria-hidden="true">
-    <div class="phone"><img src="https://aka.doubaocdn.com/s/tofUM6017L" alt="" loading="lazy" decoding="async"></div>
-    <div class="phone"><img src="https://aka.doubaocdn.com/s/WXLJ204Pz0" alt="" loading="lazy" decoding="async"></div>
-    <div class="phone"><img src="https://aka.doubaocdn.com/s/pf3uhqz8qt" alt="" loading="lazy" decoding="async"></div>
-    <div class="phone"><img src="https://aka.doubaocdn.com/s/VxTCyqRFXG" alt="" loading="lazy" decoding="async"></div>
-    <div class="phone"><img src="https://aka.doubaocdn.com/s/7LlSSrgTDD" alt="" loading="lazy" decoding="async"></div>
+    <div class="phone"><img src="https://aka.doubaocdn.com/s/SSgk8GpDBQ" alt="" loading="lazy" decoding="async"></div>
+    <div class="phone"><img src="https://aka.doubaocdn.com/s/LNq4IBKfVc" alt="" loading="lazy" decoding="async"></div>
+    <div class="phone"><img src="https://aka.doubaocdn.com/s/hjvfsP17LL" alt="" loading="lazy" decoding="async"></div>
+    <div class="phone"><img src="https://aka.doubaocdn.com/s/G3pcFLD7PV" alt="" loading="lazy" decoding="async"></div>
+    <div class="phone"><img src="https://aka.doubaocdn.com/s/gnuyngzF1d" alt="" loading="lazy" decoding="async"></div>
+    <div class="phone"><img src="https://aka.doubaocdn.com/s/IiJ5UsCFBQ" alt="" loading="lazy" decoding="async"></div>
+  </div>
+</section>
+
+<!-- ============ 2.0 专区 ============ -->
+<section class="sec sec-paper" id="v2">
+  <div class="wrap">
+    <div class="sec-head" data-rev>
+      <div class="eyebrow">2.0 · 2026 年 11 月</div>
+      <h2>这次更新，<br>把暗房搬进了取景框。</h2>
+      <p class="lede">2.0 不只是多了滤镜。它把「拍」和「调」接到了同一条线上：取景框里就能看到最终成片的颜色，按快门之前你已经知道它会长什么样。</p>
+    </div>
+
+    <div class="cards">
+      <article class="card" data-rev>
+        <div class="card-media"><img src="https://aka.doubaocdn.com/s/LNq4IBKfVc" style="object-position:50% 6%" alt="相机工作台：实时取景、对焦、变焦与曝光" loading="lazy" decoding="async"></div>
+        <div class="card-body">
+          <div class="tag">2.0 核心</div>
+          <h3>相机工作台，取景就是取景</h3>
+          <p>顶栏 ⋯ 里多了一台相机：实时取景、点按对焦、1×／2× 变焦、EV 补偿、构图参考线。拍下的那一帧直接进编辑器，不用先去相册找。</p>
+        </div>
+      </article>
+
+      <article class="card" data-rev>
+        <div class="card-media"><img src="https://aka.doubaocdn.com/s/SSgk8GpDBQ" style="object-position:50% 12%" alt="取景框内展开调色盘与滤镜抽屉" loading="lazy" decoding="async"></div>
+        <div class="card-body">
+          <div class="tag">2.0 核心</div>
+          <h3>边拍边调，效果是实时的</h3>
+          <p>取景框底下能直接拉开调色盘与滤镜：盘上拖白点、或是点一枚滤镜 chip（玻璃幕墙冷灰、和纸柔白、蓝调灰阶、和纸灰蓝），画面跟着变，所见即所得。</p>
+        </div>
+      </article>
+
+      <article class="card" data-rev>
+        <div class="card-media"><img src="https://aka.doubaocdn.com/s/gnuyngzF1d" style="object-position:50% 40%" alt="滤镜库按语义给出推荐" loading="lazy" decoding="async"></div>
+        <div class="card-body">
+          <div class="tag">2.0 核心</div>
+          <h3>语义感知：它先看你拍的是什么</h3>
+          <p>载入照片后先做一次端侧语义判断，给出「偏暗·暖调·人像感」这样的描述，再照这个结论从 463 款里挑出几款推荐，而不是让你从第一页开始翻。</p>
+        </div>
+      </article>
+    </div>
+
+    <div class="two">
+      <div class="note-card" data-rev>
+        <h3>全部 27 页，收进一个入口</h3>
+        <p>局部、分级、光效、分色、曲线、虚化、裁剪、预设、搜索命令面板……独立页面统一收在「⋯ → 设置 → 页面」，不用再记藏在哪一层。</p>
+      </div>
+      <div class="note-card" data-rev>
+        <h3>滤镜涨到 463 款</h3>
+        <p>比上个版本多了 20 款，全部带实时缩略预览，仍然支持收藏、搜索、四层叠加，每层各挂一套 12 色调。</p>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -469,8 +519,8 @@ h1 em{font-style:normal;color:var(--gold2)}
 <!-- ============ 数字 ============ -->
 <section class="sec" style="padding-block:0">
   <div class="numbers">
-    <div class="num" data-rev><b><span data-count="443">0</span></b><span>款滤镜，按色调分好了组</span></div>
-    <div class="num" data-rev><b><span data-count="78">0</span></b><span>套快捷模板，一键存全套参数</span></div>
+    <div class="num" data-rev><b><span data-count="463">0</span></b><span>款滤镜，按色调分好了组</span></div>
+    <div class="num" data-rev><b><span data-count="27">0</span><i>页</i></b><span>独立页面，收在同一个设置入口</span></div>
     <div class="num" data-rev><b><span data-count="35">0</span></b><span>款盘面，8 组，点开即换性格</span></div>
     <div class="num" data-rev><b><span data-count="6">0</span><i>种</i></b><span>出片方式，从静图到实况配对</span></div>
   </div>
@@ -487,29 +537,29 @@ h1 em{font-style:normal;color:var(--gold2)}
 
     <div class="cards">
       <article class="card" data-rev>
-        <div class="card-media"><img src="https://aka.doubaocdn.com/s/VxTCyqRFXG" alt="滤镜库界面，可见 443 款与按风格分组" loading="lazy" decoding="async"></div>
+        <div class="card-media"><img src="https://aka.doubaocdn.com/s/gnuyngzF1d" style="object-position:50% 36%" alt="滤镜库界面，可见 463 款与语义推荐" loading="lazy" decoding="async"></div>
         <div class="card-body">
           <div class="tag">滤镜</div>
-          <h3>443 款，每款带实时缩略预览</h3>
+          <h3>463 款，每款带实时缩略预览</h3>
           <p>原生 / 胶片 / 电影 / 人像 / 风光分组，支持收藏、搜索、分层叠加，最多四层，每层各挂一套 12 色调盘。</p>
         </div>
       </article>
 
       <article class="card" data-rev>
-        <div class="card-media"><img src="https://aka.doubaocdn.com/s/WXLJ204Pz0" alt="背景虚化：人物清晰，背景成散景" loading="lazy" decoding="async"></div>
+        <div class="card-media"><img src="https://aka.doubaocdn.com/s/LNq4IBKfVc" style="object-position:50% 6%" alt="相机工作台：实时取景与对焦" loading="lazy" decoding="async"></div>
         <div class="card-body">
-          <div class="tag">1.0.42 新增</div>
-          <h3>背景虚化，用系统人像分割做主体</h3>
-          <p>iOS 侧走系统 Vision 出软边蒙版，主体保护、羽化、半径与六种散景样式都在盘外单独控制。</p>
+          <div class="tag">2.0 新增</div>
+          <h3>相机工作台，把编辑提前到按下快门前</h3>
+          <p>取景、对焦、变焦、曝光、构图参考都在同一屏；拍下的画面直接落到编辑器里，接着调。</p>
         </div>
       </article>
 
       <article class="card" data-rev>
-        <div class="card-media"><img src="https://aka.doubaocdn.com/s/pf3uhqz8qt" alt="盘面模式面板，35 款 8 组" loading="lazy" decoding="async"></div>
+        <div class="card-media"><img src="https://aka.doubaocdn.com/s/G3pcFLD7PV" style="object-position:50% 58%" alt="盘面模式面板，35 款 8 组" loading="lazy" decoding="async"></div>
         <div class="card-body">
           <div class="tag">盘面</div>
-          <h3>35 款盘面，不用自己配</h3>
-          <p>语义感知 / 经典 / 影调 / 色彩等 8 组，点开就换整块盘的性格。语义渲染用 128×96 matte 在端侧做区域感知。</p>
+          <h3>35 款盘面，暗调、奶霜、凝胶都有</h3>
+          <p>冲扫、日系、霓虹、马卡龙、专项、鲜活、工艺、恒美 8 组，点开就换整块盘的性格，配 12 色调微调。</p>
         </div>
       </article>
     </div>
@@ -560,29 +610,29 @@ h1 em{font-style:normal;color:var(--gold2)}
     <div class="sec-head" data-rev>
       <div class="eyebrow">全部免费 · 已经在 GitHub 上</div>
       <h2>六个地方，装哪个都一样。</h2>
-      <p class="lede">壳负责窗口、保存与热更新，页面负责一切编辑能力。装老版本的包也没关系，启动后会按清单把页面换到 1.0.42。</p>
+      <p class="lede">壳负责窗口、保存与原生能力，页面负责一切编辑能力。2.0 的安装包已经把新页面嵌进去了，装上就是 2.0，断网也照常用。</p>
     </div>
 
     <div class="dl">
-      <a class="dl-card" href="/download/Iris_1.0.44.apk" data-rev>
-        <span class="nm">Android</span><span class="mt">APK · 1.0.44 壳 · 内嵌 1.0.42 页面</span><span class="go">本站直接下载 · 853 KB</span>
-        <span class="gh" data-gh="https://github.com/david1a21/iris-palette/releases/download/v1.0.44/Iris_1.0.44.apk">GitHub 直链</span>
+      <a class="dl-card" href="/download/Iris_2.0.0.apk" data-rev>
+        <span class="nm">Android</span><span class="mt">APK · 2.0 壳 · 内嵌 2.0 页面</span><span class="go">本站直接下载 · 0.87 MB</span>
+        <span class="gh" data-gh="https://github.com/david1a21/iris-palette/releases/download/v2.0.0/Iris_2.0.0.apk">GitHub 直链</span>
       </a>
-      <a class="dl-card" href="/download/Iris-Palette-iOS-1.0.42.ipa" data-rev>
+      <a class="dl-card" href="/download/Iris-Palette-iOS-2.0.0.ipa" data-rev>
         <span class="nm">iOS</span><span class="mt">IPA · 未签名 · 需自签安装</span><span class="go">本站直接下载 · 984 KB</span>
-        <span class="gh" data-gh="https://github.com/david1a21/iris-palette/releases/download/v1.0.42-ios/Iris-Palette-iOS-1.0.42.ipa">GitHub 直链</span>
+        <span class="gh" data-gh="https://github.com/david1a21/iris-palette/releases/download/v2.0.0/Iris-Palette-iOS-2.0.0.ipa">GitHub 直链</span>
       </a>
-      <a class="dl-card" href="https://ghfast.top/https://github.com/david1a21/iris-palette/releases/download/v1.0.42-desktop/Iris-Palette-Windows-x64-1.0.42-Setup.exe" target="_blank" rel="noopener" data-rev>
-        <span class="nm">Windows</span><span class="mt">Setup 安装器 · x64 · 75.7 MB</span><span class="go">加速镜像下载</span>
-        <span class="gh" data-gh="https://github.com/david1a21/iris-palette/releases/download/v1.0.42-desktop/Iris-Palette-Windows-x64-1.0.42-Setup.exe">GitHub 直链</span>
+      <a class="dl-card" href="https://ghfast.top/https://github.com/david1a21/iris-palette/releases/download/v2.0.0/Iris-Palette-Windows-x64-2.0.0-Setup.exe" target="_blank" rel="noopener" data-rev>
+        <span class="nm">Windows</span><span class="mt">Setup 安装器 · x64 · 77 MB</span><span class="go">加速镜像下载</span>
+        <span class="gh" data-gh="https://github.com/david1a21/iris-palette/releases/download/v2.0.0/Iris-Palette-Windows-x64-2.0.0-Setup.exe">GitHub 直链</span>
       </a>
-      <a class="dl-card" href="https://ghfast.top/https://github.com/david1a21/iris-palette/releases/download/v1.0.42-desktop/Iris-Palette-macOS-arm64-1.0.42.zip" target="_blank" rel="noopener" data-rev>
-        <span class="nm">macOS</span><span class="mt">arm64 · 92.9 MB · Intel 版见下方</span><span class="go">加速镜像下载</span>
-        <span class="gh" data-gh="https://github.com/david1a21/iris-palette/releases/download/v1.0.42-desktop/Iris-Palette-macOS-arm64-1.0.42.zip">GitHub 直链</span>
+      <a class="dl-card" href="https://ghfast.top/https://github.com/david1a21/iris-palette/releases/download/v2.0.0/Iris-Palette-macOS-arm64-2.0.0.zip" target="_blank" rel="noopener" data-rev>
+        <span class="nm">macOS</span><span class="mt">arm64 · 93.4 MB · Intel 版见下方</span><span class="go">加速镜像下载</span>
+        <span class="gh" data-gh="https://github.com/david1a21/iris-palette/releases/download/v2.0.0/Iris-Palette-macOS-arm64-2.0.0.zip">GitHub 直链</span>
       </a>
-      <a class="dl-card" href="https://ghfast.top/https://github.com/david1a21/iris-palette/releases/download/v1.0.42-desktop/Iris-Palette-Linux-x64-1.0.42.tar.gz" target="_blank" rel="noopener" data-rev>
-        <span class="nm">Linux</span><span class="mt">tar.gz · x64 · 102 MB</span><span class="go">加速镜像下载</span>
-        <span class="gh" data-gh="https://github.com/david1a21/iris-palette/releases/download/v1.0.42-desktop/Iris-Palette-Linux-x64-1.0.42.tar.gz">GitHub 直链</span>
+      <a class="dl-card" href="https://ghfast.top/https://github.com/david1a21/iris-palette/releases/download/v2.0.0/Iris-Palette-Linux-x64-2.0.0.tar.gz" target="_blank" rel="noopener" data-rev>
+        <span class="nm">Linux</span><span class="mt">tar.gz · x64 · 102.5 MB</span><span class="go">加速镜像下载</span>
+        <span class="gh" data-gh="https://github.com/david1a21/iris-palette/releases/download/v2.0.0/Iris-Palette-Linux-x64-2.0.0.tar.gz">GitHub 直链</span>
       </a>
       <a class="dl-card" href="https://david1a21.github.io/iris-palette-web/" target="_blank" rel="noopener" data-rev>
         <span class="nm">网页版</span><span class="mt">不用装 · 打开就能调</span><span class="go">直接打开</span>
@@ -595,26 +645,26 @@ h1 em{font-style:normal;color:var(--gold2)}
       <div class="alt-row">
         <span class="k">本站直链</span>
         <span class="v">
-          <a href="/download/Iris_1.0.44.apk">Android APK</a>
-          <a href="/download/Iris-Palette-iOS-1.0.42.ipa">iOS IPA</a>
+          <a href="/download/Iris_2.0.0.apk">Android APK</a>
+          <a href="/download/Iris-Palette-iOS-2.0.0.ipa">iOS IPA</a>
         </span>
       </div>
 
       <div class="alt-row">
         <span class="k">加速镜像</span>
         <span class="v">
-          <a href="https://ghfast.top/https://github.com/david1a21/iris-palette/releases/download/v1.0.42-desktop/Iris-Palette-Windows-x64-1.0.42-Setup.exe" target="_blank" rel="noopener">Windows 75.7 MB</a>
-          <a href="https://ghfast.top/https://github.com/david1a21/iris-palette/releases/download/v1.0.42-desktop/Iris-Palette-macOS-arm64-1.0.42.zip" target="_blank" rel="noopener">macOS arm64 92.9 MB</a>
-          <a href="https://ghfast.top/https://github.com/david1a21/iris-palette/releases/download/v1.0.42-desktop/Iris-Palette-macOS-x64-1.0.42.zip" target="_blank" rel="noopener">macOS Intel 98.7 MB</a>
-          <a href="https://ghfast.top/https://github.com/david1a21/iris-palette/releases/download/v1.0.42-desktop/Iris-Palette-Linux-x64-1.0.42.tar.gz" target="_blank" rel="noopener">Linux 102 MB</a>
+          <a href="https://ghfast.top/https://github.com/david1a21/iris-palette/releases/download/v2.0.0/Iris-Palette-Windows-x64-2.0.0-Setup.exe" target="_blank" rel="noopener">Windows 77 MB</a>
+          <a href="https://ghfast.top/https://github.com/david1a21/iris-palette/releases/download/v2.0.0/Iris-Palette-macOS-arm64-2.0.0.zip" target="_blank" rel="noopener">macOS arm64 93.4 MB</a>
+          <a href="https://ghfast.top/https://github.com/david1a21/iris-palette/releases/download/v2.0.0/Iris-Palette-macOS-x64-2.0.0.zip" target="_blank" rel="noopener">macOS Intel 99.3 MB</a>
+          <a href="https://ghfast.top/https://github.com/david1a21/iris-palette/releases/download/v2.0.0/Iris-Palette-Linux-x64-2.0.0.tar.gz" target="_blank" rel="noopener">Linux 102.5 MB</a>
         </span>
       </div>
 
       <div class="alt-row">
         <span class="k">备用网关</span>
         <span class="v">
-          <a href="https://gh-proxy.com/https://github.com/david1a21/iris-palette/releases/download/v1.0.42-desktop/Iris-Palette-Windows-x64-1.0.42-Setup.exe" target="_blank" rel="noopener">gh-proxy.com</a>
-          <a href="https://ghproxy.net/https://github.com/david1a21/iris-palette/releases/download/v1.0.42-desktop/Iris-Palette-Windows-x64-1.0.42-Setup.exe" target="_blank" rel="noopener">ghproxy.net</a>
+          <a href="https://gh-proxy.com/https://github.com/david1a21/iris-palette/releases/download/v2.0.0/Iris-Palette-Windows-x64-2.0.0-Setup.exe" target="_blank" rel="noopener">gh-proxy.com</a>
+          <a href="https://ghproxy.net/https://github.com/david1a21/iris-palette/releases/download/v2.0.0/Iris-Palette-Windows-x64-2.0.0-Setup.exe" target="_blank" rel="noopener">ghproxy.net</a>
         </span>
       </div>
 
@@ -646,7 +696,7 @@ h1 em{font-style:normal;color:var(--gold2)}
     </div>
     <div class="foot-btm">
       <span>MIT License · Petrichor (Patrick)</span>
-      <span>页面 1.0.42 · 1,431,227 字节单文件</span>
+      <span>页面 2.0.0 · 2,031,216 字节单文件</span>
     </div>
   </div>
 </footer>

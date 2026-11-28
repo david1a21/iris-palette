@@ -1,10 +1,14 @@
 package com.iris.palette;
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.ActivityNotFoundException;
 import android.content.ContentValues;
 import android.content.Intent;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
@@ -24,6 +28,7 @@ import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.JavascriptInterface;
+import android.webkit.PermissionRequest;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceError;
@@ -68,6 +73,8 @@ public class MainActivity extends Activity {
     private static final String HOST = "iris.local";              /* 虚拟域名，请求全部由本地资源接管 */
     private static final String START_URL = "https://" + HOST + "/index.html";
     private static final int REQ_FILE = 2001;
+    private static final int REQ_CAMERA = 2002;      /* WebView 相机授权一次性请求 */
+    private PermissionRequest pendingCamera;         /* 等运行时授权回来再答复 WebView */
 
     private static final int INK = 0xFF08080A;
     private static final int CARD_BG = 0xF21A1A1E;
@@ -253,6 +260,28 @@ public class MainActivity extends Activity {
     /* ================= 文件选择（照片 / 视频 / HEIC / LUT / JSON 都走这里） ================= */
 
     private class Chrome extends WebChromeClient {
+
+        /* 页面调 getUserMedia 时走到这里。只放行相机，麦克风一律不接。 */
+        @Override
+        public void onPermissionRequest(final PermissionRequest request) {
+            boolean wantsCamera = false;
+            for (String res : request.getResources()) {
+                if (PermissionRequest.RESOURCE_VIDEO_CAPTURE.equals(res)) wantsCamera = true;
+            }
+            if (!wantsCamera) { request.deny(); return; }
+            if (checkSelfPermission(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+                request.grant(new String[]{PermissionRequest.RESOURCE_VIDEO_CAPTURE});
+                return;
+            }
+            pendingCamera = request;
+            requestPermissions(new String[]{Manifest.permission.CAMERA}, REQ_CAMERA);
+        }
+
+        @Override
+        public void onPermissionRequestCanceled(PermissionRequest request) {
+            if (pendingCamera == request) pendingCamera = null;
+        }
+
         @Override
         public boolean onShowFileChooser(WebView view, ValueCallback<Uri[]> callback,
                                          FileChooserParams params) {
@@ -350,6 +379,21 @@ public class MainActivity extends Activity {
             return;
         }
         super.onActivityResult(requestCode, resultCode, data);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        if (requestCode == REQ_CAMERA) {
+            PermissionRequest req = pendingCamera;
+            pendingCamera = null;
+            if (req != null) {
+                boolean ok = grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED;
+                if (ok) req.grant(new String[]{PermissionRequest.RESOURCE_VIDEO_CAPTURE});
+                else { req.deny(); toast("相机权限被拒绝，实时相机模式用不了"); }
+            }
+            return;
+        }
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 
     /* ================= 虚拟 https 源：把 assets 当网站托管，保住 secure context ================= */
@@ -530,6 +574,30 @@ public class MainActivity extends Activity {
                 .show();
     }
 
+
+    /** 版本比较：远端必须高于包内 versionName，否则视为旧清单，不参与换页 */
+    private static int cmpVersion(String a, String b) {
+        String[] pa = (a == null ? "" : a).split("\\.");
+        String[] pb = (b == null ? "" : b).split("\\.");
+        for (int i = 0; i < 3; i++) {
+            int x = i < pa.length ? atoiSafe(pa[i]) : 0;
+            int y = i < pb.length ? atoiSafe(pb[i]) : 0;
+            if (x != y) return x > y ? 1 : -1;
+        }
+        return 0;
+    }
+
+    private static int atoiSafe(String s) {
+        try { return Integer.parseInt(s.trim()); } catch (Exception e) { return 0; }
+    }
+
+    private static String appVersionName(Context ctx) {
+        try {
+            PackageInfo pi = ctx.getPackageManager().getPackageInfo(ctx.getPackageName(), 0);
+            return pi.versionName == null ? "" : pi.versionName;
+        } catch (Exception e) { return ""; }
+    }
+
     private void startHotCheck() {
         new Thread(() -> {
             try {
@@ -545,6 +613,16 @@ public class MainActivity extends Activity {
                 String remote = o.optString("sha256");
                 String url = o.optString("url");
                 if (remote.isEmpty() || url.isEmpty()) return;
+
+                // 只升不降：清单版本不高于包内 versionName 时直接跳过
+                String remoteVersion = o.optString("version");
+                String localVersion = appVersionName(this);
+                if (!remoteVersion.isEmpty() && !localVersion.isEmpty()
+                        && cmpVersion(remoteVersion, localVersion) <= 0) {
+                    deleteTree(pendingDir());
+                    Log.i("IrisHot", "远端 " + remoteVersion + " 不高于本地 " + localVersion + "，跳过");
+                    return;
+                }
 
                 String bundled = sha256Of(getAssets().open("index.html"));
                 String activeSha = activePageFile != null ? sha256Of(activePageFile) : bundled;

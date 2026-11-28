@@ -120,6 +120,22 @@ enum HotUpdate {
         return sha256(of: url)
     }
 
+    /// 版本比较：远端页面版本必须高于包内版本才允许换页，避免旧清单把新包降级
+    static func cmpVersion(_ a: String, _ b: String) -> Int {
+        let pa = a.split(separator: ".").map { Int($0) ?? 0 }
+        let pb = b.split(separator: ".").map { Int($0) ?? 0 }
+        for i in 0..<3 {
+            let x = i < pa.count ? pa[i] : 0
+            let y = i < pb.count ? pb[i] : 0
+            if x != y { return x > y ? 1 : -1 }
+        }
+        return 0
+    }
+
+    static var bundleShortVersion: String {
+        return (Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String) ?? ""
+    }
+
     /// 后台检查：只负责把新版下到 pending，换不换由用户决定；
     /// 下载成功后回调（主线程），交给外壳弹窗。
     static func checkInBackground(completion: ((String) -> Void)? = nil) {
@@ -130,6 +146,13 @@ enum HotUpdate {
                   let dict = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
                   let expected = dict["sha256"] as? String else { return }
             let version = dict["version"] as? String ?? ""
+
+            // 只升不降：远端清单不高于包内版本时，清掉 pending 直接返回
+            let localVersion = bundleShortVersion
+            if !version.isEmpty, !localVersion.isEmpty, cmpVersion(version, localVersion) <= 0 {
+                if let pdir = pendingDir { try? FileManager.default.removeItem(at: pdir) }
+                return
+            }
 
             let bundled = bundledSHA()
             let active = pageForLaunch().flatMap { sha256(of: $0) }

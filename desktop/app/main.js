@@ -548,6 +548,25 @@ async function askUpdate() {
   }
 }
 
+
+/* 版本比较：远端页面版本必须“高于”包内版本才允许换页，避免旧清单把新包降级 */
+function pageVersionOf(file) {
+  try {
+    const html = fs.readFileSync(file, 'utf8');
+    const m = html.match(/IRIS_VERSION='([\d.]+)'/);
+    return m ? m[1] : '';
+  } catch (e) { return ''; }
+}
+function cmpVersion(a, b) {
+  const pa = String(a || '').split('.').map(n => parseInt(n, 10) || 0);
+  const pb = String(b || '').split('.').map(n => parseInt(n, 10) || 0);
+  for (let i = 0; i < 3; i++) {
+    const x = pa[i] || 0, y = pb[i] || 0;
+    if (x !== y) return x > y ? 1 : -1;
+  }
+  return 0;
+}
+
 /* 后台检查：只负责把新版下到 pending，换不换由用户决定 */
 async function refreshHotUpdate() {
   try {
@@ -555,6 +574,13 @@ async function refreshHotUpdate() {
     if (!res.ok) return;
     const manifest = await res.json();
     if (!manifest || !manifest.sha256 || !manifest.url) return;
+
+    // 只升不降：远端清单比包内页面旧（或同版）时，一律不动
+    const bundledVersion = pageVersionOf(path.join(ASSETS_DIR, 'index.html'));
+    if (manifest.version && bundledVersion && cmpVersion(manifest.version, bundledVersion) <= 0) {
+      dropDir(PENDING_DIR);
+      return;
+    }
 
     const bundledSha = sha256File(path.join(ASSETS_DIR, 'index.html'));
     const activeSha = sha256File(ACTIVE_PAGE);
